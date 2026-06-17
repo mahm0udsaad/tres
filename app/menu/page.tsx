@@ -4,7 +4,7 @@ import { availableItemImages } from "../lib/itemImages";
 
 export const metadata: Metadata = {
   title: "المنيو — تريس",
-  description: "تصفّح منيو تريس: القهوة المختصة، القهوة، المشروبات والحلا. كل الأسعار بالريال السعودي.",
+  description: "شوف منيو تريس: القهوة المختصة، القهوة، المشروبات والحلا. كل الأسعار بالريال السعودي.",
 };
 
 export default function MenuPage() {

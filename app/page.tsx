@@ -1,9 +1,22 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { flushSync } from "react-dom";
+import { createPortal } from "react-dom";
 import { useReveal } from "./lib/useReveal";
 import { CATEGORIES, getCategory, toArabic } from "./lib/menu";
 import Link from "next/link";
+
+function withTransition(update: () => void) {
+  const doc = document as Document & {
+    startViewTransition?: (cb: () => void) => unknown;
+  };
+  if (typeof doc.startViewTransition !== "function") {
+    update();
+    return;
+  }
+  doc.startViewTransition(() => flushSync(update));
+}
 
 const RING_TEXT =
   "THREE ORIGINS ✦ ONE STORY ✦ SPECIALTY COFFEE ✦ ROASTED IN TAIF ✦ EST. 2019 ✦ ";
@@ -44,6 +57,49 @@ export default function Home() {
   const rootRef = useRef<HTMLDivElement>(null);
   useReveal(rootRef);
 
+  const [isStoryOpen, setIsStoryOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const syncStoryHash = () => {
+      const shouldOpenStory = window.location.hash === "#story";
+      withTransition(() => {
+        setIsStoryOpen(shouldOpenStory);
+      });
+    };
+
+    const onPopState = syncStoryHash;
+    const onHashChange = syncStoryHash;
+
+    window.addEventListener("popstate", onPopState);
+    window.addEventListener("hashchange", onHashChange);
+    syncStoryHash();
+
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("hashchange", onHashChange);
+    };
+  }, []);
+
+  const openStory = () => {
+    window.history.pushState({ story: true }, "", "#story");
+    withTransition(() => {
+      setIsStoryOpen(true);
+    });
+  };
+
+  const closeStory = () => {
+    if (window.history.state?.story) {
+      window.history.back();
+    } else {
+      withTransition(() => {
+        setIsStoryOpen(false);
+      });
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  };
+
   return (
     <div ref={rootRef} className="page">
       {/* ===================== HERO ===================== */}
@@ -75,11 +131,11 @@ export default function Home() {
           </div>
 
           <h1 data-reveal data-reveal-delay="60">
-            ذوقٌ يستحقّ <span className="accent">التوقّف.</span>
+            وقفة تستاهل <span className="accent">فنجان تريس.</span>
           </h1>
           <p className="hero-lede" data-reveal data-reveal-delay="120">
-            قهوة مختصة، مُحمَّصة بدفعاتٍ صغيرة في الطائف. ثلاثة أصول مختارة بعناية
-            — الإثيوبي، الكولومبي، ومزيج تريس — تجتمع في فنجانٍ واحد.
+            نحمّص بدفعات صغيرة في الطائف، ونقدّم ثلاثة أصول: الإثيوبي،
+            الكولومبي، ومزيج تريس. قهوة واضحة، موزونة، وقريبة من مزاجك.
           </p>
           <div className="hero-actions" data-reveal data-reveal-delay="180">
             <Link href="/menu" className="btn btn-hero-primary">
@@ -91,7 +147,7 @@ export default function Home() {
             <span className="sep" />
             <span>الطائف · مدينة الورد</span>
             <span className="sep" />
-            <span>تحميص يومي</span>
+            <span>دفعات صغيرة</span>
           </div>
         </div>
       </div>
@@ -105,8 +161,8 @@ export default function Home() {
               <h2>من أين تأتي قهوتنا</h2>
             </div>
             <p data-reveal data-reveal-delay="80">
-              نختار حبوبنا من مزارع مرتفعة حول العالم, ونحمّصها على دفعاتٍ صغيرة
-              لإبراز إيحاءاتها. لكل أصلٍ شخصيّته — وهذه ثلاثتنا.
+              نختار الأصول بعناية ونحمّصها على دفعات صغيرة عشان تطلع إيحاءاتها
+              بوضوح. لكل أصل شخصيّته، وهذه ثلاثتنا.
             </p>
           </div>
 
@@ -171,8 +227,8 @@ export default function Home() {
               <div className="menu-kicker">02 — MENU</div>
               <h2>من المنيو</h2>
               <p>
-                قائمة مدروسة بلا زوائد — نُتقن الأساسيات ونضيف لمستنا. هذه أكثر
-                مشروباتنا طلبًا، والقائمة الكاملة بانتظارك.
+                منيو مختصر وواضح: قهوة، مشروبات، وحلا. إذا ودك بشي يحمل توقيعنا،
+                ابدأ بهوت تريس.
               </p>
               <div className="signature">
                 <div className="signature-blob" />
@@ -186,7 +242,7 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="signature-desc">
-                    مشروبنا الحار المميّز — دافئ، غنيّ، ويحمل اسمنا.
+                    مشروب حار بتوقيع تريس، غني ومناسب لوقفة هادية.
                   </p>
                 </div>
               </div>
@@ -207,14 +263,21 @@ export default function Home() {
                       href={`/menu/${c.id}`}
                       className={"tile" + (img ? " has-img" : "") + (empty ? " soon" : "")}
                     >
-                      {img && (
-                        <span
-                          className="tile-img"
-                          style={{
-                            backgroundImage: `url(${img})`,
-                          }}
-                        />
-                      )}
+                      <span className="tile-media-wrap">
+                        {img ? (
+                          <>
+                            <span
+                              className="tile-img"
+                              style={{
+                                backgroundImage: `url(${img})`,
+                              }}
+                            />
+                            <span className="tile-scrim" />
+                          </>
+                        ) : (
+                          <span className="tile-fill" />
+                        )}
+                      </span>
                       <span className="tile-no">{c.no}</span>
                       {!img && <span className="glyph">{c.glyph}</span>}
                       <div className="tile-foot">
@@ -235,7 +298,7 @@ export default function Home() {
       </div>
 
       {/* ===================== STORY ===================== */}
-      <div className="section story">
+      <div id="story" className="section story">
         <div className="story-grid">
           <div data-reveal>
             <div className="section-kicker">03 — STORY</div>
@@ -245,21 +308,25 @@ export default function Home() {
               مدينة الورد.
             </h2>
             <p className="lead">
-              على ارتفاع 1879 مترًا في جبال الحجاز، تشتهر الطائف بمناخها المعتدل،
-              وردها، وعسلها الجبلي. من هذه المدينة انطلقت تريس — مقهى قهوة مختصة
-              يختار ثلاثة أصول ويحمّصها بدفعاتٍ صغيرة.
+              تريس طالعة من الطائف، المدينة المعروفة بجوها، وردها، وقربها من
+              جبال الحجاز. من هنا أخذنا هدوء المكان وتفاصيله، وقدمنا قهوة مختصة
+              بثلاثة أصول.
             </p>
             <p className="sub">
               اسمنا مستوحى من «ثلاثة»: ثلاثة أصول للقهوة، تجتمع في حكايةٍ واحدة.
-              نهتمّ بمصدر الحبوب، ودرجة التحميص، وطريقة التحضير — والنتيجة فنجانٌ
-              واضح الطعم، في مكانٍ مريح تعود إليه.
+              نهتمّ بمصدر الحبوب، ودرجة التحميص، وطريقة التحضير، عشان يوصلك
+              فنجان واضح الطعم في مكان ترتاح له.
             </p>
-            <span className="btn-story">القصة كاملة</span>
+            <button type="button" className="btn-story" onClick={openStory}>اعرف قصتنا</button>
           </div>
           <div data-reveal data-reveal-delay="120" data-parallax="12">
             <div className="story-art">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/building.png" alt="قصر شبرا" />
+              <img 
+                src="/assets/building.png" 
+                alt="قصر شبرا" 
+                style={!isStoryOpen ? { viewTransitionName: "story-art-img" } : undefined}
+              />
               <div className="story-caption">
                 قصر شبرا — المعلم الذي ألهم هويّتنا · الطائف 1905
               </div>
@@ -268,16 +335,61 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ===================== STORY EXPANDED OVERLAY ===================== */}
+      {mounted && isStoryOpen && createPortal(
+        <div className="story-expanded-overlay">
+          <button type="button" className="back-link story-back" onClick={closeStory}>
+            <span className="back-arrow">→</span> عودة
+          </button>
+          
+          <div className="story-expanded-hero">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+               src="/assets/building.png" 
+               alt="قصر شبرا" 
+               className="story-expanded-img" 
+            />
+          </div>
+          
+          <div className="story-expanded-content wrap narrow">
+             <h2>
+               من الطائف،<br />
+               مدينة الورد.
+             </h2>
+             <p>
+               تريس طالعة من الطائف، المدينة المعروفة بجوها، وردها، وقربها من
+               جبال الحجاز. من هنا أخذنا هدوء المكان وتفاصيله، وقدمنا قهوة مختصة
+               بثلاثة أصول.
+             </p>
+             <p>
+               اسمنا مستوحى من «ثلاثة»: ثلاثة أصول للقهوة، تجتمع في حكايةٍ واحدة.
+               نهتمّ بمصدر الحبوب، ودرجة التحميص، وطريقة التحضير، عشان يوصلك
+               فنجان واضح الطعم في مكان ترتاح له.
+             </p>
+             <p>
+               من 2019 وتريس تبني تجربتها حول فكرة بسيطة: ثلاثة أصول، تحميص
+               بدفعات صغيرة، وتحضير يحترم طابع كل محصول. نعرض الإيحاءات بوضوح
+               عشان تختار القهوة اللي تناسب ذوقك.
+             </p>
+             <p>
+               مزيج تريس يجمع إيحاءات فواكه استوائية، مانجو، عسل، وشوكولاتة.
+               وإذا ودك بطابع مختلف، الإثيوبي والكولومبي موجودين بخيارات حارة
+               وباردة حسب مزاجك.
+             </p>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* ===================== CTA BAND ===================== */}
       <div className="cta">
         <div className="cta-inner" data-reveal>
           <div>
             <h2>جاهز لكوبك؟</h2>
-            <p>مرّ علينا في أقرب فرع، أو اطلب توصيلًا — قهوتك بانتظارك.</p>
+            <p>شوف المنيو واختر اللي يناسب مزاجك. قهوتك بنحضّرها على أصولها.</p>
           </div>
           <div className="cta-actions">
-            <span className="btn btn-cta-primary">اطلب الآن</span>
-            <span className="btn btn-cta-ghost">فروعنا</span>
+            <Link href="/menu" className="btn btn-cta-primary">شوف المنيو</Link>
           </div>
         </div>
       </div>

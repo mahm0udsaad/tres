@@ -147,26 +147,27 @@ export default function MenuExperience({
     return (
       <div className="menu-page">
         <section className="cat-hero">
-          {heroImg ? (
-            <span
-              className="cat-hero-media"
-              style={{
-                backgroundImage: `url(${heroImg})`,
-                viewTransitionName: `cat-media-${active.id}`,
-              }}
-            />
-          ) : (
-            <span
-              className="cat-hero-media cat-hero-fill"
-              style={{ viewTransitionName: `cat-media-${active.id}` }}
-            >
-              {active.glyph}
-            </span>
-          )}
-          <span className="cat-hero-scrim" />
+          <span
+            className="cat-hero-media-wrap"
+            style={{ viewTransitionName: `cat-media-${active.id}` }}
+          >
+            {heroImg ? (
+              <span
+                className="cat-hero-media"
+                style={{
+                  backgroundImage: `url(${heroImg})`,
+                }}
+              />
+            ) : (
+              <span className="cat-hero-media cat-hero-fill">
+                {active.glyph}
+              </span>
+            )}
+            <span className="cat-hero-scrim" />
+          </span>
           <div className="cat-hero-inner">
             <button type="button" className="back-link" onClick={() => navigate(null)}>
-              <span className="back-arrow">→</span> كل الأقسام
+              <span className="back-arrow">→</span> رجوع للأقسام
             </button>
             <div className="cat-hero-label">
               {active.no} — {active.en}
@@ -211,9 +212,9 @@ export default function MenuExperience({
               <div className="cat-empty-card">
                 <div className="glyph">{active.glyph}</div>
                 <h3>قريبًا</h3>
-                <p>هذا القسم في الطريق — راجِعنا قريبًا.</p>
+                <p>هذا القسم للحين ما نزل. ارجع لنا قريب.</p>
                 <button type="button" className="btn btn-menu" onClick={() => navigate(null)}>
-                  باقي الأقسام <span className="arrow">←</span>
+                  شوف باقي الأقسام <span className="arrow">←</span>
                 </button>
               </div>
             )}
@@ -233,7 +234,7 @@ export default function MenuExperience({
             قهوة مختصة · ثلاثة أصول
           </div>
           <h1>المنيو</h1>
-          <p>اختر قسمًا لتتصفّحه. كل الأسعار بالريال السعودي.</p>
+          <p>وش ودك اليوم؟ اختر القسم، وكل الأسعار بالريال السعودي.</p>
         </div>
       </section>
 
@@ -250,15 +251,24 @@ export default function MenuExperience({
                   onClick={() => navigate(c.id)}
                   className={"tile" + (img ? " has-img" : "") + (empty ? " soon" : "")}
                 >
-                  {img && (
-                    <span
-                      className="tile-img"
-                      style={{
-                        backgroundImage: `url(${img})`,
-                        viewTransitionName: `cat-media-${c.id}`,
-                      }}
-                    />
-                  )}
+                  <span 
+                    className="tile-media-wrap"
+                    style={{ viewTransitionName: `cat-media-${c.id}` }}
+                  >
+                    {img ? (
+                      <>
+                        <span
+                          className="tile-img"
+                          style={{
+                            backgroundImage: `url(${img})`,
+                          }}
+                        />
+                        <span className="tile-scrim" />
+                      </>
+                    ) : (
+                      <span className="tile-fill" />
+                    )}
+                  </span>
                   <span className="tile-no">{c.no}</span>
                   {!img && <span className="glyph">{c.glyph}</span>}
                   <div className="tile-foot">

@@ -7,8 +7,7 @@ import { useEffect, useRef } from "react";
 const NAV: { href: string; label: string; soon?: boolean }[] = [
   { href: "/", label: "الرئيسية" },
   { href: "/menu", label: "المنيو" },
-  { href: "/story", label: "قصتنا", soon: true },
-  { href: "/locations", label: "فروعنا", soon: true },
+  { href: "/#story", label: "قصتنا" },
 ];
 
 export default function SiteHeader() {
@@ -35,7 +34,7 @@ export default function SiteHeader() {
   return (
     <>
       <div className="announce">
-        ☕ مزيج تريس الموسمي — مُحمَّص هذا الأسبوع، ومتوفّر في كل فرع
+        يا هلا في تريس، قهوة مختصة بثلاثة أصول من الطائف
       </div>
       <div ref={navRef} className="nav">
         <div className="nav-inner">
@@ -65,7 +64,7 @@ export default function SiteHeader() {
               )
             )}
             <Link href="/menu" className="btn btn-blush nav-link">
-              اطلب الآن
+              شوف المنيو
             </Link>
           </div>
         </div>

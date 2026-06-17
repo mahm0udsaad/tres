@@ -41,7 +41,7 @@ export const CATEGORIES: Category[] = [
     no: "01",
     en: "SPECIALTY COFFEE",
     ar: "قهوة مختصة",
-    tagline: "أصولنا الثلاثة، محمّصة عندنا",
+    tagline: "ثلاثة أصول بطابع تريس",
     glyph: "🫘",
     image: "/assets/menu/specialty.webp",
     items: [
@@ -91,7 +91,7 @@ export const CATEGORIES: Category[] = [
     no: "02",
     en: "COFFEE",
     ar: "قهوة",
-    tagline: "إسبريسو، لاتيه، وأكثر",
+    tagline: "إسبريسو، لاتيه، وخياراتك اليومية",
     glyph: "☕",
     image: "/assets/menu/coffee.webp",
     items: [
@@ -122,7 +122,7 @@ export const CATEGORIES: Category[] = [
     no: "03",
     en: "DRINKS",
     ar: "مشروبات",
-    tagline: "ماتشا، كركديه ومنعشات",
+    tagline: "ماتشا، كركديه، وخيارات منعشة",
     glyph: "🍵",
     image: "/assets/menu/drinks.webp",
     items: [
@@ -136,7 +136,7 @@ export const CATEGORIES: Category[] = [
     no: "04",
     en: "DESSERTS",
     ar: "الحلا",
-    tagline: "كيك، كوكيز وحلا",
+    tagline: "حلا يكمّل قهوتك",
     glyph: "🍰",
     image: "/assets/menu/dessert.webp",
     note: "قد تحتوي هذه المنتجات على مسببات الحساسية (المكسرات ومنتجات الألبان والبيض).",
@@ -147,7 +147,7 @@ export const CATEGORIES: Category[] = [
         en: "Triple Chocolate",
         price: "25",
         cal: "540",
-        desc: "كيكة شوكولاتة محشوة جاناش، مع صوص شوكولاتة كراميل وشوكولاتة بلجيكي.",
+        desc: "كيكة شوكولاتة محشوة جاناش، مع صوص شوكولاتة كراميل وشوكولاتة بلجيكية.",
       },
       {
         id: "pecan-cake",
@@ -171,7 +171,7 @@ export const CATEGORIES: Category[] = [
         en: "Tres Cookies",
         price: "12",
         cal: "350",
-        desc: "كوكيز ذهبية مخبوزة بعناية.",
+        desc: "كوكيز تريس المخبوزة بعناية.",
       },
       {
         id: "raffaello-tres",

@@ -27,9 +27,9 @@ const hnArabic = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "تريس — ثلاثة أصول، حكاية واحدة",
+  title: "تريس — ثلاثة محاصيل، حكاية واحدة",
   description:
-    "تريس قهوة مختصة من الطائف. ثلاثة أصول: الإثيوبي، الكولومبي، ومزيج تريس، بطعم واضح ومتوازن.",
+    "تريس قهوة مختصة من الطائف. ثلاثة محاصيل: الإثيوبي، الكولومبي، ومزيج تريس، بطعم واضح ومتوازن.",
 };
 
 export default function RootLayout({
@@ -41,6 +41,7 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
+      data-scroll-behavior="smooth"
       className={`${ibmPlexArabic.variable} ${spaceGrotesk.variable} ${hnArabic.variable}`}
     >
       <body>

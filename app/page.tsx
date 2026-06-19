@@ -4,34 +4,41 @@ import { useRef, useState, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { createPortal } from "react-dom";
 import { useReveal } from "./lib/useReveal";
-import { CATEGORIES, getCategory, toArabic } from "./lib/menu";
+import { CATEGORIES, toArabic } from "./lib/menu";
 import Link from "next/link";
 
 function withTransition(update: () => void) {
   const doc = document as Document & {
-    startViewTransition?: (cb: () => void) => unknown;
+    startViewTransition?: (cb: () => void) => {
+      ready?: Promise<unknown>;
+      finished?: Promise<unknown>;
+    };
   };
   if (typeof doc.startViewTransition !== "function") {
     update();
     return;
   }
-  doc.startViewTransition(() => flushSync(update));
+  const t = doc.startViewTransition(() => flushSync(update));
+  // A transition interrupted by another (or by navigation) rejects these
+  // promises; swallow them so they don't surface as unhandled rejections.
+  t?.ready?.catch(() => {});
+  t?.finished?.catch(() => {});
 }
 
 const RING_TEXT =
   "THREE ORIGINS ✦ ONE STORY ✦ SPECIALTY COFFEE ✦ ROASTED IN TAIF ✦ EST. 2019 ✦ ";
 
-// Homepage "origins" cards are the official tasting-note cards (الإيحاءات),
-// pulled from the menu data so they stay in sync. Ordered + titled for display.
-const ORIGIN_IDS = ["ethiopian", "colombian", "tres-roastery"] as const;
-const ORIGIN_TITLES: Record<string, string> = {
-  ethiopian: "الإثيوبي",
-  colombian: "الكولومبي",
-  "tres-roastery": "مزيج تريس",
-};
-const ORIGINS = ORIGIN_IDS.map((id) => getCategory("specialty")?.items.find((i) => i.id === id)).filter(
-  (i): i is NonNullable<typeof i> => Boolean(i),
-);
+// "خيارات تريس اليوم" — today's featured picks, pulled from the menu data so
+// they stay in sync. Spread across the menu: signature coffee, a milk drink,
+// matcha, and a dessert.
+const FEATURED_IDS = ["hot-tres", "spanish-latte-iced", "matcha", "triple-chocolate"] as const;
+const FEATURED = FEATURED_IDS.map((id) => {
+  for (const cat of CATEGORIES) {
+    const item = cat.items.find((i) => i.id === id);
+    if (item) return { item, cat };
+  }
+  return null;
+}).filter((f): f is NonNullable<typeof f> => Boolean(f));
 
 function Ring() {
   const chars = Array.from(RING_TEXT);
@@ -108,7 +115,7 @@ export default function Home() {
         <div className="hero-inner">
           <div className="eyebrow" data-reveal data-reveal-delay="0">
             <span className="eyebrow-dot" />
-            قهوة مختصة · ثلاثة أصول
+            قهوه مختصه . تجربه مختلفه
           </div>
 
           {/* circular composition: logo + mascot + spinning ring */}
@@ -131,10 +138,10 @@ export default function Home() {
           </div>
 
           <h1 data-reveal data-reveal-delay="60">
-            وقفة تستاهل <span className="accent">فنجان تريس.</span>
+            وقفة تستاهل <span className="accent">كوب تريس.</span>
           </h1>
           <p className="hero-lede" data-reveal data-reveal-delay="120">
-            نحمّص بدفعات صغيرة في الطائف، ونقدّم ثلاثة أصول: الإثيوبي،
+            نحمّص بدفعات صغيرة في الطائف، ونقدّم ثلاثة محاصيل: الإثيوبي،
             الكولومبي، ومزيج تريس. قهوة واضحة، موزونة، وقريبة من مزاجك.
           </p>
           <div className="hero-actions" data-reveal data-reveal-delay="180">
@@ -143,76 +150,56 @@ export default function Home() {
             </Link>
           </div>
           <div className="hero-meta" data-reveal data-reveal-delay="240">
-            <span>منذ 2019</span>
+            <span>منذ 2026</span>
             <span className="sep" />
-            <span>الطائف · مدينة الورد</span>
+            <span>الطائف ·</span>
             <span className="sep" />
-            <span>دفعات صغيرة</span>
+            <span> مدينة الورد</span>
           </div>
         </div>
       </div>
 
-      {/* ===================== ORIGINS ===================== */}
-      <div className="section origins">
+      {/* ===================== TODAY'S PICKS ===================== */}
+      <div className="section today">
         <div className="wrap">
-          <div className="origins-head">
+          <div className="today-head">
             <div data-reveal>
-              <div className="section-kicker">01 — ORIGINS</div>
-              <h2>من أين تأتي قهوتنا</h2>
+              <div className="section-kicker">01 — TODAY</div>
+              <h2>خيارات تريس اليوم</h2>
             </div>
             <p data-reveal data-reveal-delay="80">
-              نختار الأصول بعناية ونحمّصها على دفعات صغيرة عشان تطلع إيحاءاتها
-              بوضوح. لكل أصل شخصيّته، وهذه ثلاثتنا.
+              مختارات اليوم من المنيو — توقيعنا، حليبنا، وماتشانا. كل الأسعار بالريال السعودي.
             </p>
           </div>
 
-          <div className="origins-grid">
-            {ORIGINS.map((o, i) => (
-              <div
-                key={o.id}
-                className="origin-card no-shadow"
+          <div className="today-grid">
+            {FEATURED.map(({ item, cat }, i) => (
+              <Link
+                key={item.id}
+                href={`/menu/${cat.id}`}
+                className="today-card"
                 data-reveal
                 data-reveal-delay={i * 100}
               >
-                <div className="origin-num">{`0${i + 1}`}</div>
-                <div className="origin-body">
-                  {o.emblem && (
-                    <span className={`origin-emblem origin-emblem-${o.emblemFit ?? "cover"}`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={o.emblem} alt={o.en ?? o.ar} />
+                <span className="today-media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/assets/items/${item.id}.webp`} alt={item.ar} loading="lazy" />
+                  {item.badge && <span className="today-badge">{item.badge}</span>}
+                </span>
+                <span className="today-body">
+                  <span className="today-tag">{cat.ar}</span>
+                  <span className="today-name">{item.ar}</span>
+                  {item.en && (
+                    <span className="today-en" dir="ltr">
+                      {item.en}
                     </span>
                   )}
-                  <h3>{ORIGIN_TITLES[o.id ?? ""] ?? o.ar}</h3>
-                  {o.notes && o.notes.length > 0 && (
-                    <p className="origin-notes">
-                      <span className="origin-notes-lbl">الإيحاءات: </span>
-                      {o.notes.join("، ")}
-                    </p>
-                  )}
-                  {(o.variety || o.altitude || o.process) && (
-                    <dl className="origin-specs">
-                      {o.variety && (
-                        <div>
-                          <dt>السلالة</dt>
-                          <dd>{o.variety}</dd>
-                        </div>
-                      )}
-                      {o.altitude && (
-                        <div>
-                          <dt>الارتفاع</dt>
-                          <dd>{o.altitude}</dd>
-                        </div>
-                      )}
-                      {o.process && (
-                        <div>
-                          <dt>المعالجة</dt>
-                          <dd>{o.process}</dd>
-                        </div>
-                      )}
-                    </dl>
-                  )}
-                </div>
-              </div>
+                  <span className="today-price">
+                    <span className="num">{item.price}</span>
+                    <span className="cur">ر.س</span>
+                  </span>
+                </span>
+              </Link>
             ))}
           </div>
         </div>
@@ -227,22 +214,22 @@ export default function Home() {
               <div className="menu-kicker">02 — MENU</div>
               <h2>من المنيو</h2>
               <p>
-                منيو مختصر وواضح: قهوة، مشروبات، وحلا. إذا ودك بشي يحمل توقيعنا،
+                منيو مختصر وواضح: قهوة مختصة، مشاريب الحليب، ماتشا، وحلا. إذا ودك بشي يحمل توقيعنا،
                 ابدأ بهوت تريس.
               </p>
               <div className="signature">
                 <div className="signature-blob" />
                 <div className="signature-body">
-                  <div className="signature-label">توقيع تريس</div>
+                  <div className="signature-label">الاكثر مبيعا</div>
                   <div className="signature-row">
-                    <span className="signature-name">هوت تريس</span>
+                    <span className="signature-name">محصول تريس</span>
                     <span>
                       <span className="signature-price">19</span>{" "}
                       <span className="signature-cur">ر.س</span>
                     </span>
                   </div>
                   <p className="signature-desc">
-                    مشروب حار بتوقيع تريس، غني ومناسب لوقفة هادية.
+                   المشروب المميز من تريس
                   </p>
                 </div>
               </div>
@@ -303,32 +290,30 @@ export default function Home() {
           <div data-reveal>
             <div className="section-kicker">03 — STORY</div>
             <h2>
-              من الطائف،
+              في قلب
               <br />
-              مدينة الورد.
+              الطائف.
             </h2>
             <p className="lead">
-              تريس طالعة من الطائف، المدينة المعروفة بجوها، وردها، وقربها من
-              جبال الحجاز. من هنا أخذنا هدوء المكان وتفاصيله، وقدمنا قهوة مختصة
-              بثلاثة أصول.
+              حيث يلتقي عبق الورد بنسيم الجبال، بدأت فكرة تريس. الرقم 3 ليس مجرد
+              رقم، بل هو سرّ التجربة التي نؤمن بها.
             </p>
             <p className="sub">
-              اسمنا مستوحى من «ثلاثة»: ثلاثة أصول للقهوة، تجتمع في حكايةٍ واحدة.
-              نهتمّ بمصدر الحبوب، ودرجة التحميص، وطريقة التحضير، عشان يوصلك
-              فنجان واضح الطعم في مكان ترتاح له.
+              ثلاثة عناصر تصنع اللحظة المثالية: قهوة تُحضّر بإتقان، حلى يكمّل
+              المتعة، وأجواء تدعوك للبقاء.
             </p>
             <button type="button" className="btn-story" onClick={openStory}>اعرف قصتنا</button>
           </div>
           <div data-reveal data-reveal-delay="120" data-parallax="12">
             <div className="story-art">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src="/assets/building.png" 
-                alt="قصر شبرا" 
+              <img
+                src="/assets/story-cup.svg"
+                alt="فنجان تريس"
                 style={!isStoryOpen ? { viewTransitionName: "story-art-img" } : undefined}
               />
               <div className="story-caption">
-                قصر شبرا — المعلم الذي ألهم هويّتنا · الطائف 1905
+                ثلاثة عناصر تصنع اللحظة · قهوة، أجواء، وذكرى
               </div>
             </div>
           </div>
@@ -344,37 +329,37 @@ export default function Home() {
           
           <div className="story-expanded-hero">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-               src="/assets/building.png" 
-               alt="قصر شبرا" 
-               className="story-expanded-img" 
+            <img
+               src="/assets/story-cup.svg"
+               alt="فنجان تريس"
+               className="story-expanded-img"
             />
           </div>
           
           <div className="story-expanded-content wrap narrow">
              <h2>
-               من الطائف،<br />
-               مدينة الورد.
+               في قلب<br />
+               الطائف.
              </h2>
              <p>
-               تريس طالعة من الطائف، المدينة المعروفة بجوها، وردها، وقربها من
-               جبال الحجاز. من هنا أخذنا هدوء المكان وتفاصيله، وقدمنا قهوة مختصة
-               بثلاثة أصول.
+               في قلب الطائف… حيث يلتقي عبق الورد بنسيم الجبال، بدأت فكرة تريس.
+               الرقم 3 ليس مجرد رقم، بل هو سرّ التجربة التي نؤمن بها.
+             </p>
+             <ul className="story-elements">
+               <li>قهوة تُحضّر بإتقان</li>
+               <li>حلى يكمّل المتعة</li>
+               <li>أجواء تدعوك للبقاء</li>
+             </ul>
+             <p>
+               ومن هنا جاء اسم تريس TRES … لأننا نترك أثرًا جميلًا في كل زيارة،
+               ونؤمن أن أفضل الذكريات تبدأ بثلاثة أشياء بسيطة: كوب رائع، مكان
+               مريح، وشخص تحب أن تشاركه اللحظة.
+             </p>
+             <p className="story-signature">
+               تريس | حيث تلتقي القهوة والأجواء والذكريات.
              </p>
              <p>
-               اسمنا مستوحى من «ثلاثة»: ثلاثة أصول للقهوة، تجتمع في حكايةٍ واحدة.
-               نهتمّ بمصدر الحبوب، ودرجة التحميص، وطريقة التحضير، عشان يوصلك
-               فنجان واضح الطعم في مكان ترتاح له.
-             </p>
-             <p>
-               من 2019 وتريس تبني تجربتها حول فكرة بسيطة: ثلاثة أصول، تحميص
-               بدفعات صغيرة، وتحضير يحترم طابع كل محصول. نعرض الإيحاءات بوضوح
-               عشان تختار القهوة اللي تناسب ذوقك.
-             </p>
-             <p>
-               مزيج تريس يجمع إيحاءات فواكه استوائية، مانجو، عسل، وشوكولاتة.
-               وإذا ودك بطابع مختلف، الإثيوبي والكولومبي موجودين بخيارات حارة
-               وباردة حسب مزاجك.
+               من الطائف… نصنع أثرًا يبقى ❤️
              </p>
           </div>
         </div>,
@@ -385,11 +370,11 @@ export default function Home() {
       <div className="cta">
         <div className="cta-inner" data-reveal>
           <div>
-            <h2>جاهز لكوبك؟</h2>
-            <p>شوف المنيو واختر اللي يناسب مزاجك. قهوتك بنحضّرها على أصولها.</p>
+            <h2>عندك ملاحظة؟</h2>
+            <p>رأيك يهمنا. إذا واجهتك أي مشكلة أو عندك شكوى، عبّر لنا عنها ونوعدك نتابعها.</p>
           </div>
           <div className="cta-actions">
-            <Link href="/menu" className="btn btn-cta-primary">شوف المنيو</Link>
+            <Link href="/complaints" className="btn btn-cta-primary">قدّم شكوى</Link>
           </div>
         </div>
       </div>

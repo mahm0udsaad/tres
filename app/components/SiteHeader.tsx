@@ -8,6 +8,7 @@ const NAV: { href: string; label: string; soon?: boolean }[] = [
   { href: "/", label: "الرئيسية" },
   { href: "/menu", label: "المنيو" },
   { href: "/#story", label: "قصتنا" },
+  { href: "/complaints", label: "الشكاوى" },
 ];
 
 export default function SiteHeader() {
@@ -34,7 +35,7 @@ export default function SiteHeader() {
   return (
     <>
       <div className="announce">
-        يا هلا في تريس، قهوة مختصة بثلاثة أصول من الطائف
+        يا هلا في تريس، قهوة مختصة بثلاثة محاصيل من الطائف
       </div>
       <div ref={navRef} className="nav">
         <div className="nav-inner">

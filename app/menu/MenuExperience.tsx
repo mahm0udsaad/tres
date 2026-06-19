@@ -33,13 +33,20 @@ function pathForId(id: string | null): string {
  */
 function withTransition(update: () => void) {
   const doc = document as Document & {
-    startViewTransition?: (cb: () => void) => unknown;
+    startViewTransition?: (cb: () => void) => {
+      ready?: Promise<unknown>;
+      finished?: Promise<unknown>;
+    };
   };
   if (typeof doc.startViewTransition !== "function") {
     update();
     return;
   }
-  doc.startViewTransition(() => flushSync(update));
+  const t = doc.startViewTransition(() => flushSync(update));
+  // A transition interrupted by another (or by navigation) rejects these
+  // promises; swallow them so they don't surface as unhandled rejections.
+  t?.ready?.catch(() => {});
+  t?.finished?.catch(() => {});
 }
 
 function categoryImage(cat: Category): string | undefined {
@@ -231,7 +238,7 @@ export default function MenuExperience({
         <div className="menu-hero-inner">
           <div className="eyebrow">
             <span className="eyebrow-dot" />
-            قهوة مختصة · ثلاثة أصول
+            قهوه مختصه . تجربه مختلفه
           </div>
           <h1>المنيو</h1>
           <p>وش ودك اليوم؟ اختر القسم، وكل الأسعار بالريال السعودي.</p>

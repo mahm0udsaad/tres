@@ -41,7 +41,7 @@ export const CATEGORIES: Category[] = [
     no: "01",
     en: "SPECIALTY COFFEE",
     ar: "قهوة مختصة",
-    tagline: "ثلاثة أصول بطابع تريس",
+    tagline: "ثلاثة محاصيل بطابع تريس",
     glyph: "🫘",
     image: "/assets/menu/specialty.webp",
     items: [
@@ -89,8 +89,8 @@ export const CATEGORIES: Category[] = [
   {
     id: "coffee",
     no: "02",
-    en: "COFFEE",
-    ar: "قهوة",
+    en: "MILK DRINKS",
+    ar: "مشاريب الحليب",
     tagline: "إسبريسو، لاتيه، وخياراتك اليومية",
     glyph: "☕",
     image: "/assets/menu/coffee.webp",
@@ -120,8 +120,8 @@ export const CATEGORIES: Category[] = [
   {
     id: "drinks",
     no: "03",
-    en: "DRINKS",
-    ar: "مشروبات",
+    en: "MATCHA",
+    ar: "ماتشا",
     tagline: "ماتشا، كركديه، وخيارات منعشة",
     glyph: "🍵",
     image: "/assets/menu/drinks.webp",

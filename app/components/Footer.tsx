@@ -31,23 +31,24 @@ export default function Footer() {
         <div className="footer-cols">
           <div>
             <div className="footer-brand">
-              <Image 
-                src="/assets/logo/tres-mark-white.png" 
-                alt="TRES Logo" 
-                width={160} 
-                height={160} 
+              <Image
+                src="/assets/logo/tres-mark-white.png"
+                alt="TRES Logo"
+                width={160}
+                height={160}
+                loading="eager"
                 style={{ width: "160px", height: "auto" }}
               />
             </div>
             <p className="footer-about">
-              ثلاثة أصول، حكاية واحدة. قهوة مختصة من الطائف، نحمّصها بدفعات
+              ثلاثة محاصيل، حكاية واحدة. قهوة مختصة من الطائف، نحمّصها بدفعات
               صغيرة ونقدّمها بطعم واضح ومتوازن.
             </p>
           </div>
           <div className="footer-col">
             <div className="title">من الطائف</div>
             <div className="lines">
-              قهوة مختصة بثلاثة أصول
+              قهوة مختصة بثلاثة محاصيل
               <br />
               بطابع تريس الهادئ
             </div>

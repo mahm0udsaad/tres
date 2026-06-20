@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import ComplaintForm from "./ComplaintForm";
 
 export const metadata: Metadata = {
-  title: "قدّم شكوى — تريس",
+  title: "قدّم شكوى",
   description: "رأيك يهمنا. شاركنا أي ملاحظة أو شكوى وبنتابعها معك.",
+  alternates: { canonical: "/complaints" },
+  robots: { index: false, follow: true },
 };
 
 export default function ComplaintsPage() {

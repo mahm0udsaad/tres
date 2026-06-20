@@ -108,6 +108,92 @@ function ProductCard({
   );
 }
 
+/** Shared inner content (name, notes, origin spec sheet, price) for a
+ *  specialty card — used by both the flag-background origin cards and the
+ *  branded TRES card. */
+function SpecialtyContent({ it }: { it: Item }) {
+  return (
+    <div className="spec-content">
+      <div className="spec-head">
+        <h3 className="spec-name">{it.ar}</h3>
+        {it.badge && <span className="spec-badge">{it.badge}</span>}
+      </div>
+      {it.en && (
+        <span className="spec-en" dir="ltr">
+          {it.en}
+        </span>
+      )}
+      {it.notes && it.notes.length > 0 && (
+        <p className="spec-notes">
+          <span className="spec-notes-lbl">الإيحاءات: </span>
+          {it.notes.join("، ")}
+        </p>
+      )}
+      {(it.variety || it.altitude || it.process) && (
+        <dl className="spec-specs">
+          {it.variety && (
+            <div>
+              <dt>السلالة</dt>
+              <dd>{it.variety}</dd>
+            </div>
+          )}
+          {it.altitude && (
+            <div>
+              <dt>الارتفاع</dt>
+              <dd>{it.altitude}</dd>
+            </div>
+          )}
+          {it.process && (
+            <div>
+              <dt>المعالجة</dt>
+              <dd>{it.process}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+      <span className="spec-price">
+        <span className="num">{it.price}</span>
+        <span className="cur">ر.س</span>
+      </span>
+    </div>
+  );
+}
+
+/** Specialty-coffee card. Origins (Ethiopian/Colombian) show the country flag
+ *  as a full-bleed background; محصول تريس gets a branded layout with the TRES
+ *  mascot. */
+function SpecialtyCard({ it, index }: { it: Item; index: number }) {
+  const style = { animationDelay: `${Math.min(index, 12) * 60}ms` };
+
+  if (it.id === "tres-roastery") {
+    return (
+      <article className="spec-card spec-card--tres" style={style}>
+        <SpecialtyContent it={it} />
+        <div className="spec-tres-figure" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="spec-tres-mark" src="/assets/logo/tres-mark-white.png" alt="" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="spec-tres-mascot" src="/assets/mascot-sitting.png" alt="" />
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article className="spec-card spec-card--origin" style={style}>
+      {it.emblem && (
+        <span
+          className="spec-flag"
+          style={{ backgroundImage: `url(${it.emblem})` }}
+          aria-hidden="true"
+        />
+      )}
+      <span className="spec-flag-scrim" aria-hidden="true" />
+      <SpecialtyContent it={it} />
+    </article>
+  );
+}
+
 export default function MenuExperience({
   initialId,
   images = [],
@@ -202,16 +288,20 @@ export default function MenuExperience({
 
             {active.items.length > 0 ? (
               <>
-                <div className="product-grid">
-                  {active.items.map((it, i) => (
-                    <ProductCard
-                      key={i}
-                      it={it}
-                      glyph={active.glyph}
-                      index={i}
-                      hasPhoto={!!it.id && photoSet.has(it.id)}
-                    />
-                  ))}
+                <div className={"product-grid" + (active.id === "specialty" ? " spec-grid" : "")}>
+                  {active.items.map((it, i) =>
+                    active.id === "specialty" ? (
+                      <SpecialtyCard key={i} it={it} index={i} />
+                    ) : (
+                      <ProductCard
+                        key={i}
+                        it={it}
+                        glyph={active.glyph}
+                        index={i}
+                        hasPhoto={!!it.id && photoSet.has(it.id)}
+                      />
+                    ),
+                  )}
                 </div>
                 {active.note && <p className="menu-note">{active.note}</p>}
               </>

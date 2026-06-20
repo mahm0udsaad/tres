@@ -28,17 +28,26 @@ function withTransition(update: () => void) {
 const RING_TEXT =
   "THREE ORIGINS ✦ ONE STORY ✦ SPECIALTY COFFEE ✦ ROASTED IN TAIF ✦ EST. 2019 ✦ ";
 
-// "خيارات تريس اليوم" — today's featured picks, pulled from the menu data so
-// they stay in sync. Spread across the menu: signature coffee, a milk drink,
+// Pick items by id from the menu data so the homepage rows stay in sync with
+// the menu (returns each item with its parent category for the link + tag).
+function pickItems(ids: readonly string[]) {
+  return ids
+    .map((id) => {
+      for (const cat of CATEGORIES) {
+        const item = cat.items.find((i) => i.id === id);
+        if (item) return { item, cat };
+      }
+      return null;
+    })
+    .filter((f): f is NonNullable<typeof f> => Boolean(f));
+}
+
+// "خيارات تريس اليوم" — today's picks: signature coffee, a milk drink,
 // matcha, and a dessert.
-const FEATURED_IDS = ["hot-tres", "spanish-latte-iced", "matcha", "triple-chocolate"] as const;
-const FEATURED = FEATURED_IDS.map((id) => {
-  for (const cat of CATEGORIES) {
-    const item = cat.items.find((i) => i.id === id);
-    if (item) return { item, cat };
-  }
-  return null;
-}).filter((f): f is NonNullable<typeof f> => Boolean(f));
+const FEATURED = pickItems(["hot-tres", "spanish-latte-iced", "matcha", "triple-chocolate"]);
+
+// "الأكثر مبيعاً" — best sellers across the menu.
+const BESTSELLERS = pickItems(["cappuccino", "spanish-latte-hot", "matcha-foam", "raffaello-tres"]);
 
 function Ring() {
   const chars = Array.from(RING_TEXT);
@@ -174,6 +183,52 @@ export default function Home() {
 
           <div className="today-grid">
             {FEATURED.map(({ item, cat }, i) => (
+              <Link
+                key={item.id}
+                href={`/menu/${cat.id}`}
+                className="today-card"
+                data-reveal
+                data-reveal-delay={i * 100}
+              >
+                <span className="today-media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/assets/items/${item.id}.webp`} alt={item.ar} loading="lazy" />
+                  {item.badge && <span className="today-badge">{item.badge}</span>}
+                </span>
+                <span className="today-body">
+                  <span className="today-tag">{cat.ar}</span>
+                  <span className="today-name">{item.ar}</span>
+                  {item.en && (
+                    <span className="today-en" dir="ltr">
+                      {item.en}
+                    </span>
+                  )}
+                  <span className="today-price">
+                    <span className="num">{item.price}</span>
+                    <span className="cur">ر.س</span>
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ===================== BEST SELLERS ===================== */}
+      <div className="section today bestsellers">
+        <div className="wrap">
+          <div className="today-head">
+            <div data-reveal>
+              <div className="section-kicker">02 — BEST SELLERS</div>
+              <h2>الأكثر مبيعاً</h2>
+            </div>
+            <p data-reveal data-reveal-delay="80">
+              الأصناف اللي ما تخيب — اختيارات ضيوفنا الأكثر طلبًا. كل الأسعار بالريال السعودي.
+            </p>
+          </div>
+
+          <div className="today-grid">
+            {BESTSELLERS.map(({ item, cat }, i) => (
               <Link
                 key={item.id}
                 href={`/menu/${cat.id}`}

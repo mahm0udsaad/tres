@@ -15,9 +15,20 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { category } = await params;
   const cat = getCategory(category);
+  if (!cat) {
+    return { title: "المنيو", alternates: { canonical: "/menu" } };
+  }
+  const title = `${cat.ar} — المنيو`;
+  const description = `${cat.ar} في تريس — ${cat.tagline}. كل الأسعار بالريال السعودي.`;
   return {
-    title: cat ? `${cat.ar} — منيو تريس` : "المنيو — تريس",
-    description: cat ? `${cat.ar} — ${cat.tagline}. منيو تريس.` : undefined,
+    title,
+    description,
+    alternates: { canonical: `/menu/${cat.id}` },
+    openGraph: {
+      title: `${cat.ar} — منيو تريس`,
+      description,
+      url: `/menu/${cat.id}`,
+    },
   };
 }
 

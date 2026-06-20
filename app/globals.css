@@ -625,6 +625,11 @@ img {
 .today {
   background: var(--burgundy);
 }
+.today.bestsellers {
+  background: var(--burgundy-deep);
+  border-top: 1px solid rgba(239, 180, 162, 0.12);
+  padding-top: 84px;
+}
 .today-head {
   display: flex;
   align-items: flex-end;
@@ -1980,6 +1985,212 @@ img {
     margin-right: -20px;
     padding-left: 20px;
     padding-right: 20px;
+  }
+}
+
+/* ===================== SPECIALTY CARDS ===================== */
+.spec-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+@keyframes spec-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+.spec-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(239, 180, 162, 0.2);
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: var(--cream);
+  box-shadow: 0 24px 54px -34px rgba(0, 0, 0, 0.85);
+  animation: spec-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* --- origin cards: country flag as background --- */
+.spec-flag {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.spec-card--origin:hover .spec-flag {
+  transform: scale(1.08);
+}
+.spec-flag-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(40, 5, 14, 0.96) 0%,
+    rgba(40, 5, 14, 0.8) 32%,
+    rgba(40, 5, 14, 0.34) 64%,
+    rgba(40, 5, 14, 0.1) 100%
+  );
+}
+
+/* --- shared content --- */
+.spec-content {
+  position: relative;
+  z-index: 2;
+  padding: 26px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.spec-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.spec-name {
+  font-family: var(--font-display);
+  font-size: 27px;
+  margin: 0;
+  line-height: 1.1;
+  color: var(--cream);
+}
+.spec-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--burgundy);
+  background: var(--blush);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.spec-en {
+  font-family: var(--font-latin);
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--blush);
+  opacity: 0.9;
+  margin-top: -4px;
+}
+.spec-notes {
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: var(--rose);
+  margin: 4px 0 0;
+}
+.spec-notes-lbl {
+  color: var(--blush);
+  font-weight: 600;
+}
+.spec-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 6px 0 0;
+}
+.spec-specs > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.spec-specs dt {
+  font-size: 11px;
+  color: var(--blush);
+  opacity: 0.75;
+}
+.spec-specs dd {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--cream);
+}
+.spec-price {
+  margin-top: 12px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  background: rgba(247, 240, 234, 0.1);
+  border: 1px solid rgba(239, 180, 162, 0.3);
+  padding: 7px 14px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+.spec-price .num {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--cream);
+}
+.spec-price .cur {
+  font-size: 12.5px;
+  color: var(--rose);
+}
+
+/* --- branded محصول تريس card --- */
+.spec-card--tres {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 300px;
+  background:
+    radial-gradient(120% 150% at 100% 0%, rgba(239, 180, 162, 0.2), transparent 55%),
+    linear-gradient(135deg, var(--burgundy) 0%, var(--burgundy-deep) 100%);
+}
+.spec-card--tres .spec-content {
+  flex: 1;
+  justify-content: center;
+  padding: 32px clamp(24px, 4vw, 44px);
+}
+.spec-card--tres .spec-name {
+  font-size: clamp(28px, 4vw, 38px);
+}
+.spec-tres-figure {
+  position: relative;
+  flex: 0 0 42%;
+  max-width: 360px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+.spec-tres-mark {
+  position: absolute;
+  top: 22px;
+  inset-inline-end: 24px;
+  width: 60px;
+  height: auto;
+  opacity: 0.45;
+}
+.spec-tres-mascot {
+  width: auto;
+  height: 88%;
+  max-height: 270px;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.4));
+}
+@media (max-width: 760px) {
+  .spec-grid {
+    grid-template-columns: 1fr;
+  }
+  .spec-card--tres {
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .spec-card--tres .spec-content {
+    order: 2;
+  }
+  .spec-tres-figure {
+    order: 1;
+    flex-basis: auto;
+    max-width: none;
+    width: 100%;
+    min-height: 200px;
+    padding-top: 24px;
+  }
+  .spec-tres-mascot {
+    height: auto;
+    max-height: 200px;
   }
 }
 

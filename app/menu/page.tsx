@@ -3,8 +3,15 @@ import MenuExperience from "./MenuExperience";
 import { availableItemImages } from "../lib/itemImages";
 
 export const metadata: Metadata = {
-  title: "المنيو — تريس",
-  description: "شوف منيو تريس: القهوة المختصة، مشاريب الحليب، الماتشا والحلا. كل الأسعار بالريال السعودي.",
+  title: "المنيو",
+  description:
+    "شوف منيو تريس: القهوة المختصة، مشاريب الحليب، الماتشا والحلا. كل الأسعار بالريال السعودي.",
+  alternates: { canonical: "/menu" },
+  openGraph: {
+    title: "المنيو — تريس",
+    description: "شوف منيو تريس: القهوة المختصة، مشاريب الحليب، الماتشا والحلا.",
+    url: "/menu",
+  },
 };
 
 export default function MenuPage() {

@@ -76,12 +76,6 @@ export const metadata: Metadata = {
     title: `${SITE.name} — ${SITE.tagline}`,
     description: SITE.description,
   },
-  icons: {
-    icon: [
-      { url: "/assets/logo/tres-badge-burgundy.png", type: "image/png" },
-    ],
-    apple: [{ url: "/assets/logo/tres-badge-burgundy.png" }],
-  },
   robots: {
     index: true,
     follow: true,

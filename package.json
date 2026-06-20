@@ -23,6 +23,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "png-to-ico": "^3.0.1",
     "typescript": "^5"
   }
 }

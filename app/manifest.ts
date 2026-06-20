@@ -13,11 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#f7f0ea",
     theme_color: "#700d28",
     icons: [
-      {
-        src: "/assets/logo/tres-badge-burgundy.png",
-        sizes: "any",
-        type: "image/png",
-      },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
   };
 }

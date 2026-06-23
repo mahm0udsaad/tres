@@ -132,8 +132,6 @@ export default async function RootLayout({
   // header/footer there.
   const pathname = (await headers()).get("x-pathname") ?? "";
   const isAdmin = pathname.startsWith("/admin");
-  // Loyalty mascot is a menu-only flourish: /menu and /menu/[category].
-  const isMenu = pathname === "/menu" || pathname.startsWith("/menu/");
   const settings = isAdmin ? null : await getPublicSettings();
   const announcement = settings?.announcementActive ? settings.announcement ?? undefined : undefined;
 
@@ -154,7 +152,7 @@ export default async function RootLayout({
         {!isAdmin && <SiteHeader announcement={announcement} />}
         {children}
         {!isAdmin && <Footer />}
-        {isMenu && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} />}
+        {!isAdmin && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} />}
       </body>
     </html>
   );

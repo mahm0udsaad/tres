@@ -18,6 +18,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 // ── editable content (Arabic) ─────────────────────────────────────────────────
@@ -60,6 +61,11 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const revealedRef = useRef(false);
 
+  // Show only on the menu and its sub-pages. usePathname updates on client
+  // navigation, so it works whether the visitor lands directly or navigates in.
+  const pathname = usePathname();
+  const onMenu = !!pathname && (pathname === "/menu" || pathname.startsWith("/menu/"));
+
   // Run the peek → wave → settled choreography (or a plain fade for reduced motion).
   const reveal = useCallback(() => {
     if (revealedRef.current) return;
@@ -77,10 +83,13 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
 
   const timersRef = useRef<number[]>([]);
 
-  // Decide WHEN to reveal: dwell timer OR scroll-intent, whichever first.
+  // Mount flag (avoids SSR/portal mismatch).
+  useEffect(() => setMounted(true), []);
+
+  // Decide WHEN to reveal — only on menu pages, and only once the visitor shows
+  // intent: dwell timer OR scroll past a threshold, whichever comes first.
   useEffect(() => {
-    setMounted(true);
-    if (typeof window === "undefined") return;
+    if (!onMenu || typeof window === "undefined") return;
     try {
       if (localStorage.getItem(STORAGE_KEY)) return; // dismissed this visit
     } catch {}
@@ -101,7 +110,7 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
       timersRef.current.forEach(clearTimeout);
       timersRef.current = [];
     };
-  }, [reveal]);
+  }, [onMenu, reveal]);
 
   // Modal: scroll-lock, focus the close button, ESC to dismiss.
   useEffect(() => {
@@ -127,7 +136,7 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
     } catch {}
   };
 
-  if (!mounted) return null;
+  if (!mounted || !onMenu) return null;
 
   const interactive = state !== "hidden";
 

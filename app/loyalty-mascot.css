@@ -13,7 +13,7 @@
 
 .lm-stage {
   position: fixed;
-  inset-inline-start: 16px;
+  left: 16px;
   bottom: 16px;
   z-index: 95;
   width: 156px;
@@ -36,7 +36,7 @@
    with a soft inner bevel, a vertical seam and a blush knob — not a flat box. */
 .lm-door {
   position: absolute;
-  inset-inline-start: 0;
+  left: 0;
   bottom: 0;
   width: 138px;
   height: 70px;
@@ -83,15 +83,19 @@
 .lm-door-knob {
   position: absolute;
   top: 50%;
-  inset-inline-end: 14px;
-  width: 7px;
-  height: 7px;
-  margin-top: -3.5px;
+  left: 50%;
+  z-index: 2;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: var(--blush);
+  background:
+    url("/assets/logo/tres-badge-grey.png") center / 42px 42px no-repeat,
+    rgb(var(--cream-rgb) / 0.94);
   box-shadow:
-    0 0 0 3px rgb(var(--blush-rgb) / 0.22),
-    0 1px 2px rgba(0, 0, 0, 0.3);
+    0 0 0 1px rgb(var(--cream-rgb) / 0.38),
+    0 7px 16px -7px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 /* ── mascot ──────────────────────────────────────────────────────────────────
@@ -99,7 +103,7 @@
    soft tilt + bob (no emoji), then settles into a quiet idle. */
 .lm-figure {
   position: absolute;
-  inset-inline-start: 18px;
+  left: 18px;
   bottom: 4px;
   width: 108px;
   height: 174px;
@@ -167,42 +171,49 @@
   }
 }
 
-/* ── thought bubble ──────────────────────────────────────────────────────────
-   Rises only at "settled". Clear hierarchy: title → offer → cup track → CTA. */
-.lm-bubble {
+/* ── offer card ──────────────────────────────────────────────────────────────
+   The card and its close control share one shell, so the close action remains
+   visually attached to the surface at every viewport size. */
+.lm-card-shell {
   position: absolute;
-  inset-inline-start: 2px;
+  left: 2px;
   bottom: 168px;
-  width: 244px;
-  max-width: 78vw;
+  width: 278px;
+  max-width: calc(100vw - 28px);
   z-index: 4;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  text-align: start;
-  padding: 14px 16px 13px;
-  border: 0;
-  cursor: pointer;
-  pointer-events: none;
-  font-family: inherit;
-  color: var(--ink);
-  background: linear-gradient(180deg, #fffaf6 0%, var(--cream) 100%);
-  border-radius: 20px 20px 20px 6px;
-  box-shadow:
-    0 24px 48px -20px rgb(var(--ink-rgb) / 0.55),
-    0 4px 12px -6px rgb(var(--burgundy-rgb) / 0.18),
-    inset 0 0 0 1px rgb(var(--burgundy-rgb) / 0.08);
   opacity: 0;
-  transform: scale(0.78) translateY(10px);
+  pointer-events: none;
+  transform: scale(0.88) translateY(12px);
   transform-origin: 8% 100%;
   transition:
-    opacity 0.32s ease,
+    opacity 0.28s ease,
     transform 0.45s var(--lm-ease);
 }
-.lm-stage[data-state="settled"] .lm-bubble {
+.lm-stage[data-state="settled"] .lm-card-shell {
   opacity: 1;
   transform: scale(1) translateY(0);
   pointer-events: auto;
+}
+.lm-bubble {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  text-align: start;
+  padding: 18px;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 14% 10%, rgb(var(--blush-rgb) / 0.12), transparent 32%),
+    linear-gradient(180deg, #fffdf9 0%, var(--cream) 100%);
+  border-radius: 24px 24px 24px 8px;
+  box-shadow:
+    0 24px 52px -20px rgb(var(--ink-rgb) / 0.5),
+    0 5px 14px -8px rgb(var(--burgundy-rgb) / 0.2),
+    inset 0 0 0 1px rgb(var(--burgundy-rgb) / 0.09);
 }
 .lm-bubble:focus-visible {
   outline: 3px solid var(--burgundy);
@@ -212,13 +223,14 @@
   font-family: var(--font-display), sans-serif;
   font-weight: 700;
   color: var(--burgundy);
-  font-size: 16px;
+  font-size: 17px;
   letter-spacing: 0.2px;
   line-height: 1.2;
+  padding-inline-start: 32px;
 }
 .lm-bubble-offer {
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.5;
   color: #4a2a23;
 }
 .lm-bubble-offer b {
@@ -226,26 +238,33 @@
   font-weight: 700;
 }
 .lm-bubble-cta {
-  align-self: flex-start;
-  margin-top: 3px;
+  min-height: 44px;
+  width: 100%;
   background: var(--burgundy);
   color: #fff;
   font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 6px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 10px 16px;
   border-radius: 999px;
-  box-shadow: 0 4px 10px -4px rgb(var(--burgundy-rgb) / 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 18px -10px rgb(var(--burgundy-rgb) / 0.75);
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 .lm-bubble:hover .lm-bubble-cta {
   background: var(--burgundy-deep);
+  transform: translateY(-1px);
 }
 
 /* thought-bubble tail: three shrinking puffs toward the mascot */
 .lm-bubble-tail {
   position: absolute;
   bottom: -7px;
-  inset-inline-start: 22px;
+  left: 22px;
 }
 .lm-bubble-tail i {
   position: absolute;
@@ -260,41 +279,37 @@
   width: 14px;
   height: 14px;
   bottom: 0;
-  inset-inline-start: 0;
+  left: 0;
 }
 .lm-bubble-tail i:nth-child(2) {
   width: 9px;
   height: 9px;
   bottom: -9px;
-  inset-inline-start: -8px;
+  left: -8px;
 }
 .lm-bubble-tail i:nth-child(3) {
   width: 5px;
   height: 5px;
   bottom: -18px;
-  inset-inline-start: -14px;
+  left: -14px;
 }
 
 /* ── dismiss ─────────────────────────────────────────────────────────────────*/
 .lm-dismiss {
   position: absolute;
-  top: -8px;
-  inset-inline-start: -8px;
-  width: 26px;
-  height: 26px;
+  top: 10px;
+  left: 10px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 0;
-  background: #fff;
+  background: rgb(var(--burgundy-rgb) / 0.07);
   color: var(--burgundy);
   display: grid;
   place-items: center;
   cursor: pointer;
   padding: 0;
   z-index: 6;
-  pointer-events: auto;
-  box-shadow:
-    0 4px 10px -3px rgb(var(--ink-rgb) / 0.45),
-    inset 0 0 0 1px rgb(var(--burgundy-rgb) / 0.14);
   transition: transform 0.18s ease, background 0.18s ease;
 }
 .lm-dismiss:hover {
@@ -309,16 +324,22 @@
 /* ── crafted cup progression (buy 5, 6th free) ──────────────────────────────── */
 .lm-track {
   display: flex;
-  align-items: flex-end;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   direction: ltr; /* slots read left→right regardless of RTL context */
-  margin-top: 2px;
+  min-height: 42px;
+  margin: 1px 0 2px;
+  padding: 10px 12px;
+  background: rgb(var(--burgundy-rgb) / 0.055);
+  border: 1px solid rgb(var(--burgundy-rgb) / 0.07);
+  border-radius: 14px;
 }
 /* a coffee cup drawn with CSS: tapered body + handle */
 .lm-cup {
   position: relative;
-  width: 15px;
-  height: 17px;
+  width: 14px;
+  height: 16px;
   border-radius: 3px 3px 6px 6px;
   background: linear-gradient(180deg, var(--burgundy) 0%, var(--burgundy-deep) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -328,9 +349,9 @@
   content: "";
   position: absolute;
   top: 3px;
-  inset-inline-end: -5px;
-  width: 6px;
-  height: 8px;
+  inset-inline-end: -4px;
+  width: 5px;
+  height: 7px;
   border: 2px solid var(--burgundy);
   border-inline-start: 0;
   border-radius: 0 6px 6px 0;
@@ -349,7 +370,7 @@
 /* the free sixth: blush-filled, lifted, with a small gift/sparkle badge */
 .lm-cup-free {
   background: linear-gradient(180deg, var(--blush) 0%, var(--blush-deep) 100%);
-  transform: translateY(-3px) scale(1.08);
+  transform: translateY(-2px) scale(1.12);
   box-shadow:
     0 4px 10px -3px rgb(var(--burgundy-rgb) / 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -378,6 +399,7 @@
   gap: 9px;
   justify-content: center;
   margin: 18px 0 16px;
+  background: rgb(var(--burgundy-rgb) / 0.05);
 }
 .lm-track-lg .lm-cup {
   width: 24px;
@@ -524,12 +546,12 @@
 /* ── small screens (375px-first) ───────────────────────────────────────────── */
 @media (max-width: 460px) {
   .lm-stage {
-    inset-inline-start: 12px;
+    left: 12px;
     bottom: 12px;
     width: 150px;
   }
-  .lm-bubble {
-    width: 222px;
+  .lm-card-shell {
+    width: min(272px, calc(100vw - 24px));
   }
 }
 
@@ -538,7 +560,7 @@
   .lm-stage,
   .lm-door,
   .lm-figure,
-  .lm-bubble {
+  .lm-card-shell {
     transition: opacity 0.3s ease !important;
     animation: none !important;
   }
@@ -549,7 +571,7 @@
   .lm-figure {
     transform: translateY(18px) !important;
   }
-  .lm-bubble {
+  .lm-card-shell {
     transform: none !important;
   }
   .lm-stage[data-state="hidden"] .lm-figure {

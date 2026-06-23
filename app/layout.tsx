@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { IBM_Plex_Sans_Arabic, Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import "./summer-theme.css";
 import "./loyalty-mascot.css";
 import SiteHeader from "./components/SiteHeader";
 import Footer from "./components/Footer";

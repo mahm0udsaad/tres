@@ -21,13 +21,9 @@ export default function SiteHeader({ announcement }: { announcement?: string }) 
     const onScroll = () => {
       const nav = navRef.current;
       if (!nav) return;
-      if (window.scrollY > 20) {
-        nav.style.background = "rgba(90,10,32,.92)";
-        nav.style.boxShadow = "0 10px 30px -18px rgba(0,0,0,.6)";
-      } else {
-        nav.style.background = "rgba(112,13,40,.72)";
-        nav.style.boxShadow = "none";
-      }
+      // Toggle a state attribute and let CSS pick the colours, so each theme
+      // (classic / summer) styles the scrolled nav from its own stylesheet.
+      nav.dataset.scrolled = window.scrollY > 20 ? "true" : "false";
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();

@@ -27,13 +27,19 @@ export async function POST(request: Request) {
   }
 
   const message = String(body.message ?? "").trim();
+  const contact = String(body.contact ?? "").trim();
+
+  if (!contact) {
+    return NextResponse.json({ ok: false, error: "phone required" }, { status: 422 });
+  }
+
   if (!message) {
     return NextResponse.json({ ok: false, error: "message required" }, { status: 422 });
   }
 
   const record = {
     name: String(body.name ?? "").trim() || null,
-    contact: String(body.contact ?? "").trim() || null,
+    contact,
     type: String(body.type ?? "other").trim(),
     message,
   };

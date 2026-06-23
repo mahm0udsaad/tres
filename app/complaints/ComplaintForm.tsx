@@ -22,6 +22,11 @@ export default function ComplaintForm() {
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
 
+    if (!String(data.contact ?? "").trim()) {
+      setError("اكتب رقم الجوال من فضلك.");
+      return;
+    }
+
     if (!String(data.message ?? "").trim()) {
       setError("اكتب لنا تفاصيل الشكوى من فضلك.");
       return;
@@ -49,8 +54,8 @@ export default function ComplaintForm() {
         <div className="complaint-done-mark">✓</div>
         <h2>وصلتنا شكواك</h2>
         <p>
-          شكرًا لأنك أخذت وقتك تكلّمنا. بنطّلع عليها ونتابعها، وإذا تركت لنا وسيلة
-          تواصل بنرجع لك.
+          شكرًا لأنك أخذت وقتك تكلّمنا. بنطّلع عليها ونتابعها، وبنرجع لك على رقم
+          الجوال المسجل.
         </p>
         <div className="complaint-done-actions">
           <button type="button" className="btn btn-cta-primary" onClick={() => setStatus("idle")}>
@@ -72,13 +77,15 @@ export default function ComplaintForm() {
       </div>
 
       <div className="complaint-field">
-        <label htmlFor="contact">وسيلة التواصل</label>
+        <label htmlFor="contact">رقم الجوال</label>
         <input
           id="contact"
           name="contact"
-          type="text"
-          inputMode="text"
-          placeholder="جوال أو إيميل عشان نرجع لك (اختياري)"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          required
+          placeholder="رقم الجوال عشان نرجع لك"
         />
       </div>
 

@@ -1,0 +1,1417 @@
+/* =================================================================
+   TRES — SUMMER skin ("حلّي صيفك")
+   A full light/beach re-skin, activated from the control panel via
+   <html data-theme="summer">. Everything here is scoped under that
+   attribute, so the default "classic" coffee identity is untouched.
+
+   Palette comes straight off the brand sheet: warm cream + sand base,
+   wine ink, powder-blue accents, with the retro wave pattern and the
+   shell / beach motifs layered in.
+   ================================================================= */
+
+:root[data-theme="summer"] {
+  /* summer design tokens */
+  --s-bg: #f6efe2; /* page */
+  --s-bg-2: #efe3d0; /* alternating section */
+  --s-surface: #fffdf8; /* cards */
+  --s-wine: #6e1d33;
+  --s-wine-deep: #58162a;
+  --s-blue: #9fbdd8;
+  --s-blue-deep: #79a4c8;
+  --s-sand: #d9c6ad;
+  --s-ink: #43282b; /* body copy */
+  --s-muted: #8d7a72; /* muted copy */
+  --s-line: rgb(110 29 51 / 0.14);
+  --s-waves: url("/assets/summer/waves.svg");
+
+  /* ── safety-net: remap the base tokens so any surface not explicitly
+     restyled below still lands in the light palette instead of going dark ── */
+  --burgundy: #ece0cd;
+  --burgundy-deep: #e4d6bf;
+  --burgundy-darkest: #6e1d33; /* kept dark: footer / scrims anchor */
+  --blush: #9fbdd8;
+  --blush-deep: #79a4c8;
+  --cream: #6e1d33; /* most --cream usages are TEXT → wine */
+  --rose: #8d7a72;
+  --grey: #b6a596;
+  --ink: #43282b;
+
+  --burgundy-rgb: 236 224 205;
+  --burgundy-deep-rgb: 228 214 191;
+  --burgundy-darkest-rgb: 110 29 51;
+  --blush-rgb: 159 189 216;
+  --cream-rgb: 110 29 51;
+  --rose-rgb: 141 122 114;
+  --ink-rgb: 67 40 43;
+}
+
+/* ===================== global surface ===================== */
+[data-theme="summer"] body,
+[data-theme="summer"] .page {
+  background: var(--s-bg);
+  color: var(--s-ink);
+}
+[data-theme="summer"] ::selection {
+  background: var(--s-blue);
+  color: var(--s-wine);
+}
+
+/* ===================== announcement ===================== */
+[data-theme="summer"] .announce {
+  background: var(--s-blue);
+  color: var(--s-wine);
+}
+
+/* ===================== nav ===================== */
+[data-theme="summer"] .nav {
+  background: rgb(246 239 226 / 0.82);
+  border-bottom: 1px solid var(--s-line);
+}
+[data-theme="summer"] .nav[data-scrolled="true"] {
+  background: rgb(246 239 226 / 0.94);
+  box-shadow: 0 10px 30px -18px rgb(110 29 51 / 0.22);
+}
+[data-theme="summer"] .logo-ar,
+[data-theme="summer"] .nav-links {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .logo-en {
+  color: var(--s-blue-deep);
+}
+[data-theme="summer"] .btn-blush {
+  background: var(--s-wine);
+  color: #fff;
+}
+[data-theme="summer"] .btn-blush:hover {
+  background: var(--s-wine-deep);
+}
+
+/* ===================== hero ===================== */
+[data-theme="summer"] .hero {
+  background: radial-gradient(120% 80% at 50% -10%, rgb(159 189 216 / 0.35) 0%, rgb(159 189 216 / 0) 55%),
+    linear-gradient(180deg, var(--s-bg) 0%, var(--s-bg-2) 100%);
+  color: var(--s-ink);
+}
+/* wave band across the very top + bottom of the hero */
+[data-theme="summer"] .hero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
+  background: var(--s-waves) repeat-x bottom / auto 120px;
+  opacity: 0.9;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 70%);
+  mask-image: linear-gradient(180deg, transparent, #000 70%);
+  z-index: 1;
+}
+[data-theme="summer"] .hero-noise {
+  display: none;
+}
+[data-theme="summer"] .eyebrow {
+  color: var(--s-wine);
+  border-color: rgb(110 29 51 / 0.3);
+  background: rgb(255 255 255 / 0.4);
+}
+[data-theme="summer"] .eyebrow-dot {
+  background: var(--s-blue-deep);
+}
+[data-theme="summer"] .hero h1,
+[data-theme="summer"] .composition-lockup .ar {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .hero h1 .accent {
+  color: var(--s-blue-deep);
+}
+[data-theme="summer"] .hero-lede {
+  color: var(--s-ink);
+  opacity: 0.78;
+}
+[data-theme="summer"] .ring-letter > span,
+[data-theme="summer"] .composition-lockup .en {
+  color: var(--s-blue-deep);
+}
+[data-theme="summer"] .ring-dashed {
+  border-color: rgb(110 29 51 / 0.2);
+}
+[data-theme="summer"] .ring-glow {
+  background: radial-gradient(circle, rgb(159 189 216 / 0.35) 0%, rgb(159 189 216 / 0) 70%);
+}
+/* swap the coffee mascot for the shell brand mark */
+[data-theme="summer"] .mascot {
+  content: url("/assets/summer/shell-logo.png");
+  filter: drop-shadow(0 20px 24px rgb(110 29 51 / 0.22));
+}
+[data-theme="summer"] .btn-hero-primary {
+  background: var(--s-wine);
+  color: #fff;
+  box-shadow: 0 18px 38px -18px rgb(110 29 51 / 0.55);
+}
+[data-theme="summer"] .btn-hero-primary:hover {
+  background: var(--s-wine-deep);
+}
+[data-theme="summer"] .btn-hero-ghost {
+  border-color: rgb(110 29 51 / 0.35);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .btn-hero-ghost:hover {
+  border-color: var(--s-wine);
+  background: rgb(110 29 51 / 0.05);
+}
+[data-theme="summer"] .hero-meta {
+  color: var(--s-muted);
+}
+[data-theme="summer"] .hero-meta .sep {
+  background: var(--s-blue-deep);
+}
+
+/* ===================== sections (origins / today / story) ===================== */
+[data-theme="summer"] .origins,
+[data-theme="summer"] .today,
+[data-theme="summer"] .story {
+  background: var(--s-bg);
+  color: var(--s-ink);
+}
+[data-theme="summer"] .today.bestsellers {
+  background: var(--s-bg-2);
+  border-top: 1px solid var(--s-line);
+}
+[data-theme="summer"] .section-kicker,
+[data-theme="summer"] .today-tag,
+[data-theme="summer"] .origin-notes-lbl {
+  color: var(--s-blue-deep);
+}
+[data-theme="summer"] .origins-head h2,
+[data-theme="summer"] .today-head h2,
+[data-theme="summer"] .story h2,
+[data-theme="summer"] .today-name,
+[data-theme="summer"] .origin-card h3 {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .origins-head p,
+[data-theme="summer"] .today-head p,
+[data-theme="summer"] .story p,
+[data-theme="summer"] .origin-card p,
+[data-theme="summer"] .today-en {
+  color: var(--s-ink);
+  opacity: 0.72;
+}
+
+/* cards → light surface */
+[data-theme="summer"] .origin-card,
+[data-theme="summer"] .today-card {
+  background: var(--s-surface);
+  border: 1px solid var(--s-line);
+  box-shadow: 0 18px 40px -30px rgb(110 29 51 / 0.3);
+}
+[data-theme="summer"] .origin-card:hover,
+[data-theme="summer"] .today-card:hover {
+  border-color: rgb(110 29 51 / 0.3);
+  background: #fff;
+}
+[data-theme="summer"] .origin-card.accent {
+  background: var(--s-blue);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .origin-card.accent h3,
+[data-theme="summer"] .origin-card.accent p {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .origin-specs {
+  border-color: var(--s-line);
+  background: var(--s-line);
+}
+[data-theme="summer"] .origin-specs > div {
+  background: var(--s-surface);
+}
+[data-theme="summer"] .origin-specs dt,
+[data-theme="summer"] .spec-specs dt {
+  color: var(--s-blue-deep);
+}
+[data-theme="summer"] .origin-specs dd {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .tag {
+  color: var(--s-blue-deep);
+  border-color: rgb(121 164 200 / 0.5);
+}
+[data-theme="summer"] .today-price,
+[data-theme="summer"] .today-price .num {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .today-price .cur {
+  color: var(--s-muted);
+}
+[data-theme="summer"] .today-badge {
+  background: var(--s-wine);
+  color: #fff;
+}
+
+/* ===================== menu (landing cream block) ===================== */
+[data-theme="summer"] .menu {
+  background: var(--s-bg-2);
+  color: var(--s-ink);
+}
+[data-theme="summer"] .menu-kicker {
+  color: var(--s-blue-deep);
+  opacity: 1;
+}
+[data-theme="summer"] .menu-feature h2,
+[data-theme="summer"] .menu-item-name,
+[data-theme="summer"] .menu-price .num,
+[data-theme="summer"] .menu-cat {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .menu-feature > p {
+  color: var(--s-ink);
+}
+[data-theme="summer"] .signature {
+  background: var(--s-wine);
+  color: #fbeee9;
+}
+[data-theme="summer"] .signature-price {
+  color: var(--s-blue);
+}
+[data-theme="summer"] .btn-menu {
+  background: var(--s-wine);
+  color: #fff;
+}
+[data-theme="summer"] .btn-menu:hover {
+  background: var(--s-wine-deep);
+}
+[data-theme="summer"] .menu-badge {
+  color: var(--s-wine);
+  background: rgb(110 29 51 / 0.08);
+}
+
+/* menu landing tiles → light cards with wine ink */
+[data-theme="summer"] .tile {
+  color: var(--s-wine);
+  border: 1px solid var(--s-line);
+  background: var(--s-surface);
+}
+[data-theme="summer"] .tile:hover {
+  border-color: rgb(110 29 51 / 0.28);
+  box-shadow: 0 28px 48px -28px rgb(110 29 51 / 0.35);
+}
+[data-theme="summer"] .tile h3 {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .tile .tagline,
+[data-theme="summer"] .tile .tile-meta,
+[data-theme="summer"] .tile .tile-arrow {
+  color: var(--s-blue-deep);
+}
+[data-theme="summer"] .tile .tile-no {
+  color: rgb(110 29 51 / 0.08);
+}
+[data-theme="summer"] .tile.accent {
+  background: var(--s-blue);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .tile.accent .tagline,
+[data-theme="summer"] .tile.accent .tile-meta,
+[data-theme="summer"] .tile.accent .tile-arrow {
+  color: var(--s-wine);
+}
+/* photo tiles keep a dark scrim → text must stay light for legibility */
+[data-theme="summer"] .tile.has-img,
+[data-theme="summer"] .tile.has-img h3,
+[data-theme="summer"] .tile.has-img .tagline,
+[data-theme="summer"] .tile.has-img .tile-meta,
+[data-theme="summer"] .tile.has-img .tile-arrow {
+  color: #fbeee9;
+}
+[data-theme="summer"] .tile.has-img {
+  border-color: rgb(255 255 255 / 0.18);
+}
+
+/* ===================== story ===================== */
+[data-theme="summer"] .btn-story {
+  border-color: var(--s-wine);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .btn-story:hover {
+  background: var(--s-wine);
+  color: #fff;
+}
+[data-theme="summer"] .story-caption {
+  color: var(--s-blue-deep);
+}
+/* the line-art glyph was tinted blush via filter; retint to wine */
+[data-theme="summer"] .story-art img,
+[data-theme="summer"] .story-expanded-img {
+  filter: brightness(0) saturate(100%) invert(13%) sepia(38%) saturate(2600%) hue-rotate(316deg) brightness(70%);
+}
+
+/* ===================== CTA band ===================== */
+[data-theme="summer"] .cta {
+  background: var(--s-blue);
+  color: var(--s-wine);
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="summer"] .cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--s-waves) repeat top left / auto 220px;
+  opacity: 0.16;
+  pointer-events: none;
+}
+[data-theme="summer"] .cta-inner {
+  position: relative;
+}
+[data-theme="summer"] .cta h2,
+[data-theme="summer"] .cta p {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .btn-cta-primary {
+  background: var(--s-wine);
+  color: #fff;
+}
+[data-theme="summer"] .btn-cta-primary:hover {
+  background: var(--s-wine-deep);
+}
+[data-theme="summer"] .btn-cta-ghost {
+  border-color: var(--s-wine);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .btn-cta-ghost:hover {
+  background: var(--s-wine);
+  color: #fff;
+}
+
+/* ===================== footer (kept as a dark wine anchor) ===================== */
+[data-theme="summer"] .footer {
+  background: var(--s-wine);
+  color: #f3e7e4;
+  position: relative;
+}
+[data-theme="summer"] .footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--s-waves) repeat-x top / auto 56px;
+  opacity: 0.5;
+}
+[data-theme="summer"] .footer-brand .en,
+[data-theme="summer"] .footer-col .title {
+  color: var(--s-blue);
+}
+[data-theme="summer"] .newsletter button {
+  background: var(--s-blue);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .socials button:hover,
+[data-theme="summer"] .socials button:focus-visible {
+  background: var(--s-blue);
+  color: var(--s-wine);
+}
+
+/* ===================== menu experience (dark redesign) → light ===================== */
+[data-theme="summer"] .menu-page {
+  background: var(--s-bg);
+}
+[data-theme="summer"] .menu-page::before {
+  background: radial-gradient(120% 72% at 50% -8%, rgb(159 189 216 / 0.3) 0%, rgb(159 189 216 / 0) 55%),
+    var(--s-bg);
+}
+[data-theme="summer"] .menu-body {
+  color: var(--s-ink);
+}
+[data-theme="summer"] .menu-hero h1,
+[data-theme="summer"] .cat-ar,
+[data-theme="summer"] .product-name {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .menu-hero p,
+[data-theme="summer"] .cat-hero p {
+  color: var(--s-ink);
+  opacity: 0.78;
+}
+[data-theme="summer"] .chip {
+  color: var(--s-blue-deep);
+  border-color: rgb(121 164 200 / 0.55);
+}
+[data-theme="summer"] .chip:hover {
+  background: var(--s-wine);
+  color: #fff;
+}
+[data-theme="summer"] .cat-strip {
+  background: rgb(246 239 226 / 0.85);
+  border-bottom: 1px solid var(--s-line);
+}
+[data-theme="summer"] .cat-pill {
+  border-color: rgb(121 164 200 / 0.5);
+  background: var(--s-surface);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .cat-pill[data-active="true"] {
+  background: var(--s-wine);
+  color: #fff;
+  border-color: var(--s-wine);
+}
+[data-theme="summer"] .product-card {
+  background: var(--s-surface);
+  border: 1px solid var(--s-line);
+  box-shadow: 0 18px 40px -30px rgb(110 29 51 / 0.28);
+}
+[data-theme="summer"] .product-card:hover {
+  border-color: rgb(110 29 51 / 0.28);
+  background: #fff;
+}
+[data-theme="summer"] .product-price .num,
+[data-theme="summer"] .cat-ar {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .product-price .cur,
+[data-theme="summer"] .product-en,
+[data-theme="summer"] .product-desc {
+  color: var(--s-muted);
+}
+[data-theme="summer"] .product-badge {
+  background: var(--s-wine);
+  color: #fff;
+}
+[data-theme="summer"] .menu-feature-card {
+  background: var(--s-wine);
+  color: #fbeee9;
+}
+[data-theme="summer"] .cat-en,
+[data-theme="summer"] .cat-hero-label {
+  color: var(--s-blue-deep);
+}
+
+/* ===================== complaints page ===================== */
+[data-theme="summer"] .complaints-page {
+  background: var(--s-bg);
+  color: var(--s-ink);
+}
+[data-theme="summer"] .complaints-hero h1 {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .complaints-hero p {
+  color: var(--s-ink);
+  opacity: 0.8;
+}
+[data-theme="summer"] .complaint-form,
+[data-theme="summer"] .complaint-done {
+  background: var(--s-surface);
+  border: 1px solid var(--s-line);
+}
+[data-theme="summer"] .complaint-field label {
+  color: var(--s-blue-deep);
+}
+[data-theme="summer"] .complaint-field input,
+[data-theme="summer"] .complaint-field select,
+[data-theme="summer"] .complaint-field textarea {
+  color: var(--s-ink);
+  background: #fff;
+  border: 1px solid var(--s-line);
+}
+[data-theme="summer"] .complaint-field input::placeholder,
+[data-theme="summer"] .complaint-field textarea::placeholder {
+  color: var(--s-muted);
+}
+[data-theme="summer"] .complaint-done h2 {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .complaint-done-mark {
+  background: var(--s-wine);
+  color: #fff;
+}
+
+/* ===================== decorative beach stickers ===================== */
+[data-theme="summer"] .origins,
+[data-theme="summer"] .today,
+[data-theme="summer"] .cta,
+[data-theme="summer"] .menu-hero {
+  position: relative;
+}
+[data-theme="summer"] .origins-head,
+[data-theme="summer"] .today-head {
+  position: relative;
+}
+/* sun by the origins heading */
+[data-theme="summer"] .origins-head::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  inset-inline-start: 0;
+  width: 88px;
+  height: 88px;
+  background: url("/assets/summer/sun.png") no-repeat center / contain;
+  opacity: 0.9;
+  pointer-events: none;
+}
+/* starfish accent on the bestsellers heading */
+[data-theme="summer"] .today.bestsellers .today-head::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  inset-inline-start: 0;
+  width: 78px;
+  height: 78px;
+  background: url("/assets/summer/starfish-cutout.png") no-repeat center / contain;
+  pointer-events: none;
+}
+/* sunglasses in the CTA corner */
+[data-theme="summer"] .cta-inner::after {
+  content: "";
+  position: absolute;
+  bottom: -18px;
+  inset-inline-end: 24px;
+  width: 120px;
+  height: 78px;
+  background: url("/assets/summer/sunglasses-cutout.png") no-repeat center / contain;
+  opacity: 0.95;
+  pointer-events: none;
+}
+@media (max-width: 760px) {
+  [data-theme="summer"] .origins-head::after,
+  [data-theme="summer"] .today.bestsellers .today-head::after,
+  [data-theme="summer"] .cta-inner::after {
+    display: none;
+  }
+}
+
+/* =================================================================
+   PREMIUM SUMMER FINISH
+   A restrained layer of paper, tide and beach ephemera. The powder
+   blue remains decorative; --s-blue-ink is the accessible text tone.
+   ================================================================= */
+:root[data-theme="summer"] {
+  --s-blue-ink: #477ba6;
+  --s-muted-ink: #705f59;
+  --s-paper:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  --s-shadow: 0 24px 55px -34px rgb(88 22 42 / 0.42);
+  --s-shadow-hover: 0 32px 65px -34px rgb(88 22 42 / 0.54);
+  --s-highlight: inset 0 1px 0 rgb(255 255 255 / 0.92);
+}
+
+/* depth and texture */
+[data-theme="summer"] body,
+[data-theme="summer"] .page,
+[data-theme="summer"] .menu-page {
+  background:
+    var(--s-paper),
+    radial-gradient(80% 42% at 92% 8%, rgb(159 189 216 / 0.18), transparent 68%),
+    radial-gradient(70% 34% at 8% 44%, rgb(217 198 173 / 0.22), transparent 72%),
+    var(--s-bg);
+  background-blend-mode: soft-light, normal, normal, normal;
+}
+[data-theme="summer"] .today,
+[data-theme="summer"] .story,
+[data-theme="summer"] .menu-body,
+[data-theme="summer"] .complaints-body {
+  background-image:
+    var(--s-paper),
+    linear-gradient(135deg, rgb(255 255 255 / 0.18), transparent 38%);
+  background-blend-mode: soft-light, normal;
+}
+[data-theme="summer"] .today.bestsellers,
+[data-theme="summer"] .menu {
+  background:
+    var(--s-paper),
+    radial-gradient(72% 58% at 12% 12%, rgb(255 253 248 / 0.72), transparent 68%),
+    linear-gradient(145deg, #f1e6d4 0%, var(--s-bg-2) 58%, #eadcc6 100%);
+  background-blend-mode: soft-light, normal, normal;
+}
+
+/* crisp, wine-tinted card depth */
+[data-theme="summer"] .origin-card,
+[data-theme="summer"] .today-card,
+[data-theme="summer"] .product-card,
+[data-theme="summer"] .complaint-form,
+[data-theme="summer"] .complaint-done {
+  box-shadow: var(--s-highlight), var(--s-shadow);
+}
+[data-theme="summer"] .origin-card:hover,
+[data-theme="summer"] .today-card:hover,
+[data-theme="summer"] .product-card:hover {
+  box-shadow: var(--s-highlight), var(--s-shadow-hover);
+}
+[data-theme="summer"] .origin-card,
+[data-theme="summer"] .today-card,
+[data-theme="summer"] .product-card,
+[data-theme="summer"] .tile {
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    border-color 200ms ease,
+    box-shadow 220ms ease,
+    background-color 200ms ease;
+}
+[data-theme="summer"] .origin-card:hover,
+[data-theme="summer"] .today-card:hover,
+[data-theme="summer"] .product-card:hover {
+  transform: translateY(-5px);
+}
+
+/* hero: a central brand moment with a deeper two-layer tide */
+[data-theme="summer"] .hero {
+  min-height: min(920px, 94vh);
+  padding-block: 48px 132px;
+  isolation: isolate;
+  background:
+    var(--s-paper),
+    radial-gradient(54% 42% at 50% 28%, rgb(255 253 248 / 0.9), transparent 72%),
+    radial-gradient(34% 28% at 16% 24%, rgb(159 189 216 / 0.3), transparent 70%),
+    radial-gradient(32% 26% at 86% 34%, rgb(217 198 173 / 0.38), transparent 72%),
+    linear-gradient(180deg, #f9f3e8 0%, var(--s-bg) 52%, #eadcc7 100%);
+  background-blend-mode: soft-light, normal, normal, normal, normal;
+}
+[data-theme="summer"] .hero::before {
+  height: 166px;
+  opacity: 0.96;
+  background-size: auto 154px;
+  background-position: 0 18px;
+  filter: saturate(0.92) contrast(1.03);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 38%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 38%);
+}
+[data-theme="summer"] .hero::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 132px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.3;
+  background: var(--s-waves) repeat-x 110px 0 / auto 118px;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: linear-gradient(180deg, transparent 2%, #000 58%);
+  mask-image: linear-gradient(180deg, transparent 2%, #000 58%);
+  animation: summer-wave-drift 16s linear infinite;
+}
+[data-theme="summer"] .hero-inner::before,
+[data-theme="summer"] .hero-inner::after,
+[data-theme="summer"] .composition::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  display: block;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  filter: drop-shadow(0 16px 18px rgb(88 22 42 / 0.16));
+}
+[data-theme="summer"] .hero-inner::before {
+  width: clamp(112px, 12vw, 168px);
+  aspect-ratio: 1.2;
+  inset-inline-start: clamp(-38px, 2vw, 20px);
+  top: 12%;
+  background-image: url("/assets/summer/sun.png");
+  transform: rotate(-8deg);
+  animation: summer-drift-a 8s ease-in-out infinite;
+}
+[data-theme="summer"] .hero-inner::after {
+  width: clamp(92px, 10vw, 138px);
+  aspect-ratio: 1.05;
+  inset-inline-end: clamp(-26px, 3vw, 38px);
+  top: 42%;
+  background-image: url("/assets/summer/starfish-cutout.png");
+  transform: rotate(12deg);
+  animation: summer-drift-b 10s ease-in-out infinite;
+}
+[data-theme="summer"] .composition::after {
+  width: clamp(94px, 10vw, 132px);
+  aspect-ratio: 1;
+  inset-inline-end: -18%;
+  bottom: 2%;
+  background-image: url("/assets/summer/shell-pearl-tres.png");
+  transform: rotate(8deg);
+  animation: summer-drift-c 9s ease-in-out infinite;
+}
+[data-theme="summer"] .mascot {
+  animation: summer-shell-sway 6.5s ease-in-out infinite;
+  transform-origin: 50% 84%;
+  filter: drop-shadow(0 24px 26px rgb(88 22 42 / 0.2));
+}
+[data-theme="summer"] .composition {
+  margin-block: 0 18px;
+}
+[data-theme="summer"] .ring-dashed {
+  border-style: solid;
+  border-color: rgb(110 29 51 / 0.14);
+  box-shadow:
+    0 0 0 9px rgb(255 253 248 / 0.28),
+    inset 0 0 0 1px rgb(255 255 255 / 0.55);
+}
+[data-theme="summer"] .eyebrow {
+  color: var(--s-wine);
+  border-color: rgb(110 29 51 / 0.2);
+  background: rgb(255 253 248 / 0.72);
+  box-shadow: inset 0 1px 0 #fff, 0 10px 28px -22px rgb(88 22 42 / 0.5);
+  backdrop-filter: blur(8px);
+}
+
+/* accessible accent typography and recurring summer signature */
+[data-theme="summer"] .section-kicker,
+[data-theme="summer"] .menu-kicker,
+[data-theme="summer"] .today-tag,
+[data-theme="summer"] .origin-notes-lbl,
+[data-theme="summer"] .cat-en,
+[data-theme="summer"] .cat-hero-label,
+[data-theme="summer"] .product-en,
+[data-theme="summer"] .story-caption {
+  color: var(--s-blue-ink);
+  opacity: 1;
+}
+[data-theme="summer"] .section-kicker,
+[data-theme="summer"] .menu-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  padding-block-end: 10px;
+}
+[data-theme="summer"] .section-kicker::before,
+[data-theme="summer"] .menu-kicker::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 4px;
+  background:
+    radial-gradient(8px 4px at 8px 0, transparent 7px, var(--s-blue-ink) 7.5px, transparent 8.5px)
+    repeat-x 0 0 / 16px 4px;
+  opacity: 0.56;
+}
+[data-theme="summer"] .section-kicker::after,
+[data-theme="summer"] .menu-kicker::after {
+  content: "حلّي صيفك";
+  font-family: var(--font-body);
+  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--s-wine);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(159 189 216 / 0.28);
+}
+[data-theme="summer"] .origins-head p,
+[data-theme="summer"] .today-head p,
+[data-theme="summer"] .story p,
+[data-theme="summer"] .origin-card p,
+[data-theme="summer"] .today-en,
+[data-theme="summer"] .product-desc,
+[data-theme="summer"] .product-price .cur {
+  color: var(--s-muted-ink);
+  opacity: 1;
+}
+
+/* photo tiles: pale frame, image-first body, cream information chips */
+[data-theme="summer"] .tile.has-img {
+  color: var(--s-wine);
+  padding: 34px 36px 32px;
+  border: 7px solid var(--s-surface);
+  background: var(--s-blue);
+  box-shadow:
+    inset 0 0 0 1px rgb(110 29 51 / 0.12),
+    inset 0 1px 0 #fff,
+    var(--s-shadow);
+}
+[data-theme="summer"] .tile.has-img:hover {
+  border-color: #fffdf8;
+  box-shadow:
+    inset 0 0 0 1px rgb(110 29 51 / 0.16),
+    inset 0 1px 0 #fff,
+    var(--s-shadow-hover);
+}
+[data-theme="summer"] .tile.has-img .tile-media-wrap {
+  inset: 3px;
+  border-radius: 16px;
+}
+[data-theme="summer"] .tile.has-img .tile-scrim {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 43%,
+    rgb(67 40 43 / 0.08) 58%,
+    rgb(67 40 43 / 0.52) 100%
+  );
+}
+[data-theme="summer"] .tile.has-img .tile-no {
+  top: 15px;
+  inset-inline-start: 17px;
+  inset-inline-end: auto;
+  font-size: 58px;
+  color: rgb(255 253 248 / 0.72);
+  text-shadow: 0 2px 12px rgb(67 40 43 / 0.22);
+}
+[data-theme="summer"] .tile.has-img h3,
+[data-theme="summer"] .tile.has-img .tagline,
+[data-theme="summer"] .tile.has-img .tile-meta,
+[data-theme="summer"] .tile.has-img .tile-arrow {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .tile.has-img h3 {
+  display: table;
+  margin-block: 12px 7px;
+  padding: 5px 13px 7px;
+  border-radius: 11px;
+  background: rgb(255 253 248 / 0.94);
+  box-shadow: inset 0 1px 0 #fff, 0 8px 20px -14px rgb(67 40 43 / 0.7);
+  backdrop-filter: blur(8px);
+}
+[data-theme="summer"] .tile.has-img .tagline {
+  display: table;
+  width: fit-content;
+  margin-block-end: 9px;
+  padding: 4px 10px;
+  border-radius: 9px;
+  background: rgb(255 253 248 / 0.88);
+  font-weight: 600;
+  opacity: 1;
+  backdrop-filter: blur(8px);
+}
+[data-theme="summer"] .tile.has-img .tile-meta {
+  width: fit-content;
+  min-width: 122px;
+  gap: 18px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgb(255 253 248 / 0.92);
+  backdrop-filter: blur(8px);
+}
+
+/* quiet section ornaments and tide separators */
+[data-theme="summer"] .menu,
+[data-theme="summer"] .story,
+[data-theme="summer"] .menu-body {
+  position: relative;
+}
+[data-theme="summer"] .menu::after {
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 154px;
+  inset-inline-end: 3%;
+  bottom: 4%;
+  z-index: 0;
+  pointer-events: none;
+  background: url("/assets/summer/deckchair.png") no-repeat center / contain;
+  opacity: 0.18;
+  transform: rotate(-5deg);
+}
+[data-theme="summer"] .story::after {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 118px;
+  inset-inline-start: 2%;
+  top: 14%;
+  z-index: 0;
+  pointer-events: none;
+  background: url("/assets/summer/rackets.png") no-repeat center / contain;
+  opacity: 0.12;
+  transform: rotate(8deg);
+}
+[data-theme="summer"] .menu-hero::after {
+  content: "";
+  position: absolute;
+  width: 164px;
+  height: 132px;
+  inset-inline-start: 5%;
+  bottom: -10px;
+  z-index: 1;
+  pointer-events: none;
+  background: url("/assets/summer/deckchair.png") no-repeat center / contain;
+  opacity: 0.3;
+}
+[data-theme="summer"] .today::before,
+[data-theme="summer"] .menu::before,
+[data-theme="summer"] .story::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: -8px;
+  height: 16px;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(16px 8px at 16px 8px, transparent 14px, rgb(121 164 200 / 0.46) 15px, transparent 16px)
+    repeat-x 0 0 / 32px 16px;
+}
+[data-theme="summer"] .menu-grid,
+[data-theme="summer"] .story-grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* CTA movement, interaction and focus */
+[data-theme="summer"] .cta {
+  background:
+    linear-gradient(110deg, rgb(255 255 255 / 0.18), transparent 34%),
+    var(--s-blue);
+  border-block: 1px solid rgb(110 29 51 / 0.12);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+[data-theme="summer"] .cta::before {
+  opacity: 0.14;
+  animation: summer-cta-shimmer 13s linear infinite;
+}
+[data-theme="summer"] .btn,
+[data-theme="summer"] .btn-story,
+[data-theme="summer"] .cat-pill,
+[data-theme="summer"] .chip {
+  transition:
+    transform 180ms ease,
+    box-shadow 200ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+[data-theme="summer"] .btn:hover,
+[data-theme="summer"] .btn-story:hover,
+[data-theme="summer"] .cat-pill:hover,
+[data-theme="summer"] .chip:hover {
+  box-shadow: 0 16px 26px -18px rgb(88 22 42 / 0.68);
+  transform: translateY(-2px);
+}
+[data-theme="summer"] .btn:active,
+[data-theme="summer"] .btn-story:active,
+[data-theme="summer"] .cat-pill:active,
+[data-theme="summer"] .chip:active,
+[data-theme="summer"] .tile:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: none;
+}
+[data-theme="summer"] :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--s-blue-ink);
+  outline-offset: 3px;
+}
+
+/* category pages retain white text where copy sits directly on photography */
+[data-theme="summer"] .cat-hero h1,
+[data-theme="summer"] .cat-hero p {
+  color: #fffdf8;
+  opacity: 1;
+  text-shadow: 0 2px 18px rgb(58 14 29 / 0.72);
+}
+[data-theme="summer"] .cat-hero .cat-hero-label,
+[data-theme="summer"] .cat-hero .back-link {
+  color: #fffdf8;
+  opacity: 0.92;
+}
+[data-theme="summer"] .cat-hero-scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(58 14 29 / 0.08) 0%,
+    rgb(58 14 29 / 0.38) 54%,
+    rgb(58 14 29 / 0.78) 100%
+  );
+}
+
+@keyframes summer-wave-drift {
+  to { background-position-x: 370px; }
+}
+@keyframes summer-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-8deg); }
+  50% { transform: translate3d(8px, -13px, 0) rotate(-3deg); }
+}
+@keyframes summer-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(12deg); }
+  50% { transform: translate3d(-10px, -9px, 0) rotate(5deg); }
+}
+@keyframes summer-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(8deg); }
+  50% { transform: translate3d(-5px, -12px, 0) rotate(13deg); }
+}
+@keyframes summer-shell-sway {
+  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+  50% { transform: translateY(-10px) rotate(1.8deg); }
+}
+@keyframes summer-cta-shimmer {
+  to { background-position: 520px 0; }
+}
+
+@media (max-width: 760px) {
+  [data-theme="summer"] .hero {
+    min-height: auto;
+    padding-block: 38px 104px;
+  }
+  [data-theme="summer"] .hero::before {
+    height: 112px;
+    background-size: auto 102px;
+  }
+  [data-theme="summer"] .hero::after {
+    height: 90px;
+    background-size: auto 82px;
+  }
+  [data-theme="summer"] .hero-inner::before,
+  [data-theme="summer"] .hero-inner::after,
+  [data-theme="summer"] .composition::after,
+  [data-theme="summer"] .menu::after,
+  [data-theme="summer"] .story::after,
+  [data-theme="summer"] .menu-hero::after {
+    display: none;
+  }
+  [data-theme="summer"] .section-kicker::after,
+  [data-theme="summer"] .menu-kicker::after {
+    font-size: 10px;
+    padding-inline: 8px;
+  }
+  [data-theme="summer"] .tile.has-img {
+    min-height: 228px;
+    padding: 30px 26px 26px;
+    border-width: 5px;
+  }
+  [data-theme="summer"] .tile.has-img h3 {
+    font-size: 25px;
+  }
+  [data-theme="summer"] .tile.has-img .tagline {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="summer"] .hero::after,
+  [data-theme="summer"] .hero-inner::before,
+  [data-theme="summer"] .hero-inner::after,
+  [data-theme="summer"] .composition::after,
+  [data-theme="summer"] .mascot,
+  [data-theme="summer"] .cta::before,
+  [data-theme="summer"] .ring,
+  [data-theme="summer"] .eyebrow-dot {
+    animation: none !important;
+  }
+  [data-theme="summer"] .tile-img,
+  [data-theme="summer"] .today-media img {
+    transition: none;
+  }
+}
+
+/* ===================== hero beach-symbol wallpaper ===================== */
+[data-theme="summer"] .hero-noise {
+  display: block;
+  inset: -70px;
+  z-index: 0;
+  opacity: 0.105;
+  background-color: transparent;
+  background-image: url("/assets/summer/symbol-pattern.png");
+  background-repeat: repeat;
+  background-size: 980px 653px;
+  background-position: center 24px;
+  mix-blend-mode: multiply;
+  filter: saturate(0.68) contrast(0.92);
+  -webkit-mask-image: radial-gradient(
+    ellipse 35% 43% at 50% 44%,
+    transparent 0 30%,
+    rgb(0 0 0 / 0.16) 48%,
+    #000 86%
+  );
+  mask-image: radial-gradient(
+    ellipse 35% 43% at 50% 44%,
+    transparent 0 30%,
+    rgb(0 0 0 / 0.16) 48%,
+    #000 86%
+  );
+}
+
+/* the wallpaper replaces the three isolated floating stickers */
+[data-theme="summer"] .hero-inner::before,
+[data-theme="summer"] .hero-inner::after,
+[data-theme="summer"] .composition::after {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  [data-theme="summer"] .hero-noise {
+    inset: -40px;
+    opacity: 0.07;
+    background-image: url("/assets/summer/symbol-pattern.png");
+    background-size: 590px 393px;
+    background-position: center 36px;
+    -webkit-mask-image: radial-gradient(
+      ellipse 60% 38% at 50% 38%,
+      transparent 0 38%,
+      rgb(0 0 0 / 0.26) 62%,
+      #000 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 60% 38% at 50% 38%,
+      transparent 0 38%,
+      rgb(0 0 0 / 0.26) 62%,
+      #000 100%
+    );
+  }
+}
+
+/* one broad shoreline replaces the dense, doubled retro wave strip */
+[data-theme="summer"] .hero::before {
+  inset-inline: 0;
+  bottom: 0;
+  height: 104px;
+  opacity: 1;
+  background: url("/assets/summer/hero-shoreline.svg") no-repeat center bottom / 100% 100%;
+  filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+[data-theme="summer"] .hero::after {
+  display: none;
+  animation: none;
+}
+[data-theme="summer"] .hero + .today::before {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  [data-theme="summer"] .hero::before {
+    height: 70px;
+    background-size: auto 70px;
+    background-position: center bottom;
+  }
+}
+
+/* ===================== composed feedback CTA =====================
+   Keep the wave language as an edge detail, not a competing wallpaper. */
+[data-theme="summer"] .cta {
+  padding: clamp(56px, 7vw, 96px) clamp(20px, 4vw, 48px);
+  background:
+    radial-gradient(circle at 12% 22%, rgb(159 189 216 / 0.18), transparent 24%),
+    radial-gradient(circle at 88% 78%, rgb(217 198 173 / 0.24), transparent 27%),
+    var(--s-bg);
+  border-block: 0;
+  box-shadow: none;
+}
+[data-theme="summer"] .cta::before {
+  inset: 0;
+  background: var(--s-paper);
+  background-size: 180px 180px;
+  opacity: 0.18;
+  animation: none;
+}
+[data-theme="summer"] .cta-inner {
+  isolation: isolate;
+  width: min(1180px, 100%);
+  min-height: 250px;
+  padding: clamp(48px, 5vw, 72px) clamp(34px, 6vw, 82px);
+  gap: 42px;
+  overflow: hidden;
+  border: 1px solid rgb(110 29 51 / 0.14);
+  border-radius: 34px;
+  background:
+    linear-gradient(118deg, rgb(255 255 255 / 0.32), transparent 46%),
+    var(--s-blue);
+  box-shadow:
+    0 34px 70px -42px rgb(88 22 42 / 0.58),
+    inset 0 1px 0 rgb(255 255 255 / 0.72);
+}
+[data-theme="summer"] .cta-inner::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  z-index: -1;
+  height: 66px;
+  background: url("/assets/summer/hero-shoreline.svg") no-repeat center bottom / 100% 100%;
+  opacity: 0.2;
+  pointer-events: none;
+}
+[data-theme="summer"] .cta-inner > div {
+  position: relative;
+  z-index: 1;
+}
+[data-theme="summer"] .cta-inner > div:first-child {
+  max-width: 680px;
+}
+[data-theme="summer"] .cta h2 {
+  font-size: clamp(38px, 4.7vw, 64px);
+  letter-spacing: -0.035em;
+}
+[data-theme="summer"] .cta p {
+  max-width: 620px;
+  color: var(--s-ink);
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.8;
+  opacity: 0.82;
+}
+[data-theme="summer"] .cta-actions {
+  padding-bottom: 36px;
+}
+[data-theme="summer"] .btn-cta-primary {
+  min-width: 164px;
+  justify-content: center;
+  box-shadow: 0 16px 28px -18px rgb(88 22 42 / 0.72);
+}
+[data-theme="summer"] .cta-inner::after {
+  bottom: 20px;
+  inset-inline-end: 54px;
+  width: 148px;
+  height: 60px;
+  opacity: 0.72;
+  transform: rotate(-4deg);
+}
+[data-theme="summer"] .footer {
+  border-top: 6px solid var(--s-blue-deep);
+}
+[data-theme="summer"] .footer::before {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  [data-theme="summer"] .cta {
+    padding: 48px 18px;
+  }
+  [data-theme="summer"] .cta-inner {
+    min-height: 0;
+    padding: 42px 28px 46px;
+    border-radius: 26px;
+    text-align: center;
+    justify-content: center;
+  }
+  [data-theme="summer"] .cta h2 {
+    font-size: clamp(36px, 12vw, 48px);
+  }
+  [data-theme="summer"] .cta p {
+    font-size: 15px;
+  }
+  [data-theme="summer"] .cta-actions {
+    width: 100%;
+    padding-bottom: 0;
+    justify-content: center;
+  }
+  [data-theme="summer"] .btn-cta-primary {
+    width: min(100%, 260px);
+  }
+  [data-theme="summer"] .cta-inner::before {
+    height: 42px;
+    background-size: auto 42px;
+  }
+}
+
+/* ===================== spec-cards (product cards on menu/home) ===================== */
+/* tres card: background remaps to light cream via --burgundy; wine text is fine */
+[data-theme="summer"] .spec-card--tres {
+  background:
+    radial-gradient(120% 150% at 100% 0%, rgb(159 189 216 / 0.2), transparent 55%),
+    linear-gradient(135deg, var(--s-surface) 0%, #f0e4cf 100%);
+}
+[data-theme="summer"] .spec-name,
+[data-theme="summer"] .spec-specs dd,
+[data-theme="summer"] .spec-price .num {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .spec-en,
+[data-theme="summer"] .spec-notes,
+[data-theme="summer"] .spec-price .cur {
+  color: var(--s-muted-ink);
+  opacity: 1;
+}
+[data-theme="summer"] .spec-notes-lbl,
+[data-theme="summer"] .spec-specs dt {
+  color: var(--s-blue-ink);
+  opacity: 1;
+}
+[data-theme="summer"] .spec-badge {
+  color: #fff;
+  background: var(--s-wine);
+}
+[data-theme="summer"] .spec-price {
+  background: rgb(110 29 51 / 0.07);
+  border-color: rgb(110 29 51 / 0.2);
+}
+
+/* origin cards: flag image + dark wine scrim → text must stay light */
+[data-theme="summer"] .spec-card--origin .spec-name,
+[data-theme="summer"] .spec-card--origin .spec-specs dd,
+[data-theme="summer"] .spec-card--origin .spec-price .num {
+  color: #fffdf8;
+}
+[data-theme="summer"] .spec-card--origin .spec-en,
+[data-theme="summer"] .spec-card--origin .spec-notes,
+[data-theme="summer"] .spec-card--origin .spec-price .cur {
+  color: rgb(255 253 248 / 0.78);
+  opacity: 1;
+}
+[data-theme="summer"] .spec-card--origin .spec-notes-lbl,
+[data-theme="summer"] .spec-card--origin .spec-specs dt {
+  color: var(--s-blue);
+  opacity: 0.9;
+}
+[data-theme="summer"] .spec-card--origin .spec-price {
+  background: rgb(255 253 248 / 0.12);
+  border-color: rgb(255 253 248 / 0.25);
+}
+
+/* ===================== loyalty mascot (menu pages) =====================
+   The bubble/modal pull their fill from `var(--cream)`, which the summer
+   safety-net remaps to wine — so without these overrides the loyalty card
+   renders dark-on-dark and looks like it never appeared. Re-skin it as a
+   light cream card with wine ink + powder-blue accents. */
+[data-theme="summer"] .lm-door {
+  background: linear-gradient(155deg, #8a2740 0%, var(--s-wine) 46%, var(--s-wine-deep) 100%);
+}
+[data-theme="summer"] .lm-bubble {
+  background: linear-gradient(180deg, #fffdf8 0%, #f4ead9 100%);
+  color: var(--s-ink);
+  box-shadow:
+    0 24px 48px -20px rgb(67 40 43 / 0.4),
+    0 4px 12px -6px rgb(110 29 51 / 0.16),
+    inset 0 0 0 1px rgb(110 29 51 / 0.1);
+}
+[data-theme="summer"] .lm-bubble-title {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .lm-bubble-offer b {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .lm-bubble-cta {
+  background: var(--s-wine);
+  color: #fff;
+}
+[data-theme="summer"] .lm-bubble:hover .lm-bubble-cta {
+  background: var(--s-wine-deep);
+}
+[data-theme="summer"] .lm-bubble-tail i {
+  background: #f4ead9;
+}
+[data-theme="summer"] .lm-dismiss {
+  color: var(--s-wine);
+}
+[data-theme="summer"] .lm-dismiss:hover {
+  background: var(--s-blue);
+}
+/* cups: wine bodies, powder-blue "free sixth" stays the highlight */
+[data-theme="summer"] .lm-cup {
+  background: linear-gradient(180deg, var(--s-wine) 0%, var(--s-wine-deep) 100%);
+}
+[data-theme="summer"] .lm-cup::before {
+  border-color: var(--s-wine);
+}
+[data-theme="summer"] .lm-cup-free::after,
+[data-theme="summer"] .lm-cup-free .lm-cup-gift {
+  background: var(--s-wine);
+}
+/* modal */
+[data-theme="summer"] .lm-modal {
+  background: linear-gradient(180deg, #fffdf8 0%, #f4ead9 60%);
+  color: var(--s-ink);
+  box-shadow:
+    0 40px 90px -24px rgb(67 40 43 / 0.5),
+    inset 0 0 0 1px rgb(110 29 51 / 0.1);
+}
+[data-theme="summer"] .lm-modal-x {
+  background: rgb(110 29 51 / 0.08);
+  color: var(--s-wine);
+}
+[data-theme="summer"] .lm-modal-x:hover {
+  background: rgb(110 29 51 / 0.16);
+}
+[data-theme="summer"] .lm-modal-title,
+[data-theme="summer"] .lm-modal-sub b {
+  color: var(--s-wine);
+}
+
+/* viewport meta colour stays wine; nothing else to do here. */

@@ -1,0 +1,85 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]: يا هلا في تريس، قهوة مختصة بثلاثة محاصيل من الطائف
+  - generic [ref=e4]:
+    - link "تريس TRES" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e6]: تريس
+      - generic [ref=e7]: TRES
+    - generic [ref=e8]:
+      - link "الرئيسية" [ref=e9] [cursor=pointer]:
+        - /url: /
+      - link "المنيو" [ref=e10] [cursor=pointer]:
+        - /url: /menu
+      - link "قصتنا" [ref=e11] [cursor=pointer]:
+        - /url: /#story
+      - link "الشكاوى" [ref=e12] [cursor=pointer]:
+        - /url: /complaints
+      - link "شوف المنيو" [ref=e13] [cursor=pointer]:
+        - /url: /menu
+  - generic [ref=e14]:
+    - generic [ref=e16]:
+      - generic [ref=e17]: قهوه مختصه . تجربه مختلفه
+      - heading "المنيو" [level=1] [ref=e19]
+      - paragraph [ref=e20]: وش ودك اليوم؟ اختر القسم، وكل الأسعار بالريال السعودي.
+    - generic [ref=e23]:
+      - button "01 قهوة مختصة ثلاثة محاصيل بطابع تريس 3 صنف ←" [ref=e24] [cursor=pointer]:
+        - generic [ref=e28]: "01"
+        - generic [ref=e29]:
+          - heading "قهوة مختصة" [level=3] [ref=e30]
+          - paragraph [ref=e31]: ثلاثة محاصيل بطابع تريس
+          - generic [ref=e32]:
+            - generic [ref=e33]: 3 صنف
+            - generic [ref=e34]: ←
+      - button "02 مشاريب الحليب إسبريسو، لاتيه، وخياراتك اليومية 11 صنف ←" [ref=e35] [cursor=pointer]:
+        - generic [ref=e39]: "02"
+        - generic [ref=e40]:
+          - heading "مشاريب الحليب" [level=3] [ref=e41]
+          - paragraph [ref=e42]: إسبريسو، لاتيه، وخياراتك اليومية
+          - generic [ref=e43]:
+            - generic [ref=e44]: 11 صنف
+            - generic [ref=e45]: ←
+      - button "03 ماتشا ماتشا، كركديه، وخيارات منعشة 3 صنف ←" [ref=e46] [cursor=pointer]:
+        - generic [ref=e50]: "03"
+        - generic [ref=e51]:
+          - heading "ماتشا" [level=3] [ref=e52]
+          - paragraph [ref=e53]: ماتشا، كركديه، وخيارات منعشة
+          - generic [ref=e54]:
+            - generic [ref=e55]: 3 صنف
+            - generic [ref=e56]: ←
+      - button "04 الحلا حلا يكمّل قهوتك 6 صنف ←" [ref=e57] [cursor=pointer]:
+        - generic [ref=e61]: "04"
+        - generic [ref=e62]:
+          - heading "الحلا" [level=3] [ref=e63]
+          - paragraph [ref=e64]: حلا يكمّل قهوتك
+          - generic [ref=e65]:
+            - generic [ref=e66]: 6 صنف
+            - generic [ref=e67]: ←
+  - generic [ref=e69]:
+    - generic [ref=e70]:
+      - generic [ref=e71]:
+        - img "TRES Logo" [ref=e73]
+        - paragraph [ref=e74]: ثلاثة محاصيل، حكاية واحدة. قهوة مختصة من الطائف، نحمّصها بدفعات صغيرة ونقدّمها بطعم واضح ومتوازن.
+      - generic [ref=e75]:
+        - generic [ref=e76]: من الطائف
+        - generic [ref=e77]:
+          - text: قهوة مختصة بثلاثة محاصيل
+          - text: بطابع تريس الهادئ
+      - generic [ref=e78]:
+        - generic [ref=e79]: ساعات العمل
+        - generic [ref=e80]:
+          - text: نحدّثها عبر حساباتنا
+          - text: تابع جديدنا هناك
+      - generic [ref=e81]:
+        - generic [ref=e82]: تابع جديدنا
+        - generic [ref=e83]:
+          - button "عرض رمز QR ورابط إنستغرام" [ref=e84] [cursor=pointer]:
+            - img [ref=e85]
+          - button "عرض رمز QR ورابط تيك توك" [ref=e87] [cursor=pointer]:
+            - img [ref=e88]
+          - button "عرض رمز QR ورابط سناب شات" [ref=e90] [cursor=pointer]:
+            - img [ref=e91]
+    - generic [ref=e93]:
+      - generic [ref=e94]: © 2026 تريس — جميع الحقوق محفوظة.
+      - generic [ref=e95]: THREE ORIGINS · ONE STORY
+  - button "Open Next.js Dev Tools" [ref=e101] [cursor=pointer]:
+    - img [ref=e102]

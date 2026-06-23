@@ -1,0 +1,120 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]: يا هلا في تريس، قهوة مختصة بثلاثة محاصيل من الطائف
+  - generic [ref=e4]:
+    - link "تريس TRES" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e6]: تريس
+      - generic [ref=e7]: TRES
+    - generic [ref=e8]:
+      - link "الرئيسية" [ref=e9] [cursor=pointer]:
+        - /url: /
+      - link "المنيو" [ref=e10] [cursor=pointer]:
+        - /url: /menu
+      - link "قصتنا" [ref=e11] [cursor=pointer]:
+        - /url: /#story
+      - link "الشكاوى" [ref=e12] [cursor=pointer]:
+        - /url: /complaints
+      - link "شوف المنيو" [ref=e13] [cursor=pointer]:
+        - /url: /menu
+  - generic [ref=e16]:
+    - generic [ref=e17]: قهوه مختصه . تجربه مختلفه
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e22]: T
+        - generic [ref=e24]: H
+        - generic [ref=e26]: R
+        - generic [ref=e28]: E
+        - generic [ref=e30]: E
+        - generic [ref=e33]: O
+        - generic [ref=e35]: R
+        - generic [ref=e37]: I
+        - generic [ref=e39]: G
+        - generic [ref=e41]: I
+        - generic [ref=e43]: "N"
+        - generic [ref=e45]: S
+        - generic [ref=e48]: ✦
+        - generic [ref=e51]: O
+        - generic [ref=e53]: "N"
+        - generic [ref=e55]: E
+        - generic [ref=e58]: S
+        - generic [ref=e60]: T
+        - generic [ref=e62]: O
+        - generic [ref=e64]: R
+        - generic [ref=e66]: "Y"
+        - generic [ref=e69]: ✦
+        - generic [ref=e72]: S
+        - generic [ref=e74]: P
+        - generic [ref=e76]: E
+        - generic [ref=e78]: C
+        - generic [ref=e80]: I
+        - generic [ref=e82]: A
+        - generic [ref=e84]: L
+        - generic [ref=e86]: T
+        - generic [ref=e88]: "Y"
+        - generic [ref=e91]: C
+        - generic [ref=e93]: O
+        - generic [ref=e95]: F
+        - generic [ref=e97]: F
+        - generic [ref=e99]: E
+        - generic [ref=e101]: E
+        - generic [ref=e104]: ✦
+        - generic [ref=e107]: R
+        - generic [ref=e109]: O
+        - generic [ref=e111]: A
+        - generic [ref=e113]: S
+        - generic [ref=e115]: T
+        - generic [ref=e117]: E
+        - generic [ref=e119]: D
+        - generic [ref=e122]: I
+        - generic [ref=e124]: "N"
+        - generic [ref=e127]: T
+        - generic [ref=e129]: A
+        - generic [ref=e131]: I
+        - generic [ref=e133]: F
+        - generic [ref=e136]: ✦
+        - generic [ref=e139]: E
+        - generic [ref=e141]: S
+        - generic [ref=e143]: T
+        - generic [ref=e145]: .
+        - generic [ref=e148]: "2"
+        - generic [ref=e150]: "0"
+        - generic [ref=e152]: "1"
+        - generic [ref=e154]: "9"
+        - generic [ref=e157]: ✦
+      - generic [ref=e161]:
+        - generic [ref=e162]:
+          - generic [ref=e163]: تريس
+          - generic [ref=e164]: TRES
+        - img "شخصية تريس" [ref=e165]
+    - heading "وقفة تستاهل كوب تريس." [level=1] [ref=e166]
+    - paragraph [ref=e167]: "نحمّص بدفعات صغيرة في الطائف، ونقدّم ثلاثة محاصيل: الإثيوبي، الكولومبي، ومزيج تريس. قهوة واضحة، موزونة، وقريبة من مزاجك."
+  - generic [ref=e183]:
+    - generic [ref=e184]:
+      - generic [ref=e185]:
+        - img "TRES Logo" [ref=e187]
+        - paragraph [ref=e188]: ثلاثة محاصيل، حكاية واحدة. قهوة مختصة من الطائف، نحمّصها بدفعات صغيرة ونقدّمها بطعم واضح ومتوازن.
+      - generic [ref=e189]:
+        - generic [ref=e190]: من الطائف
+        - generic [ref=e191]:
+          - text: قهوة مختصة بثلاثة محاصيل
+          - text: بطابع تريس الهادئ
+      - generic [ref=e192]:
+        - generic [ref=e193]: ساعات العمل
+        - generic [ref=e194]:
+          - text: نحدّثها عبر حساباتنا
+          - text: تابع جديدنا هناك
+      - generic [ref=e195]:
+        - generic [ref=e196]: تابع جديدنا
+        - generic [ref=e197]:
+          - button "عرض رمز QR ورابط إنستغرام" [ref=e198] [cursor=pointer]:
+            - img [ref=e199]
+          - button "عرض رمز QR ورابط تيك توك" [ref=e201] [cursor=pointer]:
+            - img [ref=e202]
+          - button "عرض رمز QR ورابط سناب شات" [ref=e204] [cursor=pointer]:
+            - img [ref=e205]
+    - generic [ref=e207]:
+      - generic [ref=e208]: © 2026 تريس — جميع الحقوق محفوظة.
+      - generic [ref=e209]: THREE ORIGINS · ONE STORY
+  - button "Open Next.js Dev Tools" [ref=e215] [cursor=pointer]:
+    - img [ref=e216]
+  - alert [ref=e219]

@@ -74,6 +74,7 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
   const [state, setState] = useState<State>("hidden");
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [bubbleDismissed, setBubbleDismissed] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const revealedRef = useRef(false);
 
@@ -139,8 +140,7 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
 
   const dismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setState("hidden");
-    rememberDismissed();
+    setBubbleDismissed(true);
   };
 
   if (!mounted || !onMenu) return null;
@@ -149,7 +149,7 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
 
   return (
     <>
-      <div className="lm-stage" data-state={state} aria-hidden={state === "hidden"}>
+      <div className="lm-stage" data-state={state} data-bubble-hidden={bubbleDismissed || undefined} aria-hidden={state === "hidden"}>
         {/* premium door panel the character hides behind */}
         <span className="lm-door" aria-hidden="true">
           <span className="lm-door-knob" />

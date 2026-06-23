@@ -408,10 +408,16 @@
   background: var(--s-blue);
   color: var(--s-wine);
 }
+[data-theme="summer"] .socials button {
+  background: rgb(243 231 228 / 0.08);
+  color: #f3e7e4;
+  border: 1px solid rgb(243 231 228 / 0.18);
+}
 [data-theme="summer"] .socials button:hover,
 [data-theme="summer"] .socials button:focus-visible {
   background: var(--s-blue);
   color: var(--s-wine);
+  border-color: var(--s-blue);
 }
 
 /* ===================== menu experience (dark redesign) → light ===================== */

@@ -194,6 +194,17 @@
   transform: scale(1) translateY(0);
   pointer-events: auto;
 }
+/* bubble dismissed: hidden until user hovers the character */
+.lm-stage[data-bubble-hidden] .lm-card-shell {
+  opacity: 0;
+  transform: scale(0.88) translateY(12px);
+  pointer-events: none;
+}
+.lm-stage[data-bubble-hidden]:hover .lm-card-shell {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
 .lm-bubble {
   position: relative;
   width: 100%;

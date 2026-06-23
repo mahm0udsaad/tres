@@ -1433,8 +1433,8 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: rgb(var(--cream-rgb) / 0.05);
   color: var(--cream);

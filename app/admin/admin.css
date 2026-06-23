@@ -196,7 +196,9 @@
 
 /* ===== pills / badges ===== */
 .a-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-.a-pill--badge { background: var(--blush-soft); color: var(--burgundy); }
+.a-pill--badge { background: var(--blush-soft); color: var(--burgundy); cursor: pointer; border: 1.5px solid transparent; transition: background 140ms, border-color 140ms; }
+.a-pill--badge:hover { border-color: var(--burgundy); }
+.a-pill--badge.a-pill--active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
 .a-pill--new { background: var(--burgundy); color: #fff; }
 .a-pill--read { background: var(--surface-2); color: var(--muted); }
 .a-pill--resolved { background: var(--green-soft); color: var(--green); }

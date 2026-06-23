@@ -11,7 +11,7 @@ const NAV: { href: string; label: string; soon?: boolean }[] = [
   { href: "/complaints", label: "الشكاوى" },
 ];
 
-const DEFAULT_ANNOUNCE = "يا هلا في تريس، قهوة مختصة بثلاثة محاصيل من الطائف";
+const DEFAULT_ANNOUNCE = "يا هلا في تريس";
 
 export default function SiteHeader({ announcement }: { announcement?: string }) {
   const navRef = useRef<HTMLDivElement>(null);

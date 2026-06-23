@@ -99,10 +99,13 @@ const TEMPLATE_HINT: Record<Template, string> = {
   dessert: "حلا — وصف وسعرات حرارية.",
 };
 
+const BADGE_PRESETS = ["حار / بارد", "حار", "بارد", "توقيع · حار", "جديدنا"];
+
 /* ── item add/edit sheet — fields adapt to the chosen category's template ── */
 function ItemSheet({ cats, defaultCat, item, onClose }: { cats: Cat[]; defaultCat: string; item: Itm | null; onClose: () => void }) {
   const [, start] = useTransition();
   const [catId, setCatId] = useState(item?.category_id ?? defaultCat);
+  const [badge, setBadge] = useState(item?.badge ?? "");
   const cat = cats.find((c) => c.id === catId) ?? cats[0];
   const template: Template = cat?.template ?? "simple";
 
@@ -132,7 +135,19 @@ function ItemSheet({ cats, defaultCat, item, onClose }: { cats: Cat[]; defaultCa
           </div>
           <div className="a-row-2">
             <div className="a-field"><label>السعر (ر.س)</label><input name="price" className="a-input" inputMode="decimal" defaultValue={item?.price ?? ""} /></div>
-            <div className="a-field"><label>شارة <span style={{ color: "var(--faint)", fontWeight: 400 }}>(اختياري)</span></label><input name="badge" className="a-input" placeholder="حار / بارد" defaultValue={item?.badge ?? ""} /></div>
+            <div className="a-field">
+                <label>شارة <span style={{ color: "var(--faint)", fontWeight: 400 }}>(اختياري)</span></label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                  {BADGE_PRESETS.map((p) => (
+                    <button
+                      key={p} type="button"
+                      className={"a-pill a-pill--badge" + (badge === p ? " a-pill--active" : "")}
+                      onClick={() => setBadge(badge === p ? "" : p)}
+                    >{p}</button>
+                  ))}
+                </div>
+                <input name="badge" className="a-input" placeholder="أو اكتب شارة مخصصة…" value={badge} onChange={(e) => setBadge(e.target.value)} />
+              </div>
           </div>
 
           {/* dessert-only */}

@@ -112,19 +112,14 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
     };
   }, [onMenu, reveal]);
 
-  // Modal: scroll-lock, focus the close button, ESC to dismiss.
+  // Modal: scroll-lock and focus the only control that closes it.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -201,12 +196,11 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
         createPortal(
           <div
             className="lm-overlay"
-            onClick={() => setOpen(false)}
             role="dialog"
             aria-modal="true"
             aria-label={TITLE}
           >
-            <div className="lm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="lm-modal">
               <button
                 ref={closeRef}
                 type="button"

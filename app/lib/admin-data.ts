@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "./supabase";
-import type { DbCategory, DbItem } from "./data";
+import { normalizeTheme, type DbCategory, type DbItem, type ThemeId } from "./data";
 
 export type AdminCategory = DbCategory;
 export type AdminItem = DbItem;
@@ -25,6 +25,7 @@ export type Settings = {
   instagram: string | null;
   tiktok: string | null;
   snapchat: string | null;
+  theme: ThemeId;
 };
 
 // ── reads ────────────────────────────────────────────────────────────────────
@@ -70,10 +71,11 @@ export async function listFeedback(status?: string): Promise<Feedback[]> {
 export async function getSettings(): Promise<Settings> {
   const sb = supabaseAdmin();
   const { data } = await sb.from("settings").select("*").eq("id", 1).single();
-  return (data ?? {
+  const base = (data ?? {
     id: 1, hours: [], announcement: null, announcement_active: false,
     phone: null, address: null, instagram: null, tiktok: null, snapchat: null,
-  }) as Settings;
+  }) as Omit<Settings, "theme"> & { theme?: unknown };
+  return { ...base, theme: normalizeTheme(base.theme) } as Settings;
 }
 
 // ── image upload ───────────────────────────────────────────────────────────

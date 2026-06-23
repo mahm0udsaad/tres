@@ -1,14 +1,14 @@
 import SettingsForm from "../../_components/SettingsForm";
-import { getSettings } from "../../../lib/admin-data";
+import { getSettings, type Settings } from "../../../lib/admin-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  let settings;
+  let settings: Settings;
   try {
     settings = await getSettings();
   } catch {
-    settings = { id: 1, hours: [], announcement: null, announcement_active: false, phone: null, address: null, instagram: null, tiktok: null, snapchat: null };
+    settings = { id: 1, hours: [], announcement: null, announcement_active: false, phone: null, address: null, instagram: null, tiktok: null, snapchat: null, theme: "classic" };
   }
   return (
     <>

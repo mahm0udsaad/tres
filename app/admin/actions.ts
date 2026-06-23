@@ -181,7 +181,8 @@ export async function saveSettings(form: FormData) {
     closed: closedSet.has(String(i)),
   }));
 
-  await sb.from("settings").update({
+  const theme = str(form.get("theme")) === "summer" ? "summer" : "classic";
+  const base = {
     announcement: str(form.get("announcement")),
     announcement_active: bool(form.get("announcement_active")),
     phone: str(form.get("phone")),
@@ -190,6 +191,10 @@ export async function saveSettings(form: FormData) {
     tiktok: str(form.get("tiktok")),
     snapchat: str(form.get("snapchat")),
     hours,
-  }).eq("id", 1);
+  };
+  // `theme` may not exist yet if the 0006 migration hasn't been applied — fall
+  // back to saving the rest so the panel never hard-fails on an older schema.
+  const { error } = await sb.from("settings").update({ ...base, theme }).eq("id", 1);
+  if (error) await sb.from("settings").update(base).eq("id", 1);
   refreshPublic();
 }

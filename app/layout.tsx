@@ -134,11 +134,13 @@ export default async function RootLayout({
   const isAdmin = pathname.startsWith("/admin");
   const settings = isAdmin ? null : await getPublicSettings();
   const announcement = settings?.announcementActive ? settings.announcement ?? undefined : undefined;
+  const theme = settings?.theme ?? "classic";
 
   return (
     <html
       lang="ar"
       dir="rtl"
+      data-theme={theme}
       data-scroll-behavior="smooth"
       className={`${ibmPlexArabic.variable} ${spaceGrotesk.variable} ${hnArabic.variable}`}
     >

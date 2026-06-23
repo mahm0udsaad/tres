@@ -132,6 +132,13 @@ export async function getMenuCategory(slug: string): Promise<Category | undefine
   return categories.find((c) => c.id === slug);
 }
 
+/** Visual identity the admin can switch from the control panel. */
+export type ThemeId = "classic" | "summer";
+export const THEMES: ThemeId[] = ["classic", "summer"];
+export function normalizeTheme(v: unknown): ThemeId {
+  return v === "summer" ? "summer" : "classic";
+}
+
 export type PublicSettings = {
   announcement: string | null;
   announcementActive: boolean;
@@ -140,6 +147,7 @@ export type PublicSettings = {
   snapchat: string | null;
   phone: string | null;
   address: string | null;
+  theme: ThemeId;
 };
 
 /** Public-facing store settings (anon read). Returns nulls when unconfigured
@@ -148,6 +156,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
   const empty: PublicSettings = {
     announcement: null, announcementActive: false,
     instagram: null, tiktok: null, snapchat: null, phone: null, address: null,
+    theme: "classic",
   };
   if (!supabaseConfigured) return empty;
   try {
@@ -161,6 +170,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       snapchat: data.snapchat ?? null,
       phone: data.phone ?? null,
       address: data.address ?? null,
+      theme: normalizeTheme(data.theme),
     };
   } catch {
     return empty;

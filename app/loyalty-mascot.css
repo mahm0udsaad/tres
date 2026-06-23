@@ -1,0 +1,562 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Loyalty mascot (menu pages only).
+
+   The character peeks from behind a premium door panel, gives a gentle wave
+   built into its own motion (no emoji), then a refined thought bubble rises
+   with the "buy 5, 6th free" offer rendered as a crafted cup progression.
+   Tapping opens a branded QR modal.
+
+   On-brand (burgundy / blush / cream), RTL-correct, mobile-first, with smooth
+   physical easing and a subtle idle once settled. Degrades to a plain fade
+   under prefers-reduced-motion. All classes scoped under .lm-*.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.lm-stage {
+  position: fixed;
+  inset-inline-start: 16px;
+  bottom: 16px;
+  z-index: 95;
+  width: 156px;
+  height: 184px;
+  pointer-events: none;
+  font-family: var(--font-body), system-ui, sans-serif;
+  --lm-ease: cubic-bezier(0.22, 1, 0.36, 1); /* gentle settle */
+  --lm-ease-soft: cubic-bezier(0.32, 0.72, 0.3, 1);
+}
+.lm-stage * {
+  box-sizing: border-box;
+}
+.lm-stage[data-state="hidden"] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ── door panel ──────────────────────────────────────────────────────────────
+   A slim, intentional standing panel (think a service counter / cabinet door)
+   with a soft inner bevel, a vertical seam and a blush knob — not a flat box. */
+.lm-door {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 138px;
+  height: 70px;
+  z-index: 3;
+  border-radius: 14px 14px 6px 6px;
+  background:
+    linear-gradient(155deg, #8a1933 0%, var(--burgundy) 42%, var(--burgundy-deep) 100%);
+  box-shadow:
+    0 18px 34px -16px rgba(35, 18, 15, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.28);
+  transform: translateY(8px) scaleY(0.96);
+  transform-origin: bottom;
+  opacity: 0;
+  transition:
+    transform 0.5s var(--lm-ease),
+    opacity 0.4s ease;
+}
+.lm-stage[data-state="peek"] .lm-door,
+.lm-stage[data-state="wave"] .lm-door,
+.lm-stage[data-state="settled"] .lm-door {
+  transform: translateY(0) scaleY(1);
+  opacity: 1;
+}
+/* recessed inner face + faint vertical seam */
+.lm-door::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 55%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.lm-door::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  inset-inline-end: 50%;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.07);
+}
+.lm-door-knob {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 14px;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--blush);
+  box-shadow:
+    0 0 0 3px rgba(239, 180, 162, 0.22),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ── mascot ──────────────────────────────────────────────────────────────────
+   Starts hidden behind the door, head rises first, then a built-in wave via a
+   soft tilt + bob (no emoji), then settles into a quiet idle. */
+.lm-figure {
+  position: absolute;
+  inset-inline-start: 18px;
+  bottom: 4px;
+  width: 108px;
+  height: 174px;
+  z-index: 2;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateY(146px);
+  transform-origin: 50% 100%;
+  transition: transform 0.7s var(--lm-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.lm-mascot {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 12px 18px rgba(35, 18, 15, 0.4));
+}
+.lm-figure:focus-visible {
+  outline: 3px solid var(--blush);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+/* head peeks above the door */
+.lm-stage[data-state="peek"] .lm-figure {
+  transform: translateY(40px) rotate(-3deg);
+}
+/* the wave: a couple of warm side-to-side tilts */
+.lm-stage[data-state="wave"] .lm-figure {
+  transform: translateY(24px);
+  animation: lm-wave 1.1s var(--lm-ease-soft);
+}
+@keyframes lm-wave {
+  0% {
+    transform: translateY(24px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(20px) rotate(-7deg);
+  }
+  55% {
+    transform: translateY(20px) rotate(6deg);
+  }
+  80% {
+    transform: translateY(22px) rotate(-3deg);
+  }
+  100% {
+    transform: translateY(22px) rotate(0deg);
+  }
+}
+/* settled: fully out, breathing idle */
+.lm-stage[data-state="settled"] .lm-figure {
+  transform: translateY(18px);
+  animation: lm-idle 4.2s ease-in-out 0.3s infinite;
+}
+@keyframes lm-idle {
+  0%,
+  100% {
+    transform: translateY(18px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(11px) rotate(-1.2deg);
+  }
+}
+
+/* ── thought bubble ──────────────────────────────────────────────────────────
+   Rises only at "settled". Clear hierarchy: title → offer → cup track → CTA. */
+.lm-bubble {
+  position: absolute;
+  inset-inline-start: 2px;
+  bottom: 168px;
+  width: 244px;
+  max-width: 78vw;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: start;
+  padding: 14px 16px 13px;
+  border: 0;
+  cursor: pointer;
+  pointer-events: none;
+  font-family: inherit;
+  color: var(--ink);
+  background: linear-gradient(180deg, #fffaf6 0%, var(--cream) 100%);
+  border-radius: 20px 20px 20px 6px;
+  box-shadow:
+    0 24px 48px -20px rgba(35, 18, 15, 0.55),
+    0 4px 12px -6px rgba(112, 13, 40, 0.18),
+    inset 0 0 0 1px rgba(112, 13, 40, 0.08);
+  opacity: 0;
+  transform: scale(0.78) translateY(10px);
+  transform-origin: 8% 100%;
+  transition:
+    opacity 0.32s ease,
+    transform 0.45s var(--lm-ease);
+}
+.lm-stage[data-state="settled"] .lm-bubble {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+.lm-bubble:focus-visible {
+  outline: 3px solid var(--burgundy);
+  outline-offset: 3px;
+}
+.lm-bubble-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  color: var(--burgundy);
+  font-size: 16px;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+.lm-bubble-offer {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #4a2a23;
+}
+.lm-bubble-offer b {
+  color: var(--burgundy);
+  font-weight: 700;
+}
+.lm-bubble-cta {
+  align-self: flex-start;
+  margin-top: 3px;
+  background: var(--burgundy);
+  color: #fff;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px -4px rgba(112, 13, 40, 0.6);
+}
+.lm-bubble:hover .lm-bubble-cta {
+  background: var(--burgundy-deep);
+}
+
+/* thought-bubble tail: three shrinking puffs toward the mascot */
+.lm-bubble-tail {
+  position: absolute;
+  bottom: -7px;
+  inset-inline-start: 22px;
+}
+.lm-bubble-tail i {
+  position: absolute;
+  display: block;
+  background: var(--cream);
+  border-radius: 50%;
+  box-shadow:
+    0 2px 5px rgba(35, 18, 15, 0.16),
+    inset 0 0 0 1px rgba(112, 13, 40, 0.06);
+}
+.lm-bubble-tail i:nth-child(1) {
+  width: 14px;
+  height: 14px;
+  bottom: 0;
+  inset-inline-start: 0;
+}
+.lm-bubble-tail i:nth-child(2) {
+  width: 9px;
+  height: 9px;
+  bottom: -9px;
+  inset-inline-start: -8px;
+}
+.lm-bubble-tail i:nth-child(3) {
+  width: 5px;
+  height: 5px;
+  bottom: -18px;
+  inset-inline-start: -14px;
+}
+
+/* ── dismiss ─────────────────────────────────────────────────────────────────*/
+.lm-dismiss {
+  position: absolute;
+  top: -8px;
+  inset-inline-start: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 0;
+  background: #fff;
+  color: var(--burgundy);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 6;
+  pointer-events: auto;
+  box-shadow:
+    0 4px 10px -3px rgba(35, 18, 15, 0.45),
+    inset 0 0 0 1px rgba(112, 13, 40, 0.14);
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.lm-dismiss:hover {
+  background: var(--rose);
+  transform: scale(1.08);
+}
+.lm-dismiss:focus-visible {
+  outline: 3px solid var(--burgundy);
+  outline-offset: 2px;
+}
+
+/* ── crafted cup progression (buy 5, 6th free) ──────────────────────────────── */
+.lm-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  direction: ltr; /* slots read left→right regardless of RTL context */
+  margin-top: 2px;
+}
+/* a coffee cup drawn with CSS: tapered body + handle */
+.lm-cup {
+  position: relative;
+  width: 15px;
+  height: 17px;
+  border-radius: 3px 3px 6px 6px;
+  background: linear-gradient(180deg, var(--burgundy) 0%, var(--burgundy-deep) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.lm-cup::before {
+  /* handle */
+  content: "";
+  position: absolute;
+  top: 3px;
+  inset-inline-end: -5px;
+  width: 6px;
+  height: 8px;
+  border: 2px solid var(--burgundy);
+  border-inline-start: 0;
+  border-radius: 0 6px 6px 0;
+}
+.lm-cup::after {
+  /* coffee surface */
+  content: "";
+  position: absolute;
+  top: 2px;
+  inset-inline: 2px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--blush);
+  opacity: 0.85;
+}
+/* the free sixth: blush-filled, lifted, with a small gift/sparkle badge */
+.lm-cup-free {
+  background: linear-gradient(180deg, var(--blush) 0%, #e79e89 100%);
+  transform: translateY(-3px) scale(1.08);
+  box-shadow:
+    0 4px 10px -3px rgba(112, 13, 40, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.lm-cup-free::before {
+  border-color: #e79e89;
+}
+.lm-cup-free::after {
+  background: var(--burgundy);
+  opacity: 0.55;
+}
+.lm-cup-free .lm-cup-gift {
+  position: absolute;
+  top: -7px;
+  inset-inline-start: 50%;
+  width: 6px;
+  height: 6px;
+  margin-inline-start: -3px;
+  background: var(--burgundy);
+  border-radius: 1px;
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px rgba(247, 240, 234, 0.9);
+}
+/* larger variant for the modal */
+.lm-track-lg {
+  gap: 9px;
+  justify-content: center;
+  margin: 18px 0 16px;
+}
+.lm-track-lg .lm-cup {
+  width: 24px;
+  height: 27px;
+  border-radius: 4px 4px 9px 9px;
+}
+.lm-track-lg .lm-cup::before {
+  top: 5px;
+  inset-inline-end: -8px;
+  width: 9px;
+  height: 12px;
+  border-width: 3px;
+}
+.lm-track-lg .lm-cup::after {
+  top: 4px;
+  inset-inline: 3px;
+  height: 4px;
+}
+.lm-track-lg .lm-cup-free {
+  transform: translateY(-5px) scale(1.08);
+}
+.lm-track-lg .lm-cup-free .lm-cup-gift {
+  top: -10px;
+  width: 9px;
+  height: 9px;
+  margin-inline-start: -4.5px;
+}
+
+/* ── modal ───────────────────────────────────────────────────────────────────*/
+.lm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(35, 18, 15, 0.62);
+  -webkit-backdrop-filter: blur(4px) saturate(1.1);
+  backdrop-filter: blur(4px) saturate(1.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: lm-fade 0.22s ease;
+}
+.lm-modal {
+  position: relative;
+  width: 100%;
+  max-width: 364px;
+  background: linear-gradient(180deg, #fffaf6 0%, var(--cream) 60%);
+  color: var(--ink);
+  border-radius: 26px;
+  padding: 28px 24px 26px;
+  text-align: center;
+  box-shadow:
+    0 40px 90px -24px rgba(35, 18, 15, 0.7),
+    inset 0 0 0 1px rgba(112, 13, 40, 0.07);
+  animation: lm-pop 0.36s var(--lm-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.lm-modal-x {
+  position: absolute;
+  top: 14px;
+  inset-inline-start: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(112, 13, 40, 0.08);
+  color: var(--burgundy);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.lm-modal-x:hover {
+  background: rgba(112, 13, 40, 0.16);
+}
+.lm-modal-x:focus-visible {
+  outline: 3px solid var(--burgundy);
+  outline-offset: 2px;
+}
+.lm-modal-figure {
+  width: 96px;
+  height: 96px;
+  margin: -66px auto 6px;
+}
+.lm-modal-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 16px rgba(35, 18, 15, 0.3));
+}
+.lm-modal-title {
+  font-family: var(--font-display), sans-serif;
+  color: var(--burgundy);
+  font-size: 26px;
+  line-height: 1.2;
+  margin: 0;
+}
+.lm-modal-sub {
+  font-size: 15px;
+  margin: 8px 0 0;
+  color: #4a2a23;
+}
+.lm-modal-sub b {
+  color: var(--burgundy);
+  font-weight: 700;
+}
+.lm-qr {
+  width: 214px;
+  height: 214px;
+  margin: 2px auto 8px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow:
+    inset 0 0 0 1px rgba(112, 13, 40, 0.08),
+    0 14px 30px -16px rgba(35, 18, 15, 0.45);
+}
+.lm-qr > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.lm-qr img {
+  object-fit: contain;
+}
+.lm-modal-hint {
+  font-size: 13px;
+  color: rgba(35, 18, 15, 0.72);
+  margin: 6px 0 0;
+  line-height: 1.6;
+}
+
+@keyframes lm-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes lm-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(14px);
+  }
+}
+
+/* ── small screens (375px-first) ───────────────────────────────────────────── */
+@media (max-width: 460px) {
+  .lm-stage {
+    inset-inline-start: 12px;
+    bottom: 12px;
+    width: 150px;
+  }
+  .lm-bubble {
+    width: 222px;
+  }
+}
+
+/* ── reduced motion: fade only, no choreography ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .lm-stage,
+  .lm-door,
+  .lm-figure,
+  .lm-bubble {
+    transition: opacity 0.3s ease !important;
+    animation: none !important;
+  }
+  .lm-door {
+    transform: none !important;
+    opacity: 1;
+  }
+  .lm-figure {
+    transform: translateY(18px) !important;
+  }
+  .lm-bubble {
+    transform: none !important;
+  }
+  .lm-stage[data-state="hidden"] .lm-figure {
+    transform: translateY(18px) !important;
+  }
+  .lm-overlay,
+  .lm-modal {
+    animation: none !important;
+  }
+}

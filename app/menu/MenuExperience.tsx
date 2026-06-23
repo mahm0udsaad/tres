@@ -16,7 +16,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
-import { CATEGORIES, getCategory, toArabic, type Category, type Item } from "../lib/menu";
+import { toArabic, type Category, type Item } from "../lib/menu";
 
 function pathForId(id: string | null): string {
   return id ? `/menu/${id}` : "/menu";
@@ -197,11 +197,14 @@ function SpecialtyCard({ it, index }: { it: Item; index: number }) {
 export default function MenuExperience({
   initialId,
   images = [],
+  categories,
 }: {
   initialId: string | null;
   /** Item ids that have a real photo in /public/assets/items (from the server). */
   images?: string[];
+  categories: Category[];
 }) {
+  const getCategory = (id: string) => categories.find((c) => c.id === id);
   const photoSet = new Set(images);
   const [activeId, setActiveId] = useState<string | null>(
     initialId && getCategory(initialId) ? initialId : null,
@@ -273,7 +276,7 @@ export default function MenuExperience({
         <section className="menu-body">
           <div className="wrap">
             <nav className="cat-strip" aria-label="الأقسام">
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <button
                   key={c.id}
                   type="button"
@@ -338,7 +341,7 @@ export default function MenuExperience({
       <section className="menu-body">
         <div className="wrap">
           <div className="menu-tiles">
-            {CATEGORIES.map((c) => {
+            {categories.map((c) => {
               const empty = c.items.length === 0;
               const img = categoryImage(c);
               return (

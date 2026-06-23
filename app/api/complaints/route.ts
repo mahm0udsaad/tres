@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { supabasePublic, supabaseConfigured } from "../../lib/supabase";
 
 export const runtime = "nodejs";
 
-// Complaints are appended to a newline-delimited JSON file under /data.
-// Swap this out for a DB insert (e.g. Supabase) or an email/webhook later —
-// only the persistence block below needs to change.
+// Feedback is stored in Supabase (table `feedback`) when configured, so it
+// shows up in the control panel. Falls back to a newline-delimited JSON file
+// under /data when Supabase isn't configured (e.g. local without env).
 const DATA_DIR = path.join(process.cwd(), "data");
 const FILE = path.join(DATA_DIR, "complaints.ndjson");
 
@@ -35,15 +36,25 @@ export async function POST(request: Request) {
     contact: String(body.contact ?? "").trim() || null,
     type: String(body.type ?? "other").trim(),
     message,
-    createdAt: new Date().toISOString(),
   };
 
+  // Primary: Supabase insert (anon key — RLS allows insert into feedback).
+  if (supabaseConfigured) {
+    try {
+      const { error } = await supabasePublic().from("feedback").insert(record);
+      if (error) throw error;
+      return NextResponse.json({ ok: true });
+    } catch (err) {
+      console.error("Supabase feedback insert failed, falling back to file:", err);
+    }
+  }
+
+  // Fallback: append to the local NDJSON file.
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.appendFile(FILE, JSON.stringify(record) + "\n", "utf8");
+    await fs.appendFile(FILE, JSON.stringify({ ...record, createdAt: new Date().toISOString() }) + "\n", "utf8");
   } catch (err) {
     console.error("Failed to persist complaint:", err);
-    // Still surface it in logs so it isn't lost on read-only filesystems.
     console.info("COMPLAINT", JSON.stringify(record));
     return NextResponse.json({ ok: false, error: "store failed" }, { status: 500 });
   }

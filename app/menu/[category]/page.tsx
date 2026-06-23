@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CATEGORIES, getCategory } from "../../lib/menu";
 import MenuExperience from "../MenuExperience";
 import { availableItemImages } from "../../lib/itemImages";
+import { getMenu, getMenuCategory } from "../../lib/data";
 
-export function generateStaticParams() {
-  return CATEGORIES.map((c) => ({ category: c.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -14,7 +12,7 @@ export async function generateMetadata({
   params: Promise<{ category: string }>;
 }): Promise<Metadata> {
   const { category } = await params;
-  const cat = getCategory(category);
+  const cat = await getMenuCategory(category);
   if (!cat) {
     return { title: "المنيو", alternates: { canonical: "/menu" } };
   }
@@ -38,6 +36,8 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  if (!getCategory(category)) notFound();
-  return <MenuExperience initialId={category} images={availableItemImages()} />;
+  const { categories } = await getMenu();
+  const cat = categories.find((c) => c.id === category);
+  if (!cat) notFound();
+  return <MenuExperience initialId={category} images={availableItemImages()} categories={categories} />;
 }

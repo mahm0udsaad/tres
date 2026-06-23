@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import MenuExperience from "./MenuExperience";
 import { availableItemImages } from "../lib/itemImages";
+import { getMenu } from "../lib/data";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "المنيو",
@@ -14,6 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MenuPage() {
-  return <MenuExperience initialId={null} images={availableItemImages()} />;
+export default async function MenuPage() {
+  const { categories } = await getMenu();
+  return <MenuExperience initialId={null} images={availableItemImages()} categories={categories} />;
 }

@@ -13,11 +13,13 @@ export function TresQr({
   fg = "#5a0a20",
   bg = "#f7f0ea",
   logo = "/assets/logo/tres-mark-burgundy.png",
+  ariaLabel = "رمز QR لقائمة تريس",
 }: {
   url: string;
   fg?: string;
   bg?: string;
   logo?: string;
+  ariaLabel?: string;
 }) {
   const qr = QRCode.create(url, { errorCorrectionLevel: "H" });
   const N = qr.modules.size;
@@ -63,7 +65,7 @@ export function TresQr({
       width="100%"
       height="100%"
       role="img"
-      aria-label="رمز QR لقائمة تريس"
+      aria-label={ariaLabel}
       shapeRendering="geometricPrecision"
     >
       <rect x={0} y={0} width={size} height={size} rx={3} ry={3} fill={bg} />

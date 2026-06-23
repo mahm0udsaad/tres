@@ -1,10 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { IBM_Plex_Sans_Arabic, Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import "./loyalty-mascot.css";
 import SiteHeader from "./components/SiteHeader";
 import Footer from "./components/Footer";
+import LoyaltyMascot from "./components/LoyaltyMascot";
+import { TresQr } from "./table-card/qr";
 import { SITE, SITE_URL } from "./lib/site";
+
+// Loyalty-program QR destination — single swappable constant. Defaults to the
+// same URL the placeholder PNG uses (scripts/make-loyalty-qr.mjs). Change this
+// (or swap public/assets/loyalty-qr.png) once the loyalty link is finalised.
+const LOYALTY_QR_URL = "https://www.instagram.com/tres_saudi";
+import { getPublicSettings } from "./lib/data";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
@@ -113,11 +123,20 @@ const jsonLd = {
   sameAs: [SITE.instagram, SITE.tiktok, SITE.snapchat],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // The control panel (/admin) renders its own chrome — hide the marketing
+  // header/footer there.
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const isAdmin = pathname.startsWith("/admin");
+  // Loyalty mascot is a menu-only flourish: /menu and /menu/[category].
+  const isMenu = pathname === "/menu" || pathname.startsWith("/menu/");
+  const settings = isAdmin ? null : await getPublicSettings();
+  const announcement = settings?.announcementActive ? settings.announcement ?? undefined : undefined;
+
   return (
     <html
       lang="ar"
@@ -126,13 +145,16 @@ export default function RootLayout({
       className={`${ibmPlexArabic.variable} ${spaceGrotesk.variable} ${hnArabic.variable}`}
     >
       <body>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <SiteHeader />
+        {!isAdmin && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        )}
+        {!isAdmin && <SiteHeader announcement={announcement} />}
         {children}
-        <Footer />
+        {!isAdmin && <Footer />}
+        {isMenu && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} />}
       </body>
     </html>
   );

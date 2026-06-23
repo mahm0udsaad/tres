@@ -11,7 +11,9 @@ const NAV: { href: string; label: string; soon?: boolean }[] = [
   { href: "/complaints", label: "الشكاوى" },
 ];
 
-export default function SiteHeader() {
+const DEFAULT_ANNOUNCE = "يا هلا في تريس، قهوة مختصة بثلاثة محاصيل من الطائف";
+
+export default function SiteHeader({ announcement }: { announcement?: string }) {
   const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -35,7 +37,7 @@ export default function SiteHeader() {
   return (
     <>
       <div className="announce">
-        يا هلا في تريس، قهوة مختصة بثلاثة محاصيل من الطائف
+        {announcement || DEFAULT_ANNOUNCE}
       </div>
       <div ref={navRef} className="nav">
         <div className="nav-inner">

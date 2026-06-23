@@ -49,7 +49,7 @@ function ItemRow({ item, onEdit }: { item: Itm; onEdit: () => void }) {
       <div className="a-row-main">
         <div className="a-row-name">
           {item.name_ar}
-          {item.badge && <span className="a-pill a-pill--badge">{item.badge}</span>}
+          {parseBadges(item.badge).map((b, i) => <span key={i} className="a-pill a-pill--badge">{b}</span>)}
         </div>
         <div className="a-row-sub">
           {item.price != null && <span className="a-row-price">{item.price} ر.س</span>}
@@ -101,13 +101,21 @@ const TEMPLATE_HINT: Record<Template, string> = {
 
 const BADGE_PRESETS = ["حار / بارد", "حار", "بارد", "توقيع · حار", "جديدنا"];
 
+function parseBadges(raw: string | null): string[] {
+  return (raw ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 /* ── item add/edit sheet — fields adapt to the chosen category's template ── */
 function ItemSheet({ cats, defaultCat, item, onClose }: { cats: Cat[]; defaultCat: string; item: Itm | null; onClose: () => void }) {
   const [, start] = useTransition();
   const [catId, setCatId] = useState(item?.category_id ?? defaultCat);
-  const [badge, setBadge] = useState(item?.badge ?? "");
+  const [badges, setBadges] = useState<string[]>(() => parseBadges(item?.badge ?? null));
   const cat = cats.find((c) => c.id === catId) ?? cats[0];
   const template: Template = cat?.template ?? "simple";
+
+  function togglePreset(p: string) {
+    setBadges((prev) => prev.includes(p) ? prev.filter((b) => b !== p) : [...prev, p]);
+  }
 
   return (
     <div className="a-sheet-overlay" onClick={onClose}>
@@ -136,17 +144,27 @@ function ItemSheet({ cats, defaultCat, item, onClose }: { cats: Cat[]; defaultCa
           <div className="a-row-2">
             <div className="a-field"><label>السعر (ر.س)</label><input name="price" className="a-input" inputMode="decimal" defaultValue={item?.price ?? ""} /></div>
             <div className="a-field">
-                <label>شارة <span style={{ color: "var(--faint)", fontWeight: 400 }}>(اختياري)</span></label>
+                <label>الشارات <span style={{ color: "var(--faint)", fontWeight: 400 }}>(اختياري — يمكن اختيار أكثر من واحدة)</span></label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                   {BADGE_PRESETS.map((p) => (
                     <button
                       key={p} type="button"
-                      className={"a-pill a-pill--badge" + (badge === p ? " a-pill--active" : "")}
-                      onClick={() => setBadge(badge === p ? "" : p)}
+                      className={"a-pill a-pill--badge" + (badges.includes(p) ? " a-pill--active" : "")}
+                      onClick={() => togglePreset(p)}
                     >{p}</button>
                   ))}
                 </div>
-                <input name="badge" className="a-input" placeholder="أو اكتب شارة مخصصة…" value={badge} onChange={(e) => setBadge(e.target.value)} />
+                <input
+                  name="badge" className="a-input"
+                  placeholder="أو اكتب شارة مخصصة (افصل بفاصلة)…"
+                  value={badges.join(",")}
+                  onChange={(e) => setBadges(parseBadges(e.target.value))}
+                />
+                {badges.length > 0 && (
+                  <p className="a-hint" style={{ marginTop: 4 }}>
+                    {badges.map((b, i) => <span key={i} className="a-pill a-pill--badge" style={{ marginInlineEnd: 4 }}>{b}</span>)}
+                  </p>
+                )}
               </div>
           </div>
 

@@ -14,7 +14,7 @@ import { SITE, SITE_URL } from "./lib/site";
 // Loyalty-program QR destination — single swappable constant. Defaults to the
 // same URL the placeholder PNG uses (scripts/make-loyalty-qr.mjs). Change this
 // (or swap public/assets/loyalty-qr.png) once the loyalty link is finalised.
-const LOYALTY_QR_URL = "https://www.instagram.com/tres_saudi";
+const LOYALTY_QR_URL = "https://loyapro.com/c-r/NzEwMA==";
 import { getPublicSettings } from "./lib/data";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({

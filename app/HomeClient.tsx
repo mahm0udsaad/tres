@@ -60,7 +60,7 @@ function CuratedSection({ section, extraClass = "" }: { section: HomeSec; extraC
               <span className="today-media">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={item.image ?? `/assets/items/${item.id}.webp`} alt={item.ar} loading="lazy" />
-                {item.badge && <span className="today-badge">{item.badge}</span>}
+                {item.badge?.split(",").map((b, i) => <span key={i} className="today-badge">{b.trim()}</span>)}
               </span>
               <span className="today-body">
                 <span className="today-tag">{item.categoryAr}</span>

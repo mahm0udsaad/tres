@@ -86,7 +86,7 @@ function ProductCard({
             {it.en && <span className="placeholder-word">{it.en}</span>}
           </span>
         )}
-        {it.badge && <span className="product-badge">{it.badge}</span>}
+        {it.badge?.split(",").map((b, i) => <span key={i} className="product-badge">{b.trim()}</span>)}
       </div>
       <div className="product-body">
         <div className="product-head">
@@ -116,7 +116,7 @@ function SpecialtyContent({ it }: { it: Item }) {
     <div className="spec-content">
       <div className="spec-head">
         <h3 className="spec-name">{it.ar}</h3>
-        {it.badge && <span className="spec-badge">{it.badge}</span>}
+        {it.badge?.split(",").map((b, i) => <span key={i} className="spec-badge">{b.trim()}</span>)}
       </div>
       {it.en && (
         <span className="spec-en" dir="ltr">

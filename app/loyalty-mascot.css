@@ -82,20 +82,18 @@
 }
 .lm-door-knob {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 2;
-  width: 48px;
-  height: 48px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background:
-    url("/assets/logo/tres-badge-grey.png") center / 42px 42px no-repeat,
-    rgb(var(--cream-rgb) / 0.94);
-  box-shadow:
-    0 0 0 1px rgb(var(--cream-rgb) / 0.38),
-    0 7px 16px -7px rgba(0, 0, 0, 0.62),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: #fff;
+  direction: rtl;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 /* ── mascot ──────────────────────────────────────────────────────────────────

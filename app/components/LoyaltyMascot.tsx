@@ -152,7 +152,7 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
       <div className="lm-stage" data-state={state} data-bubble-hidden={bubbleDismissed || undefined} aria-hidden={state === "hidden"}>
         {/* premium door panel the character hides behind */}
         <span className="lm-door" aria-hidden="true">
-          <span className="lm-door-knob" />
+          <span className="lm-door-knob">اضغط هنا للاشتراك ببرنامج الولاء</span>
         </span>
 
         <button

@@ -125,7 +125,7 @@ export const CATEGORIES: Category[] = [
     no: "03",
     en: "MATCHA",
     ar: "ماتشا",
-    tagline: "ماتشا بكل أشكاله",
+    tagline: "ماتشا بكل أشكاله ونكهاته",
     glyph: "🍵",
     image: "/assets/menu/drinks.webp",
     items: [
@@ -142,6 +142,7 @@ export const CATEGORIES: Category[] = [
     ar: "المشاريب الباردة",
     tagline: "مشاريب منعشة وباردة",
     glyph: "🧃",
+    image: "/assets/menu/cold-drinks.webp",
     items: [
       { id: "hibiscus", ar: "كركديه", en: "Hibiscus", price: "15" },
       { id: "blue-mojito", ar: "موهيتو أزرق", en: "Blue Mojito", price: "19" },

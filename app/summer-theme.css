@@ -139,9 +139,9 @@
 [data-theme="summer"] .ring-glow {
   background: radial-gradient(circle, rgb(159 189 216 / 0.35) 0%, rgb(159 189 216 / 0) 70%);
 }
-/* swap the coffee mascot for the shell brand mark */
+/* swap the coffee mascot for the summer character illustration */
 [data-theme="summer"] .mascot {
-  content: url("/assets/summer/shell-logo.png");
+  content: url("/assets/summer/summer-mascot.png");
   filter: drop-shadow(0 20px 24px rgb(110 29 51 / 0.22));
 }
 [data-theme="summer"] .btn-hero-primary {

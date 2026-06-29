@@ -223,8 +223,8 @@ export default function HomeClient({
               <div className="menu-kicker">02 — MENU</div>
               <h2>من المنيو</h2>
               <p>
-                منيو مختصر وواضح: قهوة مختصة، مشاريب الحليب، ماتشا، وحلا. إذا ودك بشي يحمل توقيعنا،
-                ابدأ بهوت تريس.
+               منيو مختصر وواضح: قهوة مختصة، مشاريب الحليب، ماتشا، وحلا. إذا ودك بشي يحمل توقيعنا،
+                ابدأ بمحصول تريس.
               </p>
               <div className="signature">
                 <div className="signature-blob" />

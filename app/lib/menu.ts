@@ -115,6 +115,9 @@ export const CATEGORIES: Category[] = [
       { id: "spanish-latte-hot", ar: "سبانش لاتيه", en: "Spanish Latte", price: "18", badge: "حار" },
       { id: "spanish-latte-iced", ar: "سبانش لاتيه", en: "Spanish Latte", price: "19", badge: "بارد" },
       { id: "hot-tres", ar: "هوت تريس", en: "Hot Tres", price: "19", badge: "توقيع · حار" },
+      { id: "iced-latte", ar: "ايس لاتيه", en: "Iced Latte", price: "18" },
+      { id: "alfrido-cappuccino", ar: "ايس الفريدو كابتشينو", en: "Alfrido Cappuccino", price: "18" },
+      { id: "iced-americano", ar: "ايس أمريكانو", en: "Iced Americano", price: "16" },
     ],
   },
   {
@@ -129,6 +132,13 @@ export const CATEGORIES: Category[] = [
       { id: "hibiscus", ar: "كركديه", en: "Hibiscus", price: "15" },
       { id: "matcha", ar: "ماتشا", en: "Matcha", price: "18", badge: "حار / بارد" },
       { id: "matcha-foam", ar: "ماتشا فوم", en: "Matcha Foam", price: "20" },
+      { id: "matcha-blueberry", ar: "ماتشا بلوبيري", en: "Matcha Blueberry", price: "20" },
+      { id: "matcha-ice-cream", ar: "ماتشا ايس كريم", en: "Matcha Ice Cream", price: "22" },
+      { id: "blue-mojito", ar: "موهيتو أزرق", en: "Blue Mojito", price: "19" },
+      { id: "red-mojito", ar: "موهيتو أحمر", en: "Red Mojito", price: "19" },
+      { id: "avocado", ar: "افوقادو", en: "Avocado", price: "19" },
+      { id: "iced-chocolate", ar: "ايس شوكلت", en: "Iced Chocolate", price: "18" },
+      { id: "iced-tea", ar: "ايس تي", en: "Iced Tea", price: "16" },
     ],
   },
   {

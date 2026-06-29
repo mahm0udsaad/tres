@@ -233,7 +233,7 @@ export default function HomeClient({
                   <div className="signature-row">
                     <span className="signature-name">محصول تريس</span>
                     <span>
-                      <span className="signature-price">19</span>{" "}
+                      <span className="signature-price">20</span>{" "}
                       <span className="signature-cur">ر.س</span>
                     </span>
                   </div>

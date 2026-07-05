@@ -70,7 +70,7 @@ export async function saveCategory(form: FormData) {
     template: (str(form.get("template")) as "simple" | "coffee" | "dessert" | null) ?? "simple",
     sort_order: num(form.get("sort_order")) ?? 0,
     is_active: bool(form.get("is_active")),
-    ...(image_url ? { image_url } : {}),
+    image_url,
   };
   if (id) await sb.from("categories").update(row).eq("id", id);
   else await sb.from("categories").insert(row);
@@ -107,6 +107,7 @@ export async function saveItem(form: FormData) {
     badge: str(form.get("badge")),
     cal: str(form.get("cal")),
     description: str(form.get("description")),
+    image_url,
     emblem_url,
     emblem_fit: str(form.get("emblem_fit")) as "cover" | "contain" | null,
     notes,
@@ -115,7 +116,6 @@ export async function saveItem(form: FormData) {
     process: str(form.get("process")),
     is_available: bool(form.get("is_available")),
     sort_order: num(form.get("sort_order")) ?? 0,
-    ...(image_url ? { image_url } : {}),
   };
   if (id) await sb.from("items").update(row).eq("id", id);
   else await sb.from("items").insert(row);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { Plus, Pencil, X, Trash2, ImagePlus, FolderPlus } from "lucide-react";
 import {
@@ -75,18 +75,41 @@ function ImagePicker({
   current, fileName = "image", urlName = "image_url", label = "اختر صورة", hint = "JPG أو PNG — يفضّل مربعة.",
 }: { current: string | null; fileName?: string; urlName?: string; label?: string; hint?: string }) {
   const [preview, setPreview] = useState<string | null>(current);
+  const urlInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <div className="a-imgpick">
       <span className="preview">{preview ? <img src={preview} alt="" /> : <ImagePlus strokeWidth={1.8} />}</span>
       <div style={{ flex: 1 }}>
-        <input type="hidden" name={urlName} defaultValue={current ?? ""} />
-        <label className="a-btn a-btn--ghost a-btn--sm" style={{ cursor: "pointer" }}>
-          <ImagePlus strokeWidth={2} /> {label}
-          <input
-            type="file" name={fileName} accept="image/*" hidden
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) setPreview(URL.createObjectURL(f)); }}
-          />
-        </label>
+        <input type="hidden" name={urlName} defaultValue={current ?? ""} ref={urlInputRef} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <label className="a-btn a-btn--ghost a-btn--sm" style={{ cursor: "pointer" }}>
+            <ImagePlus strokeWidth={2} /> {label}
+            <input
+              type="file" name={fileName} accept="image/*" hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  setPreview(URL.createObjectURL(f));
+                  if (urlInputRef.current) urlInputRef.current.value = "";
+                }
+              }}
+            />
+          </label>
+          {preview && (
+            <button
+              type="button" className="a-btn a-btn--ghost a-btn--sm"
+              onClick={() => {
+                setPreview(null);
+                if (urlInputRef.current) urlInputRef.current.value = "";
+                const fileInput = document.querySelector<HTMLInputElement>(`input[name="${fileName}"]`);
+                if (fileInput) fileInput.value = "";
+              }}
+            >
+              <X strokeWidth={2} /> إزالة
+            </button>
+          )}
+        </div>
         <p className="a-hint">{hint}</p>
       </div>
     </div>

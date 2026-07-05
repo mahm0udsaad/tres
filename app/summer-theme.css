@@ -1416,8 +1416,13 @@
   background: rgb(110 29 51 / 0.16);
 }
 [data-theme="summer"] .lm-modal-title,
-[data-theme="summer"] .lm-modal-sub b {
+[data-theme="summer"] .lm-modal-sub b,
+[data-theme="summer"] .lm-modal-link {
   color: var(--s-wine);
+}
+
+[data-theme="summer"] .lm-modal-link:hover {
+  color: var(--s-wine-deep);
 }
 
 /* viewport meta colour stays wine; nothing else to do here. */

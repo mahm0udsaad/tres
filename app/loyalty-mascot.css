@@ -540,6 +540,19 @@
   line-height: 1.6;
 }
 
+.lm-modal-link {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--burgundy);
+  text-decoration: underline;
+}
+
+.lm-modal-link:hover {
+  color: var(--burgundy-deep);
+}
+
 @keyframes lm-fade {
   from {
     opacity: 0;

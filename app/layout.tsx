@@ -155,7 +155,7 @@ export default async function RootLayout({
         {!isAdmin && <SiteHeader announcement={announcement} />}
         {children}
         {!isAdmin && <Footer />}
-        {!isAdmin && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} />}
+        {!isAdmin && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} qrUrl={LOYALTY_QR_URL} />}
       </body>
     </html>
   );

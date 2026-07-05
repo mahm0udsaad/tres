@@ -70,7 +70,7 @@ function CupTrack({ size = "sm" }: { size?: "sm" | "lg" }) {
   );
 }
 
-export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
+export default function LoyaltyMascot({ qr, qrUrl }: { qr?: ReactNode; qrUrl?: string }) {
   const [state, setState] = useState<State>("hidden");
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -257,6 +257,12 @@ export default function LoyaltyMascot({ qr }: { qr?: ReactNode }) {
               </div>
 
               <p className="lm-modal-hint">{MODAL_HINT}</p>
+
+              {qrUrl && (
+                <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="lm-modal-link">
+                  اضغط هنا إذا لم يعمل الباركود
+                </a>
+              )}
             </div>
           </div>,
           document.body,

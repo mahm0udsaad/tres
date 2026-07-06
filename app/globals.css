@@ -1007,9 +1007,11 @@ img {
   align-items: center;
   justify-content: center;
 }
-.story-art img {
-  width: min(420px, 84%);
+.story-art-img {
+  display: block;
+  width: min(460px, 88%);
   height: auto;
+  object-fit: contain;
   filter: brightness(0) saturate(100%) invert(82%) sepia(20%) saturate(720%)
     hue-rotate(312deg) brightness(99%);
 }

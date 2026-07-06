@@ -50,6 +50,7 @@ function withTransition(update: () => void) {
 }
 
 function categoryImage(cat: Category): string | undefined {
+  if (cat.imageCleared) return undefined;
   return cat.image ?? cat.items.find((i) => i.image)?.image;
 }
 
@@ -64,7 +65,7 @@ function ProductCard({
   index: number;
   hasPhoto: boolean;
 }) {
-  const src = it.image ?? (hasPhoto && it.id ? `/assets/items/${it.id}.webp` : undefined);
+  const src = it.image ?? (!it.imageCleared && hasPhoto && it.id ? `/assets/items/${it.id}.webp` : undefined);
   return (
     <div className="product-card" style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}>
       <div className={"product-img" + (src ? "" : " is-empty")}>

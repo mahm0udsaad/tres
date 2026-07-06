@@ -59,7 +59,7 @@ function CuratedSection({ section, extraClass = "" }: { section: HomeSec; extraC
             >
               <span className="today-media">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image ?? `/assets/items/${item.id}.webp`} alt={item.ar} loading="lazy" />
+                <img src={item.image ?? (!item.imageCleared && item.id ? `/assets/items/${item.id}.webp` : "/assets/logo/tres-mark-white.png")} alt={item.ar} loading="lazy" />
                 {item.badge?.split(",").map((b, i) => <span key={i} className="today-badge">{b.trim()}</span>)}
               </span>
               <span className="today-body">
@@ -317,8 +317,9 @@ export default function HomeClient({
             <div className="story-art">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/assets/story-cup.svg"
-                alt="فنجان تريس"
+                src="/assets/building.png"
+                alt="مبنى تريس"
+                className="story-art-img"
                 style={!isStoryOpen ? { viewTransitionName: "story-art-img" } : undefined}
               />
               <div className="story-caption">
@@ -339,8 +340,8 @@ export default function HomeClient({
           <div className="story-expanded-hero">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-               src="/assets/story-cup.svg"
-               alt="فنجان تريس"
+               src="/assets/building.png"
+               alt="مبنى تريس"
                className="story-expanded-img"
             />
           </div>

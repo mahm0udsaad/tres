@@ -340,8 +340,8 @@
 [data-theme="summer"] .story-caption {
   color: var(--s-blue-deep);
 }
-/* the line-art glyph was tinted blush via filter; retint to wine */
-[data-theme="summer"] .story-art img,
+/* The story artwork is monochrome, so tint it for the summer palette. */
+[data-theme="summer"] .story-art-img,
 [data-theme="summer"] .story-expanded-img {
   filter: brightness(0) saturate(100%) invert(13%) sepia(38%) saturate(2600%) hue-rotate(316deg) brightness(70%);
 }

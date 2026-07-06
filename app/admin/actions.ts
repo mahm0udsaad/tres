@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "../lib/supabase";
 import { uploadImage } from "../lib/admin-data";
-import { ADMIN_COOKIE, SESSION_MAX_AGE, checkPin, signSession } from "../lib/auth";
+import { ADMIN_COOKIE, SESSION_MAX_AGE, checkPin, signSession, verifySession } from "../lib/auth";
 
 function refreshPublic() {
   // Public menu + homepage reflect owner edits.
@@ -28,6 +28,15 @@ function num(v: FormDataEntryValue | null): number | null {
 function bool(v: FormDataEntryValue | null): boolean {
   return v === "on" || v === "true" || v === "1";
 }
+function imageField(form: FormData, key: string): string | null {
+  return bool(form.get(`${key}_clear`)) ? "" : str(form.get(key));
+}
+
+async function requireAdmin() {
+  const jar = await cookies();
+  const ok = await verifySession(jar.get(ADMIN_COOKIE)?.value);
+  if (!ok) redirect("/admin/login");
+}
 
 // ── auth ─────────────────────────────────────────────────────────────────────
 export async function login(_prev: { error?: string } | undefined, form: FormData) {
@@ -46,6 +55,7 @@ export async function login(_prev: { error?: string } | undefined, form: FormDat
 }
 
 export async function logout() {
+  await requireAdmin();
   const jar = await cookies();
   jar.delete(ADMIN_COOKIE);
   redirect("/admin/login");
@@ -53,10 +63,11 @@ export async function logout() {
 
 // ── categories ────────────────────────────────────────────────────────────────
 export async function saveCategory(form: FormData) {
+  await requireAdmin();
   const sb = supabaseAdmin();
   const id = str(form.get("id"));
   const file = form.get("image") as File | null;
-  let image_url = str(form.get("image_url"));
+  let image_url = imageField(form, "image_url");
   if (file && file.size > 0) image_url = await uploadImage(file, "categories");
 
   const row = {
@@ -78,6 +89,7 @@ export async function saveCategory(form: FormData) {
 }
 
 export async function deleteCategory(form: FormData) {
+  await requireAdmin();
   const id = str(form.get("id"));
   if (id) await supabaseAdmin().from("categories").delete().eq("id", id);
   refreshPublic();
@@ -85,14 +97,15 @@ export async function deleteCategory(form: FormData) {
 
 // ── items ──────────────────────────────────────────────────────────────────────
 export async function saveItem(form: FormData) {
+  await requireAdmin();
   const sb = supabaseAdmin();
   const id = str(form.get("id"));
   const file = form.get("image") as File | null;
-  let image_url = str(form.get("image_url"));
+  let image_url = imageField(form, "image_url");
   if (file && file.size > 0) image_url = await uploadImage(file, "items");
 
   const emblemFile = form.get("emblem") as File | null;
-  let emblem_url = str(form.get("emblem_url"));
+  let emblem_url = imageField(form, "emblem_url");
   if (emblemFile && emblemFile.size > 0) emblem_url = await uploadImage(emblemFile, "emblems");
 
   const notesRaw = str(form.get("notes"));
@@ -123,6 +136,7 @@ export async function saveItem(form: FormData) {
 }
 
 export async function deleteItem(form: FormData) {
+  await requireAdmin();
   const id = str(form.get("id"));
   if (id) await supabaseAdmin().from("items").delete().eq("id", id);
   refreshPublic();
@@ -130,6 +144,7 @@ export async function deleteItem(form: FormData) {
 
 /** One-tap toggles used directly from the item list. */
 export async function toggleAvailable(form: FormData) {
+  await requireAdmin();
   const id = str(form.get("id"));
   const next = bool(form.get("value"));
   if (id) await supabaseAdmin().from("items").update({ is_available: next }).eq("id", id);
@@ -137,6 +152,7 @@ export async function toggleAvailable(form: FormData) {
 }
 
 export async function toggleFeatured(form: FormData) {
+  await requireAdmin();
   const id = str(form.get("id"));
   const next = bool(form.get("value"));
   if (id) await supabaseAdmin().from("items").update({ is_featured: next }).eq("id", id);
@@ -145,6 +161,7 @@ export async function toggleFeatured(form: FormData) {
 
 // ── feedback ──────────────────────────────────────────────────────────────────
 export async function setFeedbackStatus(form: FormData) {
+  await requireAdmin();
   const id = str(form.get("id"));
   const status = str(form.get("status"));
   if (id && status) await supabaseAdmin().from("feedback").update({ status }).eq("id", id);
@@ -154,6 +171,7 @@ export async function setFeedbackStatus(form: FormData) {
 
 // ── homepage sections ─────────────────────────────────────────────────────────
 export async function saveHome(form: FormData) {
+  await requireAdmin();
   const sb = supabaseAdmin();
   const section = (k: string) => ({
     kicker: str(form.get(`${k}_kicker`)) ?? "",
@@ -168,6 +186,7 @@ export async function saveHome(form: FormData) {
 
 // ── settings ──────────────────────────────────────────────────────────────────
 export async function saveSettings(form: FormData) {
+  await requireAdmin();
   const sb = supabaseAdmin();
   // hours arrive as parallel arrays day[]/open[]/close[]/closed[]
   const days = form.getAll("hour_day").map(String);

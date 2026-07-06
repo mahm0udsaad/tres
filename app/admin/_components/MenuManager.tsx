@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { Plus, Pencil, X, Trash2, ImagePlus, FolderPlus } from "lucide-react";
 import {
@@ -74,24 +74,43 @@ function ItemRow({ item, onEdit }: { item: Itm; onEdit: () => void }) {
 function ImagePicker({
   current, fileName = "image", urlName = "image_url", label = "اختر صورة", hint = "JPG أو PNG — يفضّل مربعة.",
 }: { current: string | null; fileName?: string; urlName?: string; label?: string; hint?: string }) {
-  const [preview, setPreview] = useState<string | null>(current);
-  const urlInputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(current || null);
+  const [cleared, setCleared] = useState(current === "");
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [objectUrl]);
+
+  function clearObjectUrl() {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      setObjectUrl(null);
+    }
+  }
 
   return (
     <div className="a-imgpick">
       <span className="preview">{preview ? <img src={preview} alt="" /> : <ImagePlus strokeWidth={1.8} />}</span>
       <div style={{ flex: 1 }}>
-        <input type="hidden" name={urlName} defaultValue={current ?? ""} ref={urlInputRef} />
+        <input type="hidden" name={urlName} value={cleared ? "" : current ?? ""} readOnly />
+        <input type="hidden" name={`${urlName}_clear`} value={cleared ? "1" : ""} readOnly />
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <label className="a-btn a-btn--ghost a-btn--sm" style={{ cursor: "pointer" }}>
             <ImagePlus strokeWidth={2} /> {label}
             <input
-              type="file" name={fileName} accept="image/*" hidden
+              type="file" name={fileName} accept="image/*" hidden ref={fileInputRef}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) {
-                  setPreview(URL.createObjectURL(f));
-                  if (urlInputRef.current) urlInputRef.current.value = "";
+                  clearObjectUrl();
+                  const nextPreview = URL.createObjectURL(f);
+                  setObjectUrl(nextPreview);
+                  setPreview(nextPreview);
+                  setCleared(false);
                 }
               }}
             />
@@ -100,10 +119,10 @@ function ImagePicker({
             <button
               type="button" className="a-btn a-btn--ghost a-btn--sm"
               onClick={() => {
+                clearObjectUrl();
                 setPreview(null);
-                if (urlInputRef.current) urlInputRef.current.value = "";
-                const fileInput = document.querySelector<HTMLInputElement>(`input[name="${fileName}"]`);
-                if (fileInput) fileInput.value = "";
+                setCleared(true);
+                if (fileInputRef.current) fileInputRef.current.value = "";
               }}
             >
               <X strokeWidth={2} /> إزالة

@@ -7,6 +7,7 @@ export type Item = {
   cal?: string; // Arabic-Indic calories, desserts only
   desc?: string; // Arabic description, desserts only
   image?: string; // /assets/items/<id>.webp
+  imageCleared?: boolean;
   /** Emblem shown as a circular medallion when the item has no photo
    *  (e.g. an origin flag, or the TRES mark). */
   emblem?: string;
@@ -30,6 +31,7 @@ export type Category = {
   /** Optional tile background photo, e.g. "/assets/menu/coffee.webp".
    *  When set, the tile shows the photo (with a scrim) instead of the flat color. */
   image?: string;
+  imageCleared?: boolean;
   note?: string;
   items: Item[];
 };

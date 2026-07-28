@@ -4,6 +4,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getStaffContext, requireStaff } from "../lib/staff";
 import { supabaseServer } from "../lib/supabase-server";
+import {
+  branchDay,
+  imageFiles,
+  removeEvidence,
+  uploadEvidence,
+  validateImages,
+} from "./evidence";
 
 export type StaffActionState = {
   error?: string;
@@ -117,6 +124,55 @@ export async function staffOperation(
     operation,
     result,
   };
+}
+
+/** Complete a photo-required checklist task: upload the proof photo to the
+ *  private bucket under the caller's folder, then complete via RPC — Postgres
+ *  re-validates the photo and refuses completion without it. */
+export async function completeChecklistTask(
+  _previous: StaffActionState | undefined,
+  form: FormData,
+): Promise<StaffActionState> {
+  const context = await requireStaff();
+  const operation = "complete_task";
+
+  const taskId = text(form.get("task_id"));
+  if (!taskId) return { error: "المهمة غير موجودة.", operation };
+
+  const files = imageFiles(form, "photo");
+  const imageError = validateImages(files, true);
+  if (imageError) return { error: imageError, operation };
+  if (files.length !== 1) {
+    return { error: "أرفق صورة واحدة لإثبات إنجاز المهمة.", operation };
+  }
+
+  const day = await branchDay(context);
+  if ("error" in day) return { error: day.error, operation };
+
+  const uploaded = await uploadEvidence(
+    context,
+    "checklist",
+    `${day.reportDate}/${taskId}`,
+    files,
+  );
+  if ("error" in uploaded) return { error: uploaded.error, operation };
+
+  const { data, error } = await context.supabase.rpc("complete_task", {
+    p_task_id: taskId,
+    p_photo_path: uploaded.paths[0],
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) {
+    await removeEvidence(context, uploaded.paths);
+    return {
+      error: error?.message || String(result.message ?? "تعذّر إكمال المهمة."),
+      operation,
+      result,
+    };
+  }
+
+  revalidatePath("/staff");
+  return { message: "تم إكمال المهمة بإثبات مصوّر.", operation, result };
 }
 
 export async function updateOwnBranch(

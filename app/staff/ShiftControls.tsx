@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useState } from "react";
 import {
   Award,
+  Camera,
   Check,
   CircleAlert,
   Coffee,
@@ -16,7 +17,10 @@ import type {
   Gamification,
   StaffTask,
 } from "../lib/staff-shared";
-import { staffOperation } from "./actions";
+import { completeChecklistTask, staffOperation } from "./actions";
+
+const PHOTO_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
+const MANUAL_TASK_TYPES = new Set(["general_duty", "checklist"]);
 
 type Props = {
   attendance: AttendanceRecord | null;
@@ -37,6 +41,7 @@ function hoursSince(iso: string) {
 
 export default function ShiftControls({ attendance, tasks, gamification }: Props) {
   const [state, action, pending] = useActionState(staffOperation, undefined);
+  const [photoState, photoAction, photoPending] = useActionState(completeChecklistTask, undefined);
   const [locationPending, setLocationPending] = useState(false);
   const [locationError, setLocationError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -101,7 +106,15 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
     );
   }
 
+  function completeWithPhoto(taskId: string, file: File) {
+    const form = new FormData();
+    form.set("task_id", taskId);
+    form.set("photo", file);
+    startTransition(() => photoAction(form));
+  }
+
   const busy = pending || locationPending;
+  const taskBusy = pending || photoPending;
   const breakActive = Boolean(attendance?.break_started_at && !attendance.break_ended_at);
   const completedTasks = tasks.filter((task) => task.completed).length;
   const missing = Array.isArray(state?.result?.missing)
@@ -237,22 +250,55 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
             </div>
             <span className="staff-task-count">{completedTasks}/{tasks.length}</span>
           </div>
+          {photoState?.error ? (
+            <p className="staff-inline-error" role="alert">{photoState.error}</p>
+          ) : null}
           {tasks.length ? (
             <ul>
-              {tasks.map((task) => (
-                <li key={task.id} data-completed={task.completed}>
-                  <button
-                    type="button"
-                    aria-label={`إكمال ${task.title}`}
-                    disabled={task.completed || pending || task.task_type !== "general_duty"}
-                    onClick={() => submit("complete_task", { task_id: task.id })}
-                  >
-                    {task.completed ? <Check /> : null}
-                  </button>
-                  <span>{task.title}</span>
-                  {task.is_required ? <small>مطلوبة</small> : null}
-                </li>
-              ))}
+              {tasks.map((task) => {
+                const manual = MANUAL_TASK_TYPES.has(task.task_type);
+                const needsPhoto = task.requires_photo && !task.completed;
+                return (
+                  <li key={task.id} data-completed={task.completed}>
+                    {manual && needsPhoto ? (
+                      <label
+                        className="staff-task-photo"
+                        data-busy={taskBusy}
+                        aria-label={`إرفاق صورة لإكمال ${task.title}`}
+                      >
+                        {taskBusy ? <LoaderCircle className="spin" /> : <Camera />}
+                        <input
+                          type="file"
+                          accept={PHOTO_ACCEPT}
+                          capture="environment"
+                          disabled={taskBusy}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) completeWithPhoto(task.id, file);
+                            event.target.value = "";
+                          }}
+                        />
+                      </label>
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label={`إكمال ${task.title}`}
+                        disabled={task.completed || taskBusy || !manual}
+                        onClick={() => submit("complete_task", { task_id: task.id })}
+                      >
+                        {task.completed ? <Check /> : null}
+                      </button>
+                    )}
+                    <span>{task.title}</span>
+                    {task.requires_photo ? (
+                      <small className="staff-task-phototag" data-attached={Boolean(task.photo_path)}>
+                        <Camera /> {task.photo_path ? "تم إرفاق صورة" : "تتطلب صورة"}
+                      </small>
+                    ) : null}
+                    {task.is_required ? <small>مطلوبة</small> : null}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="staff-empty">لا توجد مهام مخصصة لك اليوم.</p>

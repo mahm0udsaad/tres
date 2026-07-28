@@ -378,6 +378,57 @@
 .staff-tasks li > small { color: var(--staff-muted); font-size: 11px; }
 .staff-empty { margin: 0; color: var(--staff-muted); font-size: 14px; }
 
+/* shared page chrome for staff sub-pages (team, checklist, submissions) */
+.staff-back-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--staff-wine);
+  text-decoration: none;
+}
+.staff-back-link:hover { text-decoration: underline; }
+.staff-back-link svg { width: 17px; }
+.staff-no-branch {
+  display: grid;
+  justify-items: center;
+  margin-top: 24px;
+  padding: 42px 20px;
+  text-align: center;
+}
+.staff-no-branch > svg { width: 42px; height: 42px; color: var(--staff-wine); }
+.staff-no-branch h1 { margin: 12px 0 4px; }
+.staff-no-branch p { margin: 0; color: var(--staff-muted); }
+
+/* photo-required checklist items */
+.staff-task-photo {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1.6px dashed var(--staff-wine);
+  border-radius: 9px;
+  background: #fdf6f2;
+  color: var(--staff-wine);
+  cursor: pointer;
+}
+.staff-task-photo[data-busy="true"] { cursor: progress; opacity: .55; }
+.staff-task-photo svg { width: 16px; }
+.staff-task-photo input { display: none; }
+.staff-task-phototag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fdf0ea;
+  color: var(--staff-wine);
+  font-size: 11px;
+  font-weight: 700;
+}
+.staff-task-phototag svg { width: 12px; }
+.staff-task-phototag[data-attached="true"] { background: #e5f2ea; color: var(--staff-green); }
+
 .staff-missing { margin-top: 14px; border-color: #edc4bf; background: #fff9f8; }
 .staff-missing h2 { margin: 0; color: var(--staff-danger); font-size: 18px; }
 .staff-missing p { margin: 4px 0 12px; color: var(--staff-muted); font-size: 13px; }

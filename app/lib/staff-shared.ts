@@ -51,6 +51,20 @@ export type StaffTask = {
   completed: boolean;
   completed_at: string | null;
   is_required: boolean;
+  requires_photo: boolean;
+  photo_path: string | null;
+  sort_order: number;
+};
+
+export type ChecklistTemplate = {
+  id: string;
+  branch_id: string;
+  role: StaffRole | null;
+  title: string;
+  requires_photo: boolean;
+  is_required: boolean;
+  sort_order: number;
+  is_active: boolean;
 };
 
 export type Gamification = {

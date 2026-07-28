@@ -41,6 +41,7 @@ for (const table of [
   "kitchen_reports",
   "water_quality_checks",
   "daily_beverage_logs",
+  "checklist_templates",
 ]) {
   requirePattern(
     `RLS enabled for ${table}`,
@@ -60,6 +61,8 @@ for (const rpc of [
   "get_daily_beverage_report",
   "register_branch_staff",
   "set_branch_staff_active",
+  "save_checklist_template",
+  "set_checklist_template_active",
 ]) {
   requirePattern(
     `anonymous execute revoked for ${rpc}`,
@@ -105,6 +108,14 @@ requirePattern(
 requirePattern(
   "staff registration scoped to the supervisor branch",
   /values \(p_new_user_id, v_name, p_role, v_profile\.branch_id, p_scheduled_start\)/i,
+);
+requirePattern(
+  "photo-required tasks cannot complete without a stored photo",
+  /not completed or not requires_photo or photo_path is not null/i,
+);
+requirePattern(
+  "checklist photo evidence validated inside Postgres",
+  /perform private\.assert_staff_evidence\(p_user_id, array\[p_photo_path\], true\)/i,
 );
 
 if (failures.length) {

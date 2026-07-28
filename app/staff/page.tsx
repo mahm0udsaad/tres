@@ -55,9 +55,10 @@ export default async function StaffDashboard() {
   if (attendance) {
     const { data } = await supabase
       .from("tasks")
-      .select("id,title,task_type,completed,completed_at,is_required")
+      .select("id,title,task_type,completed,completed_at,is_required,requires_photo,photo_path,sort_order")
       .eq("user_id", profile.user_id)
       .eq("task_date", attendance.shift_date)
+      .order("sort_order")
       .order("created_at");
     tasks = (data ?? []) as StaffTask[];
   }
@@ -91,6 +92,9 @@ export default async function StaffDashboard() {
           ) : null}
           {profile.role === "supervisor" ? (
             <Link href="/staff/team">فريق الفرع</Link>
+          ) : null}
+          {profile.role === "supervisor" ? (
+            <Link href="/staff/checklist">قائمة المهام</Link>
           ) : null}
           {["owner", "manager", "supervisor", "shift_manager"].includes(profile.role) ? (
             <Link href="/staff/reports">التقارير</Link>

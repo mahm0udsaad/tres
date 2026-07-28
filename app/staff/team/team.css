@@ -3,27 +3,6 @@
 .staff-team-page { display: grid; gap: 16px; }
 .staff-team-page .staff-welcome { margin-top: 4px; }
 
-.staff-back-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--staff-wine);
-  text-decoration: none;
-}
-.staff-back-link:hover { text-decoration: underline; }
-.staff-back-link svg { width: 17px; }
-
-.staff-no-branch {
-  display: grid;
-  justify-items: center;
-  margin-top: 24px;
-  padding: 42px 20px;
-  text-align: center;
-}
-.staff-no-branch > svg { width: 42px; height: 42px; color: var(--staff-wine); }
-.staff-no-branch h1 { margin: 12px 0 4px; }
-.staff-no-branch p { margin: 0; color: var(--staff-muted); }
-
 .staff-team-head-icon { width: 23px; color: var(--staff-wine); }
 .staff-team-form { grid-template-columns: 1fr; }
 

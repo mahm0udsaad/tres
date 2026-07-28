@@ -1,0 +1,69 @@
+/* Supervisor checklist template manager — follows .staff-* conventions */
+
+.staff-checklist-page { display: grid; gap: 16px; }
+.staff-checklist-page .staff-welcome { margin-top: 4px; }
+
+.staff-checklist-head-icon { width: 23px; color: var(--staff-wine); }
+.staff-checklist-form { grid-template-columns: 1fr; }
+
+.staff-checklist-check {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--staff-line);
+  border-radius: 13px;
+  background: white;
+  cursor: pointer;
+}
+.staff-checklist-check input { width: 18px; height: 18px; accent-color: var(--staff-wine); }
+.staff-checklist-check span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.staff-checklist-check span svg { width: 15px; color: var(--staff-wine); }
+
+.staff-checklist-items { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.staff-checklist-items li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--staff-line);
+  border-radius: 15px;
+  background: white;
+}
+.staff-checklist-items[data-inactive="true"] li { opacity: .62; background: #faf7f5; }
+.staff-checklist-item-info strong { display: block; font-size: 15px; }
+.staff-checklist-item-info span { color: var(--staff-muted); font-size: 12.5px; }
+.staff-checklist-item-actions { display: flex; align-items: center; gap: 8px; }
+
+.staff-checklist-edit {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--staff-line);
+  border-radius: 11px;
+  background: white;
+  color: var(--staff-wine);
+  cursor: pointer;
+}
+.staff-checklist-edit:disabled { cursor: not-allowed; opacity: .55; }
+.staff-checklist-edit svg { width: 16px; }
+.staff-checklist-off { color: var(--staff-danger); }
+
+.staff-checklist-subhead {
+  margin: 20px 0 10px;
+  color: var(--staff-muted);
+  font-size: 13px;
+}
+
+@media (min-width: 600px) {
+  .staff-checklist-form { grid-template-columns: 1fr 1fr; }
+}

@@ -33,6 +33,31 @@ npm run build
 
 Brand assets live in `public/assets/` (mascot, building, Arabic font).
 
+## Staff operations
+
+The staff dashboard is available at `/staff`, daily report and operations
+forms are under `/staff/submissions`, and supervisor/shift-manager reporting is
+under `/staff/reports`. The owner bootstrap screen for branches, staff
+accounts, and daily duties is at `/admin/operations`.
+
+1. Copy `.env.example` to `.env.local` and set the Supabase/admin values.
+2. Apply all SQL migrations:
+
+```bash
+node scripts/db-migrate.mjs
+```
+
+3. Sign in to `/admin`, create a branch, then create staff accounts.
+
+Static security and role-boundary checks:
+
+```bash
+npm run test:staff:static
+```
+
+See [`docs/staff-operations-plan.md`](docs/staff-operations-plan.md) for the
+codebase gap analysis, role matrix, rollout notes, and remaining stages.
+
 ## Next up (from the design brief)
 
 Inner pages — **المنيو / قصتنا / فروعنا** — in the same direction.

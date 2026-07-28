@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "../lib/supabase";
 import { uploadImage } from "../lib/admin-data";
 import { ADMIN_COOKIE, SESSION_MAX_AGE, checkPin, signSession, verifySession } from "../lib/auth";
+import { STAFF_ROLES, type StaffRole } from "../lib/staff-shared";
 
 function refreshPublic() {
   // Public menu + homepage reflect owner edits.
@@ -37,6 +38,12 @@ async function requireAdmin() {
   const ok = await verifySession(jar.get(ADMIN_COOKIE)?.value);
   if (!ok) redirect("/admin/login");
 }
+
+export type OperationsActionState = {
+  error?: string;
+  message?: string;
+  operation?: string;
+};
 
 // ── auth ─────────────────────────────────────────────────────────────────────
 export async function login(_prev: { error?: string } | undefined, form: FormData) {
@@ -216,4 +223,103 @@ export async function saveSettings(form: FormData) {
   const { error } = await sb.from("settings").update({ ...base, theme }).eq("id", 1);
   if (error) await sb.from("settings").update(base).eq("id", 1);
   refreshPublic();
+}
+
+// ── staff operations bootstrap ───────────────────────────────────────────────
+export async function saveOperations(
+  _previous: OperationsActionState | undefined,
+  form: FormData,
+): Promise<OperationsActionState> {
+  await requireAdmin();
+  const operation = str(form.get("operation"));
+  const sb = supabaseAdmin();
+
+  if (operation === "save_branch") {
+    const id = str(form.get("id"));
+    const name = str(form.get("name"));
+    const latitude = num(form.get("latitude"));
+    const longitude = num(form.get("longitude"));
+    const radius_meters = num(form.get("radius_meters"));
+    if (!name || latitude == null || longitude == null || radius_meters == null) {
+      return { error: "أكمل جميع بيانات الفرع.", operation };
+    }
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return { error: "إحداثيات الفرع غير صحيحة.", operation };
+    }
+    if (radius_meters < 10 || radius_meters > 5000) {
+      return { error: "نصف القطر يجب أن يكون بين 10 و5000 متر.", operation };
+    }
+
+    const row = { name, latitude, longitude, radius_meters };
+    const result = id
+      ? await sb.from("branches").update(row).eq("id", id)
+      : await sb.from("branches").insert(row);
+    if (result.error) return { error: result.error.message, operation };
+    revalidatePath("/admin/operations");
+    return { message: id ? "تم تحديث الفرع." : "تم إنشاء الفرع.", operation };
+  }
+
+  if (operation === "create_staff") {
+    const full_name = str(form.get("full_name"));
+    const email = str(form.get("email"))?.toLowerCase();
+    const password = str(form.get("password"));
+    const roleValue = str(form.get("role"));
+    const branch_id = str(form.get("branch_id"));
+    const scheduled_start = str(form.get("scheduled_start"));
+    if (!full_name || !email || !password || !roleValue) {
+      return { error: "أكمل بيانات الموظف.", operation };
+    }
+    if (password.length < 8) {
+      return { error: "كلمة المرور يجب ألا تقل عن 8 أحرف.", operation };
+    }
+    if (!STAFF_ROLES.includes(roleValue as StaffRole)) {
+      return { error: "الدور الوظيفي غير صحيح.", operation };
+    }
+
+    const { data: created, error: authError } = await sb.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name },
+    });
+    if (authError || !created.user) {
+      return { error: authError?.message ?? "تعذّر إنشاء حساب الدخول.", operation };
+    }
+
+    const { error: profileError } = await sb.from("staff_profiles").insert({
+      user_id: created.user.id,
+      full_name,
+      role: roleValue,
+      branch_id,
+      scheduled_start,
+    });
+    if (profileError) {
+      await sb.auth.admin.deleteUser(created.user.id);
+      return { error: profileError.message, operation };
+    }
+
+    revalidatePath("/admin/operations");
+    return { message: `تم إنشاء حساب ${full_name}.`, operation };
+  }
+
+  if (operation === "assign_task") {
+    const user_id = str(form.get("user_id"));
+    const task_date = str(form.get("task_date"));
+    const title = str(form.get("title"));
+    if (!user_id || !task_date || !title) {
+      return { error: "اختر الموظف والتاريخ واكتب المهمة.", operation };
+    }
+    const { error } = await sb.from("tasks").insert({
+      user_id,
+      task_date,
+      title,
+      task_type: "general_duty",
+      is_required: true,
+    });
+    if (error) return { error: error.message, operation };
+    revalidatePath("/admin/operations");
+    return { message: "تم إسناد المهمة.", operation };
+  }
+
+  return { error: "الإجراء غير مدعوم.", operation: operation ?? undefined };
 }

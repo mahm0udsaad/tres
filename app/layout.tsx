@@ -129,11 +129,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // The control panel (/admin) renders its own chrome — hide the marketing
+  // Internal dashboards render their own chrome — hide the marketing
   // header/footer there.
   const pathname = (await headers()).get("x-pathname") ?? "";
-  const isAdmin = pathname.startsWith("/admin");
-  const settings = isAdmin ? null : await getPublicSettings();
+  const isInternal = pathname.startsWith("/admin") || pathname.startsWith("/staff");
+  const settings = isInternal ? null : await getPublicSettings();
   const announcement = settings?.announcementActive ? settings.announcement ?? undefined : undefined;
   const theme = settings?.theme ?? "classic";
 
@@ -146,16 +146,16 @@ export default async function RootLayout({
       className={`${ibmPlexArabic.variable} ${spaceGrotesk.variable} ${hnArabic.variable}`}
     >
       <body>
-        {!isAdmin && (
+        {!isInternal && (
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
         )}
-        {!isAdmin && <SiteHeader announcement={announcement} />}
+        {!isInternal && <SiteHeader announcement={announcement} />}
         {children}
-        {!isAdmin && <Footer />}
-        {!isAdmin && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} qrUrl={LOYALTY_QR_URL} />}
+        {!isInternal && <Footer />}
+        {!isInternal && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} qrUrl={LOYALTY_QR_URL} />}
       </body>
     </html>
   );

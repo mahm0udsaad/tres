@@ -67,7 +67,7 @@
   position: fixed; inset-inline: 0; bottom: 0; z-index: 40;
   height: calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: saturate(1.2) blur(12px);
   border-top: 1px solid var(--line);
@@ -297,3 +297,25 @@
 .a-pickcat { font-size: 12px; font-weight: 700; color: var(--faint); padding: 14px 4px 6px; letter-spacing: .3px; }
 
 .a-toast { position: fixed; bottom: calc(var(--nav-h) + 16px); inset-inline: 0; margin: 0 auto; width: fit-content; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; z-index: 70; box-shadow: var(--shadow); animation: a-rise .2s ease; }
+
+/* ===== staff operations bootstrap ===== */
+.a-ops-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.a-ops-form { display: grid; gap: 12px; }
+.a-ops-form .a-field { margin: 0; }
+.a-ops-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.a-ops-message { min-height: 18px; margin: 0; font-size: 13px; }
+.a-ops-message[data-error="true"] { color: var(--danger); }
+.a-ops-message[data-error="false"] { color: var(--green); }
+.a-ops-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.a-ops-person { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
+.a-ops-person .avatar { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 10px; color: var(--burgundy); background: var(--blush-soft); font-weight: 700; }
+.a-ops-person .main { flex: 1; min-width: 0; }
+.a-ops-person strong { display: block; font-size: 14px; }
+.a-ops-person small { color: var(--muted); font-size: 12px; }
+.a-ops-branch-edit { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
+.a-ops-branch-edit .a-input { min-height: 40px; padding: 8px 10px; font-size: 13px; }
+.a-ops-branch-edit .a-ops-actions { display: grid; grid-template-columns: 1fr auto; }
+@media (min-width: 700px) {
+  .a-ops-grid { grid-template-columns: 1fr 1fr; }
+  .a-ops-wide { grid-column: 1 / -1; }
+}

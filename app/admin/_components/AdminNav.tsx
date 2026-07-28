@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CupSoda, Sparkles, MessageSquareText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, CupSoda, Sparkles, MessageSquareText, Settings, LogOut, Users } from "lucide-react";
 import { logout } from "../actions";
 
 type Tab = {
@@ -18,6 +18,7 @@ const TABS: Tab[] = [
   { href: "/admin/menu", label: "المنيو", icon: CupSoda },
   { href: "/admin/home", label: "الواجهة", icon: Sparkles },
   { href: "/admin/feedback", label: "الملاحظات", icon: MessageSquareText, badgeKey: true },
+  { href: "/admin/operations", label: "الفريق", icon: Users },
   { href: "/admin/settings", label: "الإعدادات", icon: Settings },
 ];
 

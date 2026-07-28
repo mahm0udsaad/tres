@@ -1,5 +1,6 @@
 import "server-only";
 import type { requireStaff } from "../lib/staff";
+import { t, type Lang } from "../lib/staff-i18n";
 
 /**
  * Shared photo-evidence helpers for the staff app. Uploads always go to the
@@ -27,20 +28,12 @@ export function imageFiles(form: FormData, field: string) {
     .filter((entry): entry is File => typeof entry !== "string" && entry.size > 0);
 }
 
-export function validateImages(files: File[], required: boolean) {
-  if (required && files.length === 0) {
-    return "يجب إرفاق صورة واحدة على الأقل. · Attach at least one photo.";
-  }
-  if (files.length > MAX_REPORT_IMAGES) {
-    return `يمكن إرفاق ${MAX_REPORT_IMAGES} صور كحد أقصى. · Maximum ${MAX_REPORT_IMAGES} photos.`;
-  }
+export function validateImages(files: File[], required: boolean, lang: Lang) {
+  if (required && files.length === 0) return t("photo_one_min", lang);
+  if (files.length > MAX_REPORT_IMAGES) return t("photo_max", lang, { max: MAX_REPORT_IMAGES });
   for (const file of files) {
-    if (!IMAGE_EXTENSIONS[file.type]) {
-      return "صيغة الصورة غير مدعومة — استخدم JPG أو PNG أو WebP أو HEIC. · Unsupported image format — use JPG, PNG, WebP, or HEIC.";
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      return "حجم كل صورة يجب ألا يتجاوز 3 ميجابايت. · Each photo must be under 3 MB.";
-    }
+    if (!IMAGE_EXTENSIONS[file.type]) return t("photo_format", lang);
+    if (file.size > MAX_IMAGE_BYTES) return t("photo_size", lang);
   }
   return null;
 }
@@ -55,8 +48,9 @@ export function dateInTimeZone(timeZone: string) {
 }
 
 export async function branchDay(context: StaffContext) {
+  const lang = context.profile.preferred_language;
   if (!context.profile.branch_id) {
-    return { error: "لم يتم تعيين فرع لهذا الحساب. · No branch assigned to this account." } as const;
+    return { error: t("no_branch_account", lang) } as const;
   }
   const { data, error } = await context.supabase
     .from("branches")
@@ -64,7 +58,7 @@ export async function branchDay(context: StaffContext) {
     .eq("id", context.profile.branch_id)
     .single();
   if (error || !data) {
-    return { error: "تعذّر التحقق من فرعك. · Couldn't verify your branch." } as const;
+    return { error: t("branch_check_failed", lang) } as const;
   }
   return {
     branchId: context.profile.branch_id,
@@ -102,7 +96,7 @@ export async function uploadEvidence(
     if (successfulPaths.length) {
       await context.supabase.storage.from(EVIDENCE_BUCKET).remove(successfulPaths);
     }
-    return { error: "تعذّر رفع الصور. تحقق من الاتصال وحاول مرة أخرى." };
+    return { error: t("photo_upload_failed", context.profile.preferred_language) };
   }
   return { paths: successfulPaths };
 }

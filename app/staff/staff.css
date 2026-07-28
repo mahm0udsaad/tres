@@ -429,6 +429,17 @@
 .staff-task-phototag svg { width: 12px; }
 .staff-task-phototag[data-attached="true"] { background: #e5f2ea; color: var(--staff-green); }
 
+.staff-override-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .22);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .staff-missing { margin-top: 14px; border-color: #edc4bf; background: #fff9f8; }
 .staff-missing h2 { margin: 0; color: var(--staff-danger); font-size: 18px; }
 .staff-missing p { margin: 4px 0 12px; color: var(--staff-muted); font-size: 13px; }

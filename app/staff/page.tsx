@@ -9,6 +9,7 @@ import {
   requireStaff,
   usesAttendance,
 } from "../lib/staff";
+import { t, dirFor, type Lang } from "../lib/staff-i18n";
 import BranchSettings from "./BranchSettings";
 import ShiftControls from "./ShiftControls";
 import { logoutStaff } from "./actions";
@@ -23,6 +24,10 @@ const EMPTY_GAMIFICATION: Gamification = {
 
 export default async function StaffDashboard() {
   const { profile, supabase } = await requireStaff();
+  // Attendance roles see the app in their preferred language; admin roles
+  // (owner/manager/supervisor/shift_manager) always see Arabic.
+  const lang: Lang = usesAttendance(profile.role) ? profile.preferred_language : "ar";
+  const locale = lang === "ar" ? "ar-SA" : "en-US";
 
   const [branchResult, attendanceResult, gamificationResult] = await Promise.all([
     profile.branch_id
@@ -35,7 +40,7 @@ export default async function StaffDashboard() {
     usesAttendance(profile.role)
       ? supabase
           .from("attendance_records")
-          .select("id,shift_date,start_time,end_time,break_started_at,break_ended_at,break_duration_minutes,break_entitlement_minutes,status,on_time,points_earned,tasks_completed")
+          .select("id,shift_date,start_time,end_time,break_started_at,break_ended_at,break_duration_minutes,break_entitlement_minutes,status,on_time,points_earned,tasks_completed,supervisor_override_by")
           .eq("user_id", profile.user_id)
           .eq("status", "active")
           .maybeSingle()
@@ -69,8 +74,8 @@ export default async function StaffDashboard() {
         <div className="staff-brand">
           <span>T</span>
           <div>
-            <strong>تريس</strong>
-            <small>لوحة الموظفين</small>
+            <strong>{lang === "ar" ? "تريس" : "TRES"}</strong>
+            <small>{t("panel_title", lang)}</small>
           </div>
         </div>
         <div className="staff-user">
@@ -79,33 +84,33 @@ export default async function StaffDashboard() {
             <span>{ROLE_LABELS[profile.role]}</span>
           </div>
           <form action={logoutStaff}>
-            <button type="submit" aria-label="تسجيل الخروج"><LogOut /></button>
+            <button type="submit" aria-label={t("logout", lang)}><LogOut /></button>
           </form>
         </div>
       </header>
 
       <div className="staff-content">
-        <nav className="staff-section-nav" aria-label="أقسام لوحة الموظفين">
-          <Link href="/staff" data-active="true">الرئيسية</Link>
+        <nav className="staff-section-nav" aria-label={t("panel_title", lang)}>
+          <Link href="/staff" data-active="true">{t("nav_home", lang)}</Link>
           {profile.role !== "shift_manager" ? (
-            <Link href="/staff/submissions">النماذج اليومية</Link>
+            <Link href="/staff/submissions">{t("nav_daily_forms", lang)}</Link>
           ) : null}
           {profile.role === "supervisor" ? (
-            <Link href="/staff/team">فريق الفرع</Link>
+            <Link href="/staff/team">{t("nav_team", lang)}</Link>
           ) : null}
           {profile.role === "supervisor" ? (
-            <Link href="/staff/checklist">قائمة المهام</Link>
+            <Link href="/staff/checklist">{t("nav_checklist", lang)}</Link>
           ) : null}
           {["owner", "manager", "supervisor", "shift_manager"].includes(profile.role) ? (
-            <Link href="/staff/reports">التقارير</Link>
+            <Link href="/staff/reports">{t("nav_reports", lang)}</Link>
           ) : null}
         </nav>
 
         <section className="staff-welcome">
           <div>
             <p className="staff-eyebrow">STAFF OPERATIONS</p>
-            <h1>مرحباً، {profile.full_name.split(" ")[0]}</h1>
-            <p>{new Intl.DateTimeFormat("ar-SA", { dateStyle: "full" }).format(new Date())}</p>
+            <h1>{t("greeting", lang, { name: profile.full_name.split(" ")[0] })}</h1>
+            <p>{new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(new Date())}</p>
           </div>
           {branch ? (
             <div className="staff-branch-pill"><MapPin /> {branch.name}</div>
@@ -114,7 +119,7 @@ export default async function StaffDashboard() {
 
         {!branch ? (
           <div className="staff-alert staff-alert--error">
-            لم يتم تعيين فرع لهذا الحساب. تواصل مع الإدارة قبل بدء العمل.
+            {t("branch_unassigned", lang)}
           </div>
         ) : null}
 
@@ -123,6 +128,7 @@ export default async function StaffDashboard() {
             attendance={attendance}
             tasks={tasks}
             gamification={(gamificationResult.data ?? EMPTY_GAMIFICATION) as Gamification}
+            lang={lang}
           />
         ) : null}
 

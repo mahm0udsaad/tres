@@ -7,7 +7,9 @@ import {
   deleteStaffAuthUser,
 } from "../../lib/staff-provisioning";
 import {
+  NATIONALITY_VALUES,
   PROVISIONABLE_ROLES,
+  languageForNationality,
   type ProvisionableRole,
 } from "../../lib/staff-shared";
 
@@ -37,7 +39,14 @@ const RPC_ERRORS: Record<string, string> = {
   auth_user_missing: "تعذّر إنشاء الحساب. حاول مرة أخرى.",
   profile_exists: "يوجد ملف موظف لهذا الحساب بالفعل.",
   cannot_target_self: "لا يمكنك تعديل حسابك من هنا.",
-  target_not_allowed: "لا يمكن تعديل هذا الحساب — خارج فرعك أو دوره محمي.",
+  target_not_allowed: "لا يمكن تنفيذ الإجراء — الحساب خارج فرعك أو دوره محمي.",
+  nationality_invalid: "اختر جنسية صحيحة.",
+  language_invalid: "اختر لغة صحيحة (العربية أو الإنجليزية).",
+  reason_required: "أدخل سبباً لا يقل عن 10 أحرف.",
+  active_shift_exists: "لدى الموظف وردية جارية بالفعل.",
+  no_active_shift: "لا توجد وردية جارية لهذا الموظف.",
+  incomplete_tasks: "لا يمكن إنهاء الوردية — لدى الموظف مهام مطلوبة غير مكتملة.",
+  break_active: "لدى الموظف استراحة جارية — يجب إنهاؤها أولاً.",
 };
 
 function rpcError(result: Record<string, unknown>, fallback: string): string {
@@ -61,6 +70,8 @@ export async function createBranchStaff(
   const role = text(form.get("role")) as ProvisionableRole;
   const email = text(form.get("email")).toLowerCase();
   const scheduledStart = text(form.get("scheduled_start"));
+  const nationality = text(form.get("nationality")) || "Other";
+  const langValue = text(form.get("preferred_language"));
   let password = text(form.get("password"));
 
   if (!fullName) return { error: "أدخل اسم الموظف." };
@@ -70,6 +81,11 @@ export async function createBranchStaff(
   if (!EMAIL_PATTERN.test(email)) {
     return { error: "أدخل بريدًا إلكترونيًا صالحًا لتسجيل الدخول." };
   }
+  if (!NATIONALITY_VALUES.includes(nationality)) {
+    return { error: RPC_ERRORS.nationality_invalid };
+  }
+  const preferredLanguage =
+    langValue === "ar" || langValue === "en" ? langValue : languageForNationality(nationality);
   if (password && password.length < 8) {
     return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا." };
   }
@@ -86,6 +102,8 @@ export async function createBranchStaff(
     p_full_name: fullName,
     p_role: role,
     p_scheduled_start: scheduledStart || null,
+    p_nationality: nationality,
+    p_preferred_language: preferredLanguage,
   });
 
   const result = (data ?? {}) as Record<string, unknown>;
@@ -143,4 +161,52 @@ export async function toggleBranchStaffActive(
 
   revalidatePath("/staff/team");
   return { message: nextActive ? "تم تفعيل الحساب." : "تم تعطيل الحساب." };
+}
+
+/** Manual GPS-fallback: supervisor clocks a same-branch employee in/out with a
+ *  mandatory reason. The database enforces branch scope, the reason, and (on
+ *  end) task completion. */
+export async function overrideBranchShift(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "supervisor") {
+    return { error: "هذا الإجراء متاح للمشرف فقط." };
+  }
+
+  const employeeId = text(form.get("employee_id"));
+  const action = text(form.get("action"));
+  const reason = text(form.get("reason"));
+  if (!employeeId || (action !== "start" && action !== "end")) {
+    return { error: "بيانات الإجراء غير مكتملة." };
+  }
+  if (reason.length < 10) {
+    return { error: RPC_ERRORS.reason_required };
+  }
+
+  const { data, error } = await supabase.rpc("supervisor_override_shift", {
+    p_employee_id: employeeId,
+    p_action: action,
+    p_reason: reason,
+  });
+
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) {
+    if (error) {
+      return {
+        error: error.code === "42501"
+          ? "هذا الإجراء متاح للمشرف فقط."
+          : "تعذّر تنفيذ الإجراء. حاول مرة أخرى.",
+      };
+    }
+    return { error: rpcError(result, "تعذّر تنفيذ الإجراء. حاول مرة أخرى.") };
+  }
+
+  revalidatePath("/staff/team");
+  return {
+    message: action === "start"
+      ? "تم تسجيل حضور الموظف يدوياً."
+      : "تم تسجيل انصراف الموظف يدوياً.",
+  };
 }

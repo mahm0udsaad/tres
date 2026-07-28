@@ -6,7 +6,12 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "../lib/supabase";
 import { uploadImage } from "../lib/admin-data";
 import { ADMIN_COOKIE, SESSION_MAX_AGE, checkPin, signSession, verifySession } from "../lib/auth";
-import { STAFF_ROLES, type StaffRole } from "../lib/staff-shared";
+import {
+  NATIONALITY_VALUES,
+  STAFF_ROLES,
+  languageForNationality,
+  type StaffRole,
+} from "../lib/staff-shared";
 
 function refreshPublic() {
   // Public menu + homepage reflect owner edits.
@@ -266,6 +271,8 @@ export async function saveOperations(
     const roleValue = str(form.get("role"));
     const branch_id = str(form.get("branch_id"));
     const scheduled_start = str(form.get("scheduled_start"));
+    const nationality = str(form.get("nationality")) ?? "Other";
+    const langValue = str(form.get("preferred_language"));
     if (!full_name || !email || !password || !roleValue) {
       return { error: "أكمل بيانات الموظف.", operation };
     }
@@ -275,6 +282,11 @@ export async function saveOperations(
     if (!STAFF_ROLES.includes(roleValue as StaffRole)) {
       return { error: "الدور الوظيفي غير صحيح.", operation };
     }
+    if (!NATIONALITY_VALUES.includes(nationality)) {
+      return { error: "الجنسية غير صحيحة.", operation };
+    }
+    const preferred_language =
+      langValue === "ar" || langValue === "en" ? langValue : languageForNationality(nationality);
 
     const { data: created, error: authError } = await sb.auth.admin.createUser({
       email,
@@ -292,6 +304,8 @@ export async function saveOperations(
       role: roleValue,
       branch_id,
       scheduled_start,
+      nationality,
+      preferred_language,
     });
     if (profileError) {
       await sb.auth.admin.deleteUser(created.user.id);

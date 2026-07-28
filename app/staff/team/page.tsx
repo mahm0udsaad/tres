@@ -32,11 +32,18 @@ export default async function StaffTeamPage() {
     );
   }
 
-  const { data: members } = await supabase
-    .from("staff_profiles")
-    .select("user_id,full_name,role,branch_id,scheduled_start,is_active")
-    .eq("branch_id", branch.id)
-    .order("full_name");
+  const [{ data: members }, { data: shiftStatus }] = await Promise.all([
+    supabase
+      .from("staff_profiles")
+      .select("user_id,full_name,role,branch_id,scheduled_start,is_active,nationality,preferred_language")
+      .eq("branch_id", branch.id)
+      .order("full_name"),
+    supabase.rpc("get_branch_shift_status"),
+  ]);
+
+  const activeShiftIds = Array.isArray(shiftStatus)
+    ? (shiftStatus as { user_id: string }[]).map((row) => row.user_id)
+    : [];
 
   return (
     <main className="staff-content staff-team-page">
@@ -54,6 +61,7 @@ export default async function StaffTeamPage() {
       <TeamManager
         members={(members ?? []) as StaffProfile[]}
         selfUserId={profile.user_id}
+        activeShiftIds={activeShiftIds}
       />
     </main>
   );

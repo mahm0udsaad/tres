@@ -1,9 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { MapPin, Plus, UserPlus } from "lucide-react";
-import { ROLE_LABELS, STAFF_ROLES, type StaffRole } from "../../lib/staff-shared";
+import {
+  LANGUAGE_LABELS,
+  NATIONALITIES,
+  ROLE_LABELS,
+  STAFF_ROLES,
+  languageForNationality,
+  type StaffRole,
+} from "../../lib/staff-shared";
 import { saveOperations } from "../actions";
 
 type Branch = {
@@ -59,6 +66,8 @@ export default function OperationsForms({
   const [branchState, branchAction] = useActionState(saveOperations, undefined);
   const [staffState, staffAction] = useActionState(saveOperations, undefined);
   const [taskState, taskAction] = useActionState(saveOperations, undefined);
+  const [nationality, setNationality] = useState("Saudi Arabia");
+  const [language, setLanguage] = useState<"ar" | "en">(languageForNationality("Saudi Arabia"));
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Riyadh",
     year: "numeric",
@@ -150,6 +159,37 @@ export default function OperationsForms({
               <select className="a-select" name="branch_id" required defaultValue="">
                 <option value="" disabled>اختر الفرع</option>
                 {branches.map((branch) => <option value={branch.id} key={branch.id}>{branch.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="a-row-2">
+            <div className="a-field">
+              <label>الجنسية</label>
+              <select
+                className="a-select"
+                name="nationality"
+                value={nationality}
+                onChange={(event) => {
+                  setNationality(event.target.value);
+                  setLanguage(languageForNationality(event.target.value));
+                }}
+              >
+                {NATIONALITIES.map((item) => (
+                  <option value={item.value} key={item.value}>{item.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="a-field">
+              <label>لغة لوحة الموظف</label>
+              <select
+                className="a-select"
+                name="preferred_language"
+                value={language}
+                onChange={(event) => setLanguage(event.target.value as "ar" | "en")}
+              >
+                {(["ar", "en"] as const).map((code) => (
+                  <option value={code} key={code}>{LANGUAGE_LABELS[code]}</option>
+                ))}
               </select>
             </div>
           </div>

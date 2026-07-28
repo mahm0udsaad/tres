@@ -11,7 +11,7 @@ import {
   uploadEvidence,
   validateImages,
 } from "./evidence";
-import { staffErrorMessage, staffSqlErrorMessage } from "../lib/staff-shared";
+import { staffErrorMessage, staffSqlErrorMessage, t } from "../lib/staff-i18n";
 
 export type StaffActionState = {
   error?: string;
@@ -61,7 +61,8 @@ export async function staffOperation(
   _previous: StaffActionState | undefined,
   form: FormData,
 ): Promise<StaffActionState> {
-  const { supabase } = await requireStaff();
+  const { supabase, profile } = await requireStaff();
+  const lang = profile.preferred_language;
   const operation = text(form.get("operation"));
   let rpc:
     | "start_shift"
@@ -76,7 +77,7 @@ export async function staffOperation(
     const longitude = number(form.get("longitude"));
     const accuracy = number(form.get("accuracy"));
     if (latitude == null || longitude == null || accuracy == null) {
-      return { error: "تعذّر قراءة الموقع. فعّل إذن الموقع وحاول مرة أخرى.", operation };
+      return { error: t("geo_unreadable", lang), operation };
     }
     rpc = operation;
     args = {
@@ -89,35 +90,37 @@ export async function staffOperation(
     args = { p_action: operation === "start_break" ? "start" : "end" };
   } else if (operation === "complete_task") {
     const taskId = text(form.get("task_id"));
-    if (!taskId) return { error: "المهمة غير موجودة.", operation };
+    if (!taskId) return { error: t("task_not_found", lang), operation };
     rpc = "complete_task";
     args = { p_task_id: taskId };
   } else {
-    return { error: "الإجراء غير مدعوم.", operation };
+    return { error: t("generic_error", lang), operation };
   }
 
   const { data, error } = await supabase.rpc(rpc, args);
   if (error) {
-    return { error: staffSqlErrorMessage(error.code), operation };
+    return { error: staffSqlErrorMessage(error.code, lang), operation };
   }
 
   const result = (data ?? {}) as Record<string, unknown>;
   if (result.ok !== true) {
-    return { error: staffErrorMessage(result), operation, result };
+    return { error: staffErrorMessage(result, lang), operation, result };
   }
 
   revalidatePath("/staff");
   return {
-    message:
+    message: t(
       operation === "start_shift"
-        ? "بدأت الوردية بنجاح. · Shift started."
+        ? "ok_shift_started"
         : operation === "end_shift"
-          ? "أحسنت! اكتملت الوردية. · Great job — shift completed."
+          ? "ok_shift_ended"
           : operation === "complete_task"
-            ? "تم إكمال المهمة. · Task completed."
+            ? "ok_task_completed"
             : operation === "start_break"
-              ? "بدأت الاستراحة. · Break started."
-              : "انتهت الاستراحة. · Break ended.",
+              ? "ok_break_started"
+              : "ok_break_ended",
+      lang,
+    ),
     operation,
     result,
   };
@@ -131,21 +134,19 @@ export async function completeChecklistTask(
   form: FormData,
 ): Promise<StaffActionState> {
   const context = await requireStaff();
+  const lang = context.profile.preferred_language;
   const operation = "complete_task";
 
   const taskId = text(form.get("task_id"));
   if (!taskId) {
-    return { error: "المهمة غير موجودة. · Task not found.", operation };
+    return { error: t("task_not_found", lang), operation };
   }
 
   const files = imageFiles(form, "photo");
-  const imageError = validateImages(files, true);
+  const imageError = validateImages(files, true, lang);
   if (imageError) return { error: imageError, operation };
   if (files.length !== 1) {
-    return {
-      error: "أرفق صورة واحدة لإثبات إنجاز المهمة. · Attach one photo as proof.",
-      operation,
-    };
+    return { error: t("attach_one_photo", lang), operation };
   }
 
   const day = await branchDay(context);
@@ -167,18 +168,14 @@ export async function completeChecklistTask(
   if (error || result.ok !== true) {
     await removeEvidence(context, uploaded.paths);
     return {
-      error: error ? staffSqlErrorMessage(error.code) : staffErrorMessage(result),
+      error: error ? staffSqlErrorMessage(error.code, lang) : staffErrorMessage(result, lang),
       operation,
       result,
     };
   }
 
   revalidatePath("/staff");
-  return {
-    message: "تم إكمال المهمة بإثبات مصوّر. · Task completed with photo proof.",
-    operation,
-    result,
-  };
+  return { message: t("ok_task_photo", lang), operation, result };
 }
 
 export async function updateOwnBranch(
@@ -207,8 +204,9 @@ export async function updateOwnBranch(
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) {
+    // Owner/manager branch settings are an Arabic-only administrative surface.
     return {
-      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ الفرع. حاول مرة أخرى.",
+      error: error ? staffSqlErrorMessage(error.code, "ar") : "تعذّر حفظ الفرع. حاول مرة أخرى.",
     };
   }
   revalidatePath("/staff");

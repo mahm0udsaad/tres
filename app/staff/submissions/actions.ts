@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { StaffRole } from "../../lib/staff-shared";
 import { requireStaff } from "../../lib/staff";
-import { staffSqlErrorMessage } from "../../lib/staff-shared";
+import { staffSqlErrorMessage, t } from "../../lib/staff-i18n";
 import {
   branchDay,
   imageFiles,
@@ -66,12 +66,12 @@ async function maySubmitReport(
     .order("revision", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) return { error: "تعذّر التحقق من تقرير اليوم." } as const;
+  if (error) return { error: t("report_check_failed", context.profile.preferred_language) } as const;
   if (data?.status === "pending") {
-    return { error: "تم إرسال تقرير اليوم وهو بانتظار مراجعة المشرف." } as const;
+    return { error: t("report_pending", context.profile.preferred_language) } as const;
   }
   if (data?.status === "confirmed") {
-    return { error: "تم اعتماد تقرير اليوم بالفعل." } as const;
+    return { error: t("report_confirmed", context.profile.preferred_language) } as const;
   }
   return { ok: true } as const;
 }
@@ -94,7 +94,7 @@ async function submitCleaning(
     return { operation: "cleaning", error: "اكتب ملاحظات واضحة من 10 إلى 3000 حرف." };
   }
   const files = imageFiles(form, "photos");
-  const imageError = validateImages(files, true);
+  const imageError = validateImages(files, true, context.profile.preferred_language);
   if (imageError) return { operation: "cleaning", error: imageError };
 
   const day = await branchDay(context);
@@ -114,7 +114,7 @@ async function submitCleaning(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "cleaning",
-      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ تقرير النظافة.",
+      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ تقرير النظافة.",
     };
   }
   return finish("cleaning", "تم إرسال تقرير النظافة للمراجعة.");
@@ -135,7 +135,7 @@ async function submitBarista(
     return { operation: "barista", error: "يجب تأكيد نظافة البار قبل التسليم." };
   }
   const files = imageFiles(form, "photos");
-  const imageError = validateImages(files, false);
+  const imageError = validateImages(files, false, context.profile.preferred_language);
   if (imageError) return { operation: "barista", error: imageError };
 
   const day = await branchDay(context);
@@ -156,7 +156,7 @@ async function submitBarista(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "barista",
-      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ تقرير البار.",
+      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ تقرير البار.",
     };
   }
   return finish("barista", "تم إرسال تقرير البار للمراجعة.");
@@ -213,7 +213,7 @@ async function submitKitchen(
     };
   }
   const files = imageFiles(form, "photos");
-  const imageError = validateImages(files, true);
+  const imageError = validateImages(files, true, context.profile.preferred_language);
   if (imageError) return { operation: "kitchen", error: imageError };
 
   const day = await branchDay(context);
@@ -233,7 +233,7 @@ async function submitKitchen(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "kitchen",
-      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ تقرير المطبخ.",
+      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ تقرير المطبخ.",
     };
   }
   return finish("kitchen", "تم إرسال تقرير المطبخ والجرد للمراجعة.");
@@ -251,7 +251,7 @@ async function submitWater(
     return { operation: "water", error: "أدخل قراءة ملوحة صحيحة أكبر من أو تساوي صفر." };
   }
   const files = imageFiles(form, "photo");
-  const imageError = validateImages(files, true);
+  const imageError = validateImages(files, true, context.profile.preferred_language);
   if (imageError) return { operation: "water", error: imageError };
   if (files.length !== 1) {
     return { operation: "water", error: "أرفق صورة واحدة لقراءة فحص المياه." };
@@ -277,7 +277,7 @@ async function submitWater(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "water",
-      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ فحص المياه.",
+      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ فحص المياه.",
     };
   }
   return finish("water", "تم تسجيل فحص جودة المياه.");
@@ -302,7 +302,7 @@ async function submitBeverage(
   if (error || result.ok !== true) {
     return {
       operation: "beverage",
-      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ استهلاك المشروبات.",
+      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ استهلاك المشروبات.",
     };
   }
   return finish("beverage", "تم تحديث استهلاك مشروبات اليوم.");

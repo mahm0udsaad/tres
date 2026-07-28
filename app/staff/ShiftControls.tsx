@@ -17,6 +17,7 @@ import type {
   Gamification,
   StaffTask,
 } from "../lib/staff-shared";
+import { t, type Lang } from "../lib/staff-i18n";
 import { completeChecklistTask, staffOperation } from "./actions";
 
 const PHOTO_ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif";
@@ -26,6 +27,7 @@ type Props = {
   attendance: AttendanceRecord | null;
   tasks: StaffTask[];
   gamification: Gamification;
+  lang: Lang;
 };
 
 type Coordinates = {
@@ -34,12 +36,12 @@ type Coordinates = {
   accuracy: number;
 };
 
-function hoursSince(iso: string) {
+function hoursSince(iso: string, lang: Lang) {
   const hours = Math.max(0, (Date.now() - new Date(iso).getTime()) / 3_600_000);
-  return hours.toLocaleString("ar-SA", { maximumFractionDigits: 1 });
+  return hours.toLocaleString(lang === "ar" ? "ar-SA" : "en-US", { maximumFractionDigits: 1 });
 }
 
-export default function ShiftControls({ attendance, tasks, gamification }: Props) {
+export default function ShiftControls({ attendance, tasks, gamification, lang }: Props) {
   const [state, action, pending] = useActionState(staffOperation, undefined);
   const [photoState, photoAction, photoPending] = useActionState(completeChecklistTask, undefined);
   const [locationPending, setLocationPending] = useState(false);
@@ -52,11 +54,11 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
       setElapsedHours(null);
       return;
     }
-    const update = () => setElapsedHours(hoursSince(attendance.start_time));
+    const update = () => setElapsedHours(hoursSince(attendance.start_time, lang));
     update();
     const timer = window.setInterval(update, 60_000);
     return () => window.clearInterval(timer);
-  }, [attendance]);
+  }, [attendance, lang]);
 
   useEffect(() => {
     if (state?.operation === "end_shift" && state.result?.ok === true) {
@@ -76,9 +78,7 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
   function locateAndSubmit(operation: "start_shift" | "end_shift") {
     setLocationError("");
     if (!navigator.geolocation) {
-      setLocationError(
-        "هذا المتصفح لا يدعم تحديد الموقع. · This browser does not support location.",
-      );
+      setLocationError(t("geo_unsupported", lang));
       return;
     }
     setLocationPending(true);
@@ -100,8 +100,8 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
         setLocationPending(false);
         setLocationError(
           error.code === error.PERMISSION_DENIED
-            ? "اسمح بالوصول إلى الموقع لبدء أو إنهاء الوردية. · Allow location access to start or end your shift."
-            : "تعذّر تحديد موقعك بدقة — حاول في مكان مكشوف. · Couldn't get an accurate location — try again outdoors.",
+            ? t("geo_denied", lang)
+            : t("geo_unavailable", lang),
         );
       },
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 15_000 },
@@ -131,13 +131,13 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
       {showSuccess ? (
         <section className="staff-success" role="status">
           <div className="staff-success-icon"><Award /></div>
-          <p>أحسنت!</p>
-          <h2>اكتملت الوردية بنجاح</h2>
+          <p>{lang === "ar" ? "أحسنت!" : "Well done!"}</p>
+          <h2>{t("ok_shift_ended", lang)}</h2>
           <div>
-            <span>{String(state?.result?.hours_worked ?? 0)} ساعة</span>
-            <span>{String(state?.result?.tasks_completed ?? 0)} مهام</span>
-            <span>+{String(state?.result?.points_earned ?? 0)} نقطة</span>
-            <span>{String(state?.result?.streak_count ?? 1)} أيام متتالية</span>
+            <span>{String(state?.result?.hours_worked ?? 0)} {lang === "ar" ? "ساعة" : "h"}</span>
+            <span>{String(state?.result?.tasks_completed ?? 0)} {t("today_tasks", lang)}</span>
+            <span>+{String(state?.result?.points_earned ?? 0)} {t("total_points", lang)}</span>
+            <span>{String(state?.result?.streak_count ?? 1)} {t("streak_days", lang)}</span>
           </div>
         </section>
       ) : null}
@@ -145,12 +145,15 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
       <section className="staff-shift-card">
         <div className="staff-shift-status">
           <span className={attendance ? "is-active" : ""} />
-          {attendance ? "وردية جارية · Shift running" : "جاهز لبدء الوردية · Ready to start"}
+          {attendance ? t("shift_running", lang) : t("ready_to_start", lang)}
         </div>
         {attendance ? (
           <>
             <strong className="staff-hours" suppressHydrationWarning>{elapsedHours ?? "—"}</strong>
-            <span className="staff-hours-label">ساعة منذ تسجيل الحضور</span>
+            <span className="staff-hours-label">{t("hours_since", lang)}</span>
+            {attendance.supervisor_override_by ? (
+              <span className="staff-override-badge">{t("manual_by_supervisor", lang)}</span>
+            ) : null}
             <button
               type="button"
               className="staff-shift-button staff-shift-button--end"
@@ -158,8 +161,8 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
               disabled={busy}
             >
               {busy ? <LoaderCircle className="spin" /> : <LogOut />}
-              <span>إنهاء الوردية · End shift</span>
-              <small>سيتم التحقق من مهام اليوم أولاً · Today's tasks are checked first</small>
+              <span>{t("end_shift", lang)}</span>
+              <small>{t("end_hint", lang)}</small>
             </button>
           </>
         ) : (
@@ -170,8 +173,8 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
             disabled={busy}
           >
             {busy ? <LoaderCircle className="spin" /> : <LogIn />}
-            <span>بدء الوردية · Start shift</span>
-            <small><MapPin /> يجب أن تكون داخل نطاق الفرع · Be inside the branch area</small>
+            <span>{t("start_shift", lang)}</span>
+            <small><MapPin /> {t("start_hint", lang)}</small>
           </button>
         )}
         {locationError ? <p className="staff-inline-error">{locationError}</p> : null}
@@ -191,14 +194,18 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
 
       {missing.length > 0 ? (
         <section className="staff-card staff-missing">
-          <h2>متطلبات ناقصة · Missing requirements</h2>
-          <p>أكمل هذه العناصر قبل إنهاء الوردية: · Complete these before ending your shift:</p>
+          <h2>{t("missing_title", lang)}</h2>
+          <p>{t("missing_intro", lang)}</p>
           <ul>
-            {missing.map((item, index) => <li key={item.id ?? index}>{item.title}</li>)}
+            {missing.map((item, index) => (
+              <li key={item.id ?? index}>
+                {item.task_type === "break" ? t("end_active_break", lang) : item.title}
+              </li>
+            ))}
           </ul>
           {missingHasReportTask ? (
             <a className="staff-missing-link" href="/staff/submissions">
-              فتح النماذج اليومية · Open daily forms
+              {t("open_daily_forms", lang)}
             </a>
           ) : null}
         </section>
@@ -209,15 +216,15 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
           <div className="staff-card-head">
             <div>
               <p className="staff-eyebrow">BREAK</p>
-              <h2>استراحة الوردية</h2>
+              <h2>{t("break", lang)}</h2>
             </div>
             <Coffee />
           </div>
           <strong>{attendance?.break_duration_minutes ?? 0} / 60</strong>
-          <span>دقيقة مستخدمة</span>
+          <span>{t("break_minutes_used", lang)}</span>
           {attendance ? (
             attendance.break_ended_at ? (
-              <button type="button" className="staff-secondary" disabled>تمت الاستراحة</button>
+              <button type="button" className="staff-secondary" disabled>{t("break_done", lang)}</button>
             ) : (
               <button
                 type="button"
@@ -225,11 +232,11 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
                 onClick={() => submit(breakActive ? "end_break" : "start_break")}
                 disabled={pending}
               >
-                {breakActive ? "إنهاء الاستراحة" : "بدء الاستراحة"}
+                {breakActive ? t("break_end", lang) : t("break_start", lang)}
               </button>
             )
           ) : (
-            <p className="staff-muted">تتاح بعد بدء الوردية.</p>
+            <p className="staff-muted">{t("break_after_start", lang)}</p>
           )}
         </section>
 
@@ -237,16 +244,16 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
           <div className="staff-card-head">
             <div>
               <p className="staff-eyebrow">REWARDS</p>
-              <h2>إنجازك</h2>
+              <h2>{t("rewards", lang)}</h2>
             </div>
             <Award />
           </div>
           <strong>{gamification.points}</strong>
-          <span>نقطة إجمالية · {gamification.streak_count} أيام متتالية</span>
+          <span>{t("total_points", lang)} · {gamification.streak_count} {t("streak_days", lang)}</span>
           <div className="staff-badges">
             {gamification.badges.length
               ? gamification.badges.map((badge) => <span key={badge}>{badge.replaceAll("_", " ")}</span>)
-              : <span>أكمل أول وردية لفتح شارة</span>}
+              : <span>{t("first_badge_hint", lang)}</span>}
           </div>
         </section>
       </div>
@@ -256,7 +263,7 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
           <div className="staff-card-head">
             <div>
               <p className="staff-eyebrow">TODAY</p>
-              <h2>مهام اليوم</h2>
+              <h2>{t("today_tasks", lang)}</h2>
             </div>
             <span className="staff-task-count">{completedTasks}/{tasks.length}</span>
           </div>
@@ -274,7 +281,7 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
                       <label
                         className="staff-task-photo"
                         data-busy={taskBusy}
-                        aria-label={`إرفاق صورة لإكمال ${task.title}`}
+                        aria-label={t("attach_photo_label", lang, { title: task.title })}
                       >
                         {taskBusy ? <LoaderCircle className="spin" /> : <Camera />}
                         <input
@@ -292,7 +299,7 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
                     ) : (
                       <button
                         type="button"
-                        aria-label={`إكمال ${task.title}`}
+                        aria-label={t("complete_label", lang, { title: task.title })}
                         disabled={task.completed || taskBusy || !manual}
                         onClick={() => submit("complete_task", { task_id: task.id })}
                       >
@@ -302,16 +309,16 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
                     <span>{task.title}</span>
                     {task.requires_photo ? (
                       <small className="staff-task-phototag" data-attached={Boolean(task.photo_path)}>
-                        <Camera /> {task.photo_path ? "تم إرفاق صورة · Photo attached" : "تتطلب صورة · Photo required"}
+                        <Camera /> {task.photo_path ? t("photo_attached_tag", lang) : t("photo_required_tag", lang)}
                       </small>
                     ) : null}
-                    {task.is_required ? <small>مطلوبة · Required</small> : null}
+                    {task.is_required ? <small>{t("required", lang)}</small> : null}
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <p className="staff-empty">لا توجد مهام مخصصة لك اليوم.</p>
+            <p className="staff-empty">{t("no_tasks", lang)}</p>
           )}
         </section>
       ) : null}

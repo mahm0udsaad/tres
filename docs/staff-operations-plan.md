@@ -134,10 +134,41 @@ Implemented:
    titles are bilingual; the missing-requirements card links to the daily
    forms. Supervisor/owner surfaces remain Arabic.
 
+### Stage 6 — nationality, per-user language, GPS override
+
+Implemented:
+
+1. `nationality` and `preferred_language` (`ar`/`en`) on every staff profile,
+   set by owner and supervisor at creation (nationality dropdown auto-suggests
+   the dashboard language — Arabic for Saudi Arabia, English otherwise).
+2. Owner creates staff for any branch/role at `/admin/operations`; supervisors
+   stay branch- and role-scoped at `/staff/team` (both gained nationality +
+   language fields).
+3. Per-user i18n for the **employee dashboard** (`app/lib/staff-i18n.ts`,
+   `t(key, lang)`): `/staff` renders in the member's language and flips
+   direction (rtl/ar, ltr/en). Seeded role task titles are single-language.
+   RPC failure `code`s map to localized text; the 100 m geofence rejection
+   shows live distance vs. allowed radius. Admin/owner/supervisor/shift-manager
+   surfaces stay Arabic.
+4. Supervisor GPS-override fallback: from `/staff/team`, a supervisor manually
+   clocks a same-branch employee in/out with a mandatory reason (≥10 chars),
+   bypassing GPS but still enforcing task completion on end. Recorded on
+   `attendance_records.supervisor_override_*` and badged on the employee's
+   shift card. Shared shift logic refactored into `private.seed_shift_tasks`
+   and `private.close_shift_impl` so the geofenced and override paths cannot
+   diverge.
+5. Branch geofence default set to 100 m.
+
+Phase-1 boundary: the daily-report **forms** at `/staff/submissions`
+(`SubmissionForms.tsx` field labels) remain Arabic; their action-level errors
+and the layout direction are already language-aware. Full form-field
+translation is a follow-up.
+
 Future enhancement:
 
 - Owner analytics for compliance trends, labor hours, and approval rates.
-- Bengali as a third language if bilingual proves insufficient.
+- Translate the submission report forms; add Bengali if two languages prove
+  insufficient.
 
 ## Data and security notes
 

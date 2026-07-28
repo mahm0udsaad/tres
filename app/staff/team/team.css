@@ -51,9 +51,7 @@
 .staff-team-members { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .staff-team-members li {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
   border: 1px solid var(--staff-line);
@@ -75,6 +73,47 @@
   color: var(--staff-muted);
 }
 .staff-team-status[data-active="true"] { background: #e5f2ea; color: var(--staff-green); }
+.staff-team-status[data-shift="true"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eef3fb;
+  color: #2b5aa7;
+}
+.staff-team-status[data-shift="true"] svg { width: 13px; }
+
+.staff-team-member-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.staff-team-override {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--staff-line);
+}
+.staff-team-override label { display: grid; gap: 5px; }
+.staff-team-override label > span { font-size: 12.5px; font-weight: 700; color: var(--staff-muted); }
+.staff-team-override textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--staff-line);
+  border-radius: 12px;
+  font: inherit;
+  resize: vertical;
+}
+.staff-team-override textarea:focus {
+  outline: 3px solid var(--staff-blush-soft);
+  border-color: var(--staff-wine);
+}
+.staff-team-override .staff-primary { justify-self: start; }
 
 .staff-team-toggle {
   display: inline-flex;

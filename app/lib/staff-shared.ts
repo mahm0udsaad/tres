@@ -18,6 +18,8 @@ export type StaffProfile = {
   branch_id: string | null;
   scheduled_start: string | null;
   is_active: boolean;
+  nationality: string;
+  preferred_language: "ar" | "en";
 };
 
 export type Branch = {
@@ -42,6 +44,7 @@ export type AttendanceRecord = {
   on_time: boolean;
   points_earned: number;
   tasks_completed: number;
+  supervisor_override_by: string | null;
 };
 
 export type StaffTask = {
@@ -110,68 +113,40 @@ export function suggestStaffEmail(fullName: string): string {
   return `${slug || "staff"}-${digits}@${STAFF_EMAIL_DOMAIN}`;
 }
 
-/**
- * Bilingual (Arabic · English) operations messages for the employee-facing
- * staff app. Branch staff speak Arabic, Bengali, and English (Kenyan), so
- * every shift/task message pairs both languages. The database RPCs return
- * stable `code` values; these maps turn them into user-facing text.
- */
-export type StaffErrorParams = {
-  distance_meters?: unknown;
-  allowed_radius_meters?: unknown;
+/** Allowed staff nationalities (value stored in DB = English canonical, matches
+ *  the `staff_profiles_nationality_check` constraint). Labels are Arabic since
+ *  the creation panels are Arabic. Saudi first, "Other" last. */
+export const NATIONALITIES: { value: string; label: string }[] = [
+  { value: "Saudi Arabia", label: "السعودية" },
+  { value: "Egypt", label: "مصر" },
+  { value: "Yemen", label: "اليمن" },
+  { value: "Sudan", label: "السودان" },
+  { value: "Jordan", label: "الأردن" },
+  { value: "Kenya", label: "كينيا" },
+  { value: "Bangladesh", label: "بنغلاديش" },
+  { value: "India", label: "الهند" },
+  { value: "Pakistan", label: "باكستان" },
+  { value: "Philippines", label: "الفلبين" },
+  { value: "Ethiopia", label: "إثيوبيا" },
+  { value: "Nepal", label: "نيبال" },
+  { value: "Sri Lanka", label: "سريلانكا" },
+  { value: "Indonesia", label: "إندونيسيا" },
+  { value: "Uganda", label: "أوغندا" },
+  { value: "Tanzania", label: "تنزانيا" },
+  { value: "Other", label: "أخرى" },
+];
+
+export const NATIONALITY_VALUES = NATIONALITIES.map((n) => n.value);
+
+export const LANGUAGE_LABELS: Record<"ar" | "en", string> = {
+  ar: "العربية",
+  en: "الإنجليزية",
 };
 
-const STAFF_ERRORS: Record<string, string | ((params: StaffErrorParams) => string)> = {
-  outside_branch: (params) => {
-    const distance = Math.round(Number(params.distance_meters ?? 0));
-    const allowed = Math.round(Number(params.allowed_radius_meters ?? 0));
-    return `أنت خارج نطاق الفرع — تبعد ${distance} م والمسموح ${allowed} م. · You are outside the branch area — ${distance}m away, allowed ${allowed}m.`;
-  },
-  low_accuracy:
-    "إشارة الموقع ضعيفة — انتقل لمكان مكشوف وحاول مجددًا. · Weak GPS signal — move to an open area and retry.",
-  no_branch:
-    "لم يتم تعيين فرع لحسابك. · No branch is assigned to your account.",
-  active_shift_exists:
-    "لديك وردية جارية بالفعل. · You already have an active shift.",
-  no_active_shift: "لا توجد وردية جارية. · No active shift found.",
-  break_active:
-    "أنهِ الاستراحة الجارية قبل إنهاء الوردية. · End your active break before ending the shift.",
-  break_already_used:
-    "استراحة اليوم مستخدمة بالفعل. · Today's break has already been used.",
-  break_not_started: "لم تبدأ الاستراحة بعد. · Break has not started yet.",
-  break_already_ended: "انتهت الاستراحة بالفعل. · Break has already ended.",
-  incomplete_tasks:
-    "أكمل جميع المهام المطلوبة قبل إنهاء الوردية. · Complete all required tasks before ending the shift.",
-  task_not_found: "المهمة غير موجودة. · Task not found.",
-  task_already_completed:
-    "هذه المهمة مكتملة بالفعل. · This task is already completed.",
-  task_not_manual:
-    "تُكمل هذه المهمة تلقائيًا من نموذجها اليومي. · This task completes automatically from its daily form.",
-  photo_required:
-    "هذه المهمة تتطلب صورة إثبات. · This task requires a proof photo.",
-};
-
-const SQLSTATE_ERRORS: Record<string, string> = {
-  "42501": "ليس لديك صلاحية لهذا الإجراء. · You are not allowed to perform this action.",
-  "22023": "بيانات غير صالحة — حاول مرة أخرى. · Invalid data — please try again.",
-  "28000": "انتهت الجلسة — سجّل الدخول مجددًا. · Session expired — sign in again.",
-};
-
-export const STAFF_GENERIC_ERROR =
-  "تعذّر تنفيذ الإجراء — حاول مرة أخرى. · Something went wrong — please try again.";
-
-/** Bilingual message for an RPC soft-failure result ({code, ...params}). */
-export function staffErrorMessage(result: Record<string, unknown> | null | undefined): string {
-  const code = typeof result?.code === "string" ? result.code : "";
-  const entry = STAFF_ERRORS[code];
-  if (typeof entry === "function") return entry(result as StaffErrorParams);
-  if (entry) return entry;
-  return STAFF_GENERIC_ERROR;
-}
-
-/** Bilingual message for a thrown Postgres error (by SQLSTATE). */
-export function staffSqlErrorMessage(code: string | undefined | null): string {
-  return (code && SQLSTATE_ERRORS[code]) || STAFF_GENERIC_ERROR;
+/** Auto-suggested dashboard language for a nationality. Per spec: Arabic only
+ *  for Saudi Arabia, English for everyone else (editable before submit). */
+export function languageForNationality(nationality: string): "ar" | "en" {
+  return nationality === "Saudi Arabia" ? "ar" : "en";
 }
 
 export const ROLE_LABELS: Record<StaffRole, string> = {

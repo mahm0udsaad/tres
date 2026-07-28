@@ -111,9 +111,33 @@ Implemented:
 4. Secure generated daily beverage report, including employees who have not
    recorded a state.
 
+### Stage 5 — supervisor delegation and checklist templates
+
+Implemented:
+
+1. Supervisor-scoped staff provisioning at `/staff/team`: the service role
+   creates only the bare auth user (isolated in `app/lib/staff-provisioning.ts`),
+   while `register_branch_staff` runs under the supervisor's session so
+   Postgres enforces the branch scope and the non-privileged role allowlist
+   (employee, cleaning_staff, barista, kitchen_manager). Generated login
+   email suggestion plus a one-time temporary password handover, and
+   activate/deactivate for own-branch staff.
+2. Reusable branch checklist templates at `/staff/checklist` (per-item target
+   role, required flag, photo requirement, ordering). Active items seed as
+   tasks at shift start. `complete_task(p_task_id, p_photo_path)` validates
+   photo evidence in Postgres; a CHECK constraint makes photo-less completion
+   of photo items impossible, and cited photos become immutable in storage.
+3. Bilingual (Arabic · English) employee-facing operations messages — staff
+   speak Arabic, Bengali, and English — driven by stable `code` values from
+   the RPCs (`outside_branch` with live distance, `low_accuracy`,
+   `incomplete_tasks` with typed missing items, break codes). Seeded task
+   titles are bilingual; the missing-requirements card links to the daily
+   forms. Supervisor/owner surfaces remain Arabic.
+
 Future enhancement:
 
 - Owner analytics for compliance trends, labor hours, and approval rates.
+- Bengali as a third language if bilingual proves insufficient.
 
 ## Data and security notes
 

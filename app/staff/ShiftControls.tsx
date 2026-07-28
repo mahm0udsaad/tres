@@ -76,7 +76,9 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
   function locateAndSubmit(operation: "start_shift" | "end_shift") {
     setLocationError("");
     if (!navigator.geolocation) {
-      setLocationError("هذا المتصفح لا يدعم تحديد الموقع.");
+      setLocationError(
+        "هذا المتصفح لا يدعم تحديد الموقع. · This browser does not support location.",
+      );
       return;
     }
     setLocationPending(true);
@@ -98,8 +100,8 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
         setLocationPending(false);
         setLocationError(
           error.code === error.PERMISSION_DENIED
-            ? "يجب السماح بالوصول إلى الموقع لبدء أو إنهاء الوردية."
-            : "تعذّر تحديد موقعك بدقة. حاول مرة أخرى في مكان مفتوح.",
+            ? "اسمح بالوصول إلى الموقع لبدء أو إنهاء الوردية. · Allow location access to start or end your shift."
+            : "تعذّر تحديد موقعك بدقة — حاول في مكان مكشوف. · Couldn't get an accurate location — try again outdoors.",
         );
       },
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 15_000 },
@@ -118,8 +120,11 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
   const breakActive = Boolean(attendance?.break_started_at && !attendance.break_ended_at);
   const completedTasks = tasks.filter((task) => task.completed).length;
   const missing = Array.isArray(state?.result?.missing)
-    ? (state.result.missing as { id: string | null; title: string }[])
+    ? (state.result.missing as { id: string | null; title: string; task_type?: string }[])
     : [];
+  const missingHasReportTask = missing.some(
+    (item) => item.task_type && !MANUAL_TASK_TYPES.has(item.task_type) && item.task_type !== "break",
+  );
 
   return (
     <>
@@ -140,7 +145,7 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
       <section className="staff-shift-card">
         <div className="staff-shift-status">
           <span className={attendance ? "is-active" : ""} />
-          {attendance ? "وردية جارية" : "جاهز لبدء الوردية"}
+          {attendance ? "وردية جارية · Shift running" : "جاهز لبدء الوردية · Ready to start"}
         </div>
         {attendance ? (
           <>
@@ -153,8 +158,8 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
               disabled={busy}
             >
               {busy ? <LoaderCircle className="spin" /> : <LogOut />}
-              <span>إنهاء الوردية</span>
-              <small>سيتم التحقق من مهام اليوم أولاً</small>
+              <span>إنهاء الوردية · End shift</span>
+              <small>سيتم التحقق من مهام اليوم أولاً · Today's tasks are checked first</small>
             </button>
           </>
         ) : (
@@ -165,8 +170,8 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
             disabled={busy}
           >
             {busy ? <LoaderCircle className="spin" /> : <LogIn />}
-            <span>بدء الوردية</span>
-            <small><MapPin /> يجب أن تكون داخل نطاق الفرع</small>
+            <span>بدء الوردية · Start shift</span>
+            <small><MapPin /> يجب أن تكون داخل نطاق الفرع · Be inside the branch area</small>
           </button>
         )}
         {locationError ? <p className="staff-inline-error">{locationError}</p> : null}
@@ -186,11 +191,16 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
 
       {missing.length > 0 ? (
         <section className="staff-card staff-missing">
-          <h2>متطلبات ناقصة</h2>
-          <p>أكمل هذه العناصر قبل إنهاء الوردية:</p>
+          <h2>متطلبات ناقصة · Missing requirements</h2>
+          <p>أكمل هذه العناصر قبل إنهاء الوردية: · Complete these before ending your shift:</p>
           <ul>
             {missing.map((item, index) => <li key={item.id ?? index}>{item.title}</li>)}
           </ul>
+          {missingHasReportTask ? (
+            <a className="staff-missing-link" href="/staff/submissions">
+              فتح النماذج اليومية · Open daily forms
+            </a>
+          ) : null}
         </section>
       ) : null}
 
@@ -292,10 +302,10 @@ export default function ShiftControls({ attendance, tasks, gamification }: Props
                     <span>{task.title}</span>
                     {task.requires_photo ? (
                       <small className="staff-task-phototag" data-attached={Boolean(task.photo_path)}>
-                        <Camera /> {task.photo_path ? "تم إرفاق صورة" : "تتطلب صورة"}
+                        <Camera /> {task.photo_path ? "تم إرفاق صورة · Photo attached" : "تتطلب صورة · Photo required"}
                       </small>
                     ) : null}
-                    {task.is_required ? <small>مطلوبة</small> : null}
+                    {task.is_required ? <small>مطلوبة · Required</small> : null}
                   </li>
                 );
               })}

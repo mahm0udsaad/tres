@@ -28,16 +28,18 @@ export function imageFiles(form: FormData, field: string) {
 }
 
 export function validateImages(files: File[], required: boolean) {
-  if (required && files.length === 0) return "يجب إرفاق صورة واحدة على الأقل.";
+  if (required && files.length === 0) {
+    return "يجب إرفاق صورة واحدة على الأقل. · Attach at least one photo.";
+  }
   if (files.length > MAX_REPORT_IMAGES) {
-    return `يمكن إرفاق ${MAX_REPORT_IMAGES} صور كحد أقصى.`;
+    return `يمكن إرفاق ${MAX_REPORT_IMAGES} صور كحد أقصى. · Maximum ${MAX_REPORT_IMAGES} photos.`;
   }
   for (const file of files) {
     if (!IMAGE_EXTENSIONS[file.type]) {
-      return "صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP أو HEIC.";
+      return "صيغة الصورة غير مدعومة — استخدم JPG أو PNG أو WebP أو HEIC. · Unsupported image format — use JPG, PNG, WebP, or HEIC.";
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      return "حجم كل صورة يجب ألا يتجاوز 3 ميجابايت.";
+      return "حجم كل صورة يجب ألا يتجاوز 3 ميجابايت. · Each photo must be under 3 MB.";
     }
   }
   return null;
@@ -54,7 +56,7 @@ export function dateInTimeZone(timeZone: string) {
 
 export async function branchDay(context: StaffContext) {
   if (!context.profile.branch_id) {
-    return { error: "لم يتم تعيين فرع لهذا الحساب." } as const;
+    return { error: "لم يتم تعيين فرع لهذا الحساب. · No branch assigned to this account." } as const;
   }
   const { data, error } = await context.supabase
     .from("branches")
@@ -62,7 +64,7 @@ export async function branchDay(context: StaffContext) {
     .eq("id", context.profile.branch_id)
     .single();
   if (error || !data) {
-    return { error: "تعذّر التحقق من فرعك." } as const;
+    return { error: "تعذّر التحقق من فرعك. · Couldn't verify your branch." } as const;
   }
   return {
     branchId: context.profile.branch_id,

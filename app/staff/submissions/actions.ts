@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { StaffRole } from "../../lib/staff-shared";
 import { requireStaff } from "../../lib/staff";
+import { staffSqlErrorMessage } from "../../lib/staff-shared";
 import {
   branchDay,
   imageFiles,
@@ -113,7 +114,7 @@ async function submitCleaning(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "cleaning",
-      error: error?.message || String(result.message ?? "تعذّر حفظ تقرير النظافة."),
+      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ تقرير النظافة.",
     };
   }
   return finish("cleaning", "تم إرسال تقرير النظافة للمراجعة.");
@@ -155,7 +156,7 @@ async function submitBarista(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "barista",
-      error: error?.message || String(result.message ?? "تعذّر حفظ تقرير البار."),
+      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ تقرير البار.",
     };
   }
   return finish("barista", "تم إرسال تقرير البار للمراجعة.");
@@ -232,7 +233,7 @@ async function submitKitchen(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "kitchen",
-      error: error?.message || String(result.message ?? "تعذّر حفظ تقرير المطبخ."),
+      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ تقرير المطبخ.",
     };
   }
   return finish("kitchen", "تم إرسال تقرير المطبخ والجرد للمراجعة.");
@@ -276,7 +277,7 @@ async function submitWater(
     await removeEvidence(context, uploaded.paths);
     return {
       operation: "water",
-      error: error?.message || String(result.message ?? "تعذّر حفظ فحص المياه."),
+      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ فحص المياه.",
     };
   }
   return finish("water", "تم تسجيل فحص جودة المياه.");
@@ -301,7 +302,7 @@ async function submitBeverage(
   if (error || result.ok !== true) {
     return {
       operation: "beverage",
-      error: error?.message || String(result.message ?? "تعذّر حفظ استهلاك المشروبات."),
+      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ استهلاك المشروبات.",
     };
   }
   return finish("beverage", "تم تحديث استهلاك مشروبات اليوم.");

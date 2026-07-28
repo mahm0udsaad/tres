@@ -11,6 +11,7 @@ import {
   uploadEvidence,
   validateImages,
 } from "./evidence";
+import { staffErrorMessage, staffSqlErrorMessage } from "../lib/staff-shared";
 
 export type StaffActionState = {
   error?: string;
@@ -97,30 +98,26 @@ export async function staffOperation(
 
   const { data, error } = await supabase.rpc(rpc, args);
   if (error) {
-    return { error: error.message || "تعذّر تنفيذ الإجراء.", operation };
+    return { error: staffSqlErrorMessage(error.code), operation };
   }
 
   const result = (data ?? {}) as Record<string, unknown>;
   if (result.ok !== true) {
-    return {
-      error: String(result.message ?? "تعذّر تنفيذ الإجراء."),
-      operation,
-      result,
-    };
+    return { error: staffErrorMessage(result), operation, result };
   }
 
   revalidatePath("/staff");
   return {
     message:
       operation === "start_shift"
-        ? "بدأت الوردية بنجاح."
+        ? "بدأت الوردية بنجاح. · Shift started."
         : operation === "end_shift"
-          ? "أحسنت! اكتملت الوردية."
+          ? "أحسنت! اكتملت الوردية. · Great job — shift completed."
           : operation === "complete_task"
-            ? "تم إكمال المهمة."
+            ? "تم إكمال المهمة. · Task completed."
             : operation === "start_break"
-              ? "بدأت الاستراحة."
-              : "انتهت الاستراحة.",
+              ? "بدأت الاستراحة. · Break started."
+              : "انتهت الاستراحة. · Break ended.",
     operation,
     result,
   };
@@ -137,13 +134,18 @@ export async function completeChecklistTask(
   const operation = "complete_task";
 
   const taskId = text(form.get("task_id"));
-  if (!taskId) return { error: "المهمة غير موجودة.", operation };
+  if (!taskId) {
+    return { error: "المهمة غير موجودة. · Task not found.", operation };
+  }
 
   const files = imageFiles(form, "photo");
   const imageError = validateImages(files, true);
   if (imageError) return { error: imageError, operation };
   if (files.length !== 1) {
-    return { error: "أرفق صورة واحدة لإثبات إنجاز المهمة.", operation };
+    return {
+      error: "أرفق صورة واحدة لإثبات إنجاز المهمة. · Attach one photo as proof.",
+      operation,
+    };
   }
 
   const day = await branchDay(context);
@@ -165,14 +167,18 @@ export async function completeChecklistTask(
   if (error || result.ok !== true) {
     await removeEvidence(context, uploaded.paths);
     return {
-      error: error?.message || String(result.message ?? "تعذّر إكمال المهمة."),
+      error: error ? staffSqlErrorMessage(error.code) : staffErrorMessage(result),
       operation,
       result,
     };
   }
 
   revalidatePath("/staff");
-  return { message: "تم إكمال المهمة بإثبات مصوّر.", operation, result };
+  return {
+    message: "تم إكمال المهمة بإثبات مصوّر. · Task completed with photo proof.",
+    operation,
+    result,
+  };
 }
 
 export async function updateOwnBranch(
@@ -201,7 +207,9 @@ export async function updateOwnBranch(
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) {
-    return { error: error?.message ?? String(result.message ?? "تعذّر حفظ الفرع.") };
+    return {
+      error: error ? staffSqlErrorMessage(error.code) : "تعذّر حفظ الفرع. حاول مرة أخرى.",
+    };
   }
   revalidatePath("/staff");
   return { message: "تم تحديث موقع الفرع.", result };

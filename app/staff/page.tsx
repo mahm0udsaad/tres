@@ -144,7 +144,7 @@ export default async function StaffDashboard() {
             <ClipboardList />
             <div>
               <strong>عرض التقارير والملاحظات فقط</strong>
-              <p>لن تظهر بيانات الحضور في هذا الحساب. ستُضاف التقارير في المراحل 2–4.</p>
+              <p>لن تظهر بيانات الحضور في هذا الحساب. يمكنك متابعة التقارير من تبويب «التقارير».</p>
             </div>
           </section>
         ) : null}

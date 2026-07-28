@@ -58,6 +58,8 @@ for (const rpc of [
   "record_water_quality_check",
   "log_daily_beverage",
   "get_daily_beverage_report",
+  "register_branch_staff",
+  "set_branch_staff_active",
 ]) {
   requirePattern(
     `anonymous execute revoked for ${rpc}`,
@@ -90,6 +92,19 @@ forbidPattern(
   "service-role key referenced by staff client code",
   /SUPABASE_SERVICE_ROLE_KEY|supabaseAdmin\s*\(/,
   staffSource,
+);
+forbidPattern(
+  "auth admin API referenced by staff client code",
+  /auth\.admin\./,
+  staffSource,
+);
+requirePattern(
+  "staff registration limited to non-privileged roles",
+  /p_role not in \('employee', 'cleaning_staff', 'barista', 'kitchen_manager'\)/i,
+);
+requirePattern(
+  "staff registration scoped to the supervisor branch",
+  /values \(p_new_user_id, v_name, p_role, v_profile\.branch_id, p_scheduled_start\)/i,
 );
 
 if (failures.length) {

@@ -59,6 +59,43 @@ export type Gamification = {
   streak_count: number;
 };
 
+/** Roles a supervisor may provision for their own branch. Mirrors the
+ *  allowlist enforced by `private.register_branch_staff_impl` in Postgres. */
+export const PROVISIONABLE_ROLES = [
+  "employee",
+  "cleaning_staff",
+  "barista",
+  "kitchen_manager",
+] as const;
+
+export type ProvisionableRole = (typeof PROVISIONABLE_ROLES)[number];
+
+/** Domain used for suggested staff login emails. These addresses are login
+ *  identifiers handed over with a temporary password — no mail is sent. */
+export const STAFF_EMAIL_DOMAIN = "tres-staff.com";
+
+const ARABIC_TO_LATIN: Record<string, string> = {
+  ا: "a", أ: "a", إ: "e", آ: "a", ب: "b", ت: "t", ث: "th", ج: "j", ح: "h",
+  خ: "kh", د: "d", ذ: "th", ر: "r", ز: "z", س: "s", ش: "sh", ص: "s", ض: "d",
+  ط: "t", ظ: "z", ع: "a", غ: "gh", ف: "f", ق: "q", ك: "k", ل: "l", م: "m",
+  ن: "n", ه: "h", و: "w", ي: "y", ى: "a", ئ: "e", ء: "", ؤ: "o", ة: "a",
+};
+
+/** Suggest a unique-ish login email from a (possibly Arabic) staff name. */
+export function suggestStaffEmail(fullName: string): string {
+  const slug = fullName
+    .trim()
+    .toLowerCase()
+    .split("")
+    .map((char) => ARABIC_TO_LATIN[char] ?? char)
+    .join("")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24);
+  const digits = String(Math.floor(1000 + Math.random() * 9000));
+  return `${slug || "staff"}-${digits}@${STAFF_EMAIL_DOMAIN}`;
+}
+
 export const ROLE_LABELS: Record<StaffRole, string> = {
   owner: "المالك",
   manager: "المدير",

@@ -89,6 +89,9 @@ export default async function StaffDashboard() {
           {profile.role !== "shift_manager" ? (
             <Link href="/staff/submissions">النماذج اليومية</Link>
           ) : null}
+          {profile.role === "supervisor" ? (
+            <Link href="/staff/team">فريق الفرع</Link>
+          ) : null}
           {["owner", "manager", "supervisor", "shift_manager"].includes(profile.role) ? (
             <Link href="/staff/reports">التقارير</Link>
           ) : null}

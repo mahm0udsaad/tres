@@ -1,0 +1,206 @@
+"use client";
+
+import { startTransition, useActionState, useRef, useState } from "react";
+import { Check, Copy, KeyRound, UserPlus, UserX, UserCheck } from "lucide-react";
+import {
+  PROVISIONABLE_ROLES,
+  ROLE_LABELS,
+  suggestStaffEmail,
+  type StaffProfile,
+} from "../../lib/staff-shared";
+import { createBranchStaff, toggleBranchStaffActive } from "./actions";
+
+export default function TeamManager({
+  members,
+  selfUserId,
+}: {
+  members: StaffProfile[];
+  selfUserId: string;
+}) {
+  const [createState, createAction, creating] = useActionState(createBranchStaff, undefined);
+  const [toggleState, toggleAction, toggling] = useActionState(toggleBranchStaffActive, undefined);
+  const [email, setEmail] = useState("");
+  const emailEdited = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const credentials = createState?.credentials;
+
+  function onNameChange(name: string) {
+    if (!emailEdited.current) setEmail(name.trim() ? suggestStaffEmail(name) : "");
+  }
+
+  async function copyCredentials() {
+    if (!credentials) return;
+    try {
+      await navigator.clipboard.writeText(
+        `الموظف: ${credentials.fullName}\nالبريد: ${credentials.email}\nكلمة المرور: ${credentials.password}`,
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Clipboard unavailable — the values stay visible for manual copy.
+    }
+  }
+
+  return (
+    <>
+      <section className="staff-card staff-team-create">
+        <div className="staff-card-head">
+          <div>
+            <p className="staff-eyebrow">NEW ACCOUNT</p>
+            <h2>إنشاء حساب موظف</h2>
+          </div>
+          <UserPlus className="staff-team-head-icon" />
+        </div>
+
+        {credentials ? (
+          <div className="staff-team-credentials" role="status">
+            <div className="staff-team-credentials-head">
+              <KeyRound />
+              <div>
+                <strong>بيانات دخول {credentials.fullName}</strong>
+                <p>احفظها الآن وسلّمها للموظف — لن تظهر مرة أخرى بعد مغادرة الصفحة.</p>
+              </div>
+            </div>
+            <dl>
+              <div>
+                <dt>البريد الإلكتروني</dt>
+                <dd dir="ltr">{credentials.email}</dd>
+              </div>
+              <div>
+                <dt>كلمة المرور المؤقتة</dt>
+                <dd dir="ltr">{credentials.password}</dd>
+              </div>
+            </dl>
+            <button type="button" className="staff-secondary" onClick={copyCredentials}>
+              {copied ? <Check /> : <Copy />} {copied ? "تم النسخ" : "نسخ البيانات"}
+            </button>
+          </div>
+        ) : null}
+
+        <form
+          ref={formRef}
+          className="staff-form staff-team-form"
+          action={(form) => startTransition(() => createAction(form))}
+        >
+          <label>
+            <span>اسم الموظف</span>
+            <input
+              name="full_name"
+              required
+              maxLength={120}
+              placeholder="مثال: أحمد السالم"
+              onChange={(event) => onNameChange(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>الدور</span>
+            <select name="role" required defaultValue="employee">
+              {PROVISIONABLE_ROLES.map((role) => (
+                <option key={role} value={role}>{ROLE_LABELS[role]}</option>
+              ))}
+            </select>
+          </label>
+          <label className="staff-field-wide">
+            <span>البريد الإلكتروني لتسجيل الدخول</span>
+            <input
+              name="email"
+              type="email"
+              dir="ltr"
+              required
+              value={email}
+              onChange={(event) => {
+                emailEdited.current = true;
+                setEmail(event.target.value);
+              }}
+              placeholder="name@tres-staff.com"
+            />
+          </label>
+          <label>
+            <span>كلمة المرور (اختياري)</span>
+            <input
+              name="password"
+              dir="ltr"
+              minLength={8}
+              placeholder="تُولَّد تلقائيًا إن تُركت فارغة"
+              autoComplete="off"
+            />
+          </label>
+          <label>
+            <span>بداية الدوام (اختياري)</span>
+            <input name="scheduled_start" type="time" />
+          </label>
+          <div className="staff-field-wide">
+            {createState?.error ? <p className="staff-form-error">{createState.error}</p> : null}
+            {createState?.message && !createState.error ? (
+              <p className="staff-form-success">{createState.message}</p>
+            ) : null}
+            <button type="submit" className="staff-primary" disabled={creating}>
+              <UserPlus /> {creating ? "جارٍ الإنشاء…" : "إنشاء الحساب"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="staff-card staff-team-list">
+        <div className="staff-card-head">
+          <div>
+            <p className="staff-eyebrow">TEAM</p>
+            <h2>موظفو الفرع</h2>
+          </div>
+          <span className="staff-team-count">{members.length}</span>
+        </div>
+
+        {toggleState?.error ? <p className="staff-form-error">{toggleState.error}</p> : null}
+
+        {members.length === 0 ? (
+          <p className="staff-empty">لا يوجد موظفون في هذا الفرع بعد.</p>
+        ) : (
+          <ul className="staff-team-members">
+            {members.map((member) => {
+              const isSelf = member.user_id === selfUserId;
+              const protectedRole = !PROVISIONABLE_ROLES.includes(
+                member.role as (typeof PROVISIONABLE_ROLES)[number],
+              );
+              return (
+                <li key={member.user_id} data-inactive={!member.is_active}>
+                  <div className="staff-team-member-info">
+                    <strong>
+                      {member.full_name}
+                      {isSelf ? <span className="staff-team-self"> (أنت)</span> : null}
+                    </strong>
+                    <span>
+                      {ROLE_LABELS[member.role]}
+                      {member.scheduled_start ? ` · يبدأ ${member.scheduled_start.slice(0, 5)}` : ""}
+                    </span>
+                  </div>
+                  <div className="staff-team-member-actions">
+                    <span className="staff-team-status" data-active={member.is_active}>
+                      {member.is_active ? "نشط" : "معطّل"}
+                    </span>
+                    {!isSelf && !protectedRole ? (
+                      <form action={(form) => startTransition(() => toggleAction(form))}>
+                        <input type="hidden" name="user_id" value={member.user_id} />
+                        <input type="hidden" name="next_active" value={String(!member.is_active)} />
+                        <button
+                          type="submit"
+                          className="staff-team-toggle"
+                          disabled={toggling}
+                          data-deactivate={member.is_active}
+                        >
+                          {member.is_active ? <UserX /> : <UserCheck />}
+                          {member.is_active ? "تعطيل" : "تفعيل"}
+                        </button>
+                      </form>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </>
+  );
+}

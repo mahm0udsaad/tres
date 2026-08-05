@@ -1,7 +1,6 @@
 import { ClipboardList, LogOut, MapPin } from "lucide-react";
 import Link from "next/link";
 import {
-  ROLE_LABELS,
   type AttendanceRecord,
   type Branch,
   type Gamification,
@@ -9,25 +8,37 @@ import {
   requireStaff,
   usesAttendance,
 } from "../lib/staff";
-import { t, dirFor, type Lang } from "../lib/staff-i18n";
+import { dashboardLang, isAdminRole } from "../lib/staff-shared";
+import { t, type Lang } from "../lib/staff-i18n";
 import BranchSettings from "./BranchSettings";
 import ShiftControls from "./ShiftControls";
+import type { ReportStatus } from "./DailyReport";
 import { logoutStaff } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-const EMPTY_GAMIFICATION: Gamification = {
-  points: 0,
-  badges: [],
-  streak_count: 0,
-};
+const EMPTY_GAMIFICATION: Gamification = { points: 0, badges: [], streak_count: 0 };
+
+const REPORT_TABLE = {
+  cleaning_staff: "cleaning_reports",
+  barista: "barista_reports",
+  kitchen_manager: "kitchen_reports",
+} as const;
+
+function dateInTimeZone(timeZone: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
 
 export default async function StaffDashboard() {
   const { profile, supabase } = await requireStaff();
-  // Attendance roles see the app in their preferred language; admin roles
-  // (owner/manager/supervisor/shift_manager) always see Arabic.
-  const lang: Lang = usesAttendance(profile.role) ? profile.preferred_language : "ar";
+  const lang: Lang = dashboardLang(profile);
   const locale = lang === "ar" ? "ar-SA" : "en-US";
+  const attends = usesAttendance(profile.role);
 
   const [branchResult, attendanceResult, gamificationResult] = await Promise.all([
     profile.branch_id
@@ -37,15 +48,17 @@ export default async function StaffDashboard() {
           .eq("id", profile.branch_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    usesAttendance(profile.role)
+    attends
       ? supabase
           .from("attendance_records")
-          .select("id,shift_date,start_time,end_time,break_started_at,break_ended_at,break_duration_minutes,break_entitlement_minutes,status,on_time,points_earned,tasks_completed,supervisor_override_by")
+          .select(
+            "id,shift_date,start_time,end_time,break_started_at,break_ended_at,break_duration_minutes,break_entitlement_minutes,status,on_time,points_earned,tasks_completed,supervisor_override_by",
+          )
           .eq("user_id", profile.user_id)
           .eq("status", "active")
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    usesAttendance(profile.role)
+    attends
       ? supabase
           .from("gamification")
           .select("points,badges,streak_count")
@@ -56,17 +69,63 @@ export default async function StaffDashboard() {
 
   const branch = (branchResult.data ?? null) as Branch | null;
   const attendance = (attendanceResult.data ?? null) as AttendanceRecord | null;
+  const reportDate = dateInTimeZone(String(branch?.timezone || "Asia/Riyadh"));
+
+  // The daily forms now live on this page, so their state is fetched here —
+  // an employee never has to navigate away to find out what is still missing.
   let tasks: StaffTask[] = [];
+  let ownReport: ReportStatus = null;
+  let latestWater: { salt_ratio: number } | null = null;
+  let beverageConsumed: boolean | null = null;
+
   if (attendance) {
-    const { data } = await supabase
-      .from("tasks")
-      .select("id,title,task_type,completed,completed_at,is_required,requires_photo,photo_path,sort_order")
-      .eq("user_id", profile.user_id)
-      .eq("task_date", attendance.shift_date)
-      .order("sort_order")
-      .order("created_at");
-    tasks = (data ?? []) as StaffTask[];
+    const reportTable = REPORT_TABLE[profile.role as keyof typeof REPORT_TABLE];
+    const canCheckWater = ["supervisor", "kitchen_manager"].includes(profile.role);
+    const [taskResult, reportResult, waterResult, beverageResult] = await Promise.all([
+      supabase
+        .from("tasks")
+        .select(
+          "id,title,task_type,completed,completed_at,is_required,requires_photo,photo_path,sort_order",
+        )
+        .eq("user_id", profile.user_id)
+        .eq("task_date", attendance.shift_date)
+        .order("sort_order")
+        .order("created_at"),
+      reportTable
+        ? supabase
+            .from(reportTable)
+            .select("status,review_notes,revision")
+            .eq("submitted_by", profile.user_id)
+            .eq("report_date", reportDate)
+            .order("revision", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      canCheckWater && branch
+        ? supabase
+            .from("water_quality_checks")
+            .select("salt_ratio")
+            .eq("branch_id", branch.id)
+            .eq("check_date", reportDate)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("daily_beverage_logs")
+        .select("consumed")
+        .eq("employee_id", profile.user_id)
+        .eq("log_date", reportDate)
+        .maybeSingle(),
+    ]);
+
+    tasks = (taskResult.data ?? []) as StaffTask[];
+    ownReport = (reportResult.data ?? null) as ReportStatus;
+    latestWater = waterResult.data ? { salt_ratio: Number(waterResult.data.salt_ratio) } : null;
+    beverageConsumed = beverageResult.data ? Boolean(beverageResult.data.consumed) : null;
   }
+
+  const showNav = isAdminRole(profile.role);
 
   return (
     <main className="staff-dashboard">
@@ -75,60 +134,61 @@ export default async function StaffDashboard() {
           <span>T</span>
           <div>
             <strong>{lang === "ar" ? "تريس" : "TRES"}</strong>
-            <small>{t("panel_title", lang)}</small>
+            <small>{profile.full_name}</small>
           </div>
         </div>
         <div className="staff-user">
-          <div>
-            <strong>{profile.full_name}</strong>
-            <span>{ROLE_LABELS[profile.role]}</span>
-          </div>
+          {branch ? (
+            <span className="staff-branch-pill">
+              <MapPin /> {branch.name}
+            </span>
+          ) : null}
           <form action={logoutStaff}>
-            <button type="submit" aria-label={t("logout", lang)}><LogOut /></button>
+            <button type="submit" aria-label={t("logout", lang)}>
+              <LogOut />
+            </button>
           </form>
         </div>
       </header>
 
       <div className="staff-content">
-        <nav className="staff-section-nav" aria-label={t("panel_title", lang)}>
-          <Link href="/staff" data-active="true">{t("nav_home", lang)}</Link>
-          {profile.role !== "shift_manager" ? (
-            <Link href="/staff/submissions">{t("nav_daily_forms", lang)}</Link>
-          ) : null}
-          {profile.role === "supervisor" ? (
-            <Link href="/staff/team">{t("nav_team", lang)}</Link>
-          ) : null}
-          {profile.role === "supervisor" ? (
-            <Link href="/staff/checklist">{t("nav_checklist", lang)}</Link>
-          ) : null}
-          {["owner", "manager", "supervisor", "shift_manager"].includes(profile.role) ? (
+        {showNav ? (
+          <nav className="staff-section-nav" aria-label={t("panel_title", lang)}>
+            <Link href="/staff" data-active="true">
+              {t("nav_home", lang)}
+            </Link>
+            {profile.role !== "shift_manager" ? (
+              <Link href="/staff/submissions">{t("nav_daily_forms", lang)}</Link>
+            ) : null}
+            {profile.role === "supervisor" ? <Link href="/staff/team">{t("nav_team", lang)}</Link> : null}
+            {profile.role === "supervisor" ? (
+              <Link href="/staff/checklist">{t("nav_checklist", lang)}</Link>
+            ) : null}
             <Link href="/staff/reports">{t("nav_reports", lang)}</Link>
-          ) : null}
-        </nav>
-
-        <section className="staff-welcome">
-          <div>
-            <p className="staff-eyebrow">STAFF OPERATIONS</p>
-            <h1>{t("greeting", lang, { name: profile.full_name.split(" ")[0] })}</h1>
-            <p>{new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(new Date())}</p>
-          </div>
-          {branch ? (
-            <div className="staff-branch-pill"><MapPin /> {branch.name}</div>
-          ) : null}
-        </section>
-
-        {!branch ? (
-          <div className="staff-alert staff-alert--error">
-            {t("branch_unassigned", lang)}
-          </div>
+          </nav>
         ) : null}
 
-        {branch && usesAttendance(profile.role) ? (
+        <section className="staff-greeting">
+          <h1>{t("greeting", lang, { name: profile.full_name.split(" ")[0] })}</h1>
+          <p>{new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(new Date())}</p>
+        </section>
+
+        {!branch ? <div className="staff-alert staff-alert--error">{t("branch_unassigned", lang)}</div> : null}
+
+        {branch && attends ? (
           <ShiftControls
             attendance={attendance}
             tasks={tasks}
             gamification={(gamificationResult.data ?? EMPTY_GAMIFICATION) as Gamification}
             lang={lang}
+            role={profile.role}
+            reports={{
+              cleaning: profile.role === "cleaning_staff" ? ownReport : null,
+              barista: profile.role === "barista" ? ownReport : null,
+              kitchen: profile.role === "kitchen_manager" ? ownReport : null,
+            }}
+            latestWater={latestWater}
+            beverageConsumed={beverageConsumed}
           />
         ) : null}
 
@@ -154,6 +214,8 @@ export default async function StaffDashboard() {
             </div>
           </section>
         ) : null}
+
+        <p className="staff-role-foot">{t(`role_${profile.role}`, lang)}</p>
       </div>
     </main>
   );

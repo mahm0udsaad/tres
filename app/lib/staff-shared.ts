@@ -149,6 +149,20 @@ export function languageForNationality(nationality: string): "ar" | "en" {
   return nationality === "Saudi Arabia" ? "ar" : "en";
 }
 
+/** Roles whose surfaces stay Arabic-only: they read the review queue, branch
+ *  settings, and team panels, which are written for management. */
+export const ADMIN_ROLES: StaffRole[] = ["owner", "manager", "supervisor", "shift_manager"];
+
+export function isAdminRole(role: StaffRole): boolean {
+  return ADMIN_ROLES.includes(role);
+}
+
+/** The language a signed-in member's dashboard renders in. Single source of
+ *  truth for the layout direction and every page under /staff. */
+export function dashboardLang(profile: Pick<StaffProfile, "role" | "preferred_language">): "ar" | "en" {
+  return isAdminRole(profile.role) ? "ar" : profile.preferred_language;
+}
+
 export const ROLE_LABELS: Record<StaffRole, string> = {
   owner: "المالك",
   manager: "المدير",

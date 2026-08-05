@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getStaffContext } from "../lib/staff";
+import { dashboardLang } from "../lib/staff-shared";
 import { dirFor, type Lang } from "../lib/staff-i18n";
 import "./staff.css";
 
@@ -15,9 +16,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   // direction to match. Unauthenticated pages (login) default to Arabic.
   // Admin roles (owner/manager/supervisor/shift_manager) always see Arabic.
   const context = await getStaffContext().catch(() => null);
-  const role = context?.profile?.role;
-  const isAdminRole = role === "owner" || role === "manager" || role === "supervisor" || role === "shift_manager";
-  const lang: Lang = isAdminRole ? "ar" : context?.profile?.preferred_language ?? "ar";
+  const lang: Lang = context?.profile ? dashboardLang(context.profile) : "ar";
 
   return (
     <div className="staff-app" lang={lang} dir={dirFor(lang)}>

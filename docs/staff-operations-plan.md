@@ -159,16 +159,50 @@ Implemented:
    diverge.
 5. Branch geofence default set to 100 m.
 
-Phase-1 boundary: the daily-report **forms** at `/staff/submissions`
-(`SubmissionForms.tsx` field labels) remain Arabic; their action-level errors
-and the layout direction are already language-aware. Full form-field
-translation is a follow-up.
+### Stage 7 — icon-first employee rebuild
+
+The employee surface had been built like an admin dashboard: a five-link nav,
+decorative English section labels, required free-text paragraphs typed on a
+phone in a second language, and a separate `/staff/submissions` trip that an
+employee only discovered by failing to end their shift. Rebuilt around one
+screen and one action at a time:
+
+1. `/staff` before a shift is a single circular **start** button; during a
+   shift it is a dark progress header (elapsed hours, completion bar, items
+   left) followed by the to-do rows, the daily forms, break, rewards, and a
+   sticky **end shift** bar. Employee roles get no nav at all; the admin nav
+   is gated on `isAdminRole`.
+2. The daily forms render inline on `/staff` (`DailyReport.tsx`), so nothing
+   requires navigating away. Every seeded report task links to its own form
+   (`TASK_ANCHOR`), which replaces failure-driven discovery.
+   `/staff/submissions` now redirects the four employee roles to `/staff` and
+   keeps only the water check and beverage log for management.
+3. Required notes became **tap-to-answer chips** (`app/lib/staff-checks.ts`,
+   shared by the client form and the action). The action builds the Arabic
+   notes string the supervisor queue reads and stores the raw keys in
+   `report_data`. Postgres already accepted notes of length 1–5000, so no
+   migration was needed; the old 10-character minimum was client-side only.
+   The single remaining free-text field is an optional note.
+4. Kitchen inventory is a preset list with −/+ steppers instead of typed
+   name/category/count rows; the preset always satisfies the "at least one
+   product and one dessert" rule enforced in `parseInventory` and Postgres.
+5. `PhotoCapture.tsx` adds a preview step: photos are shown back with retake
+   before anything is uploaded, replacing the bare camera icon that fired the
+   upload the instant the picker returned.
+6. Every employee-facing string is now bilingual — the report forms, their
+   action errors, the stock count, the beverage log, and the photo flow.
+   `dashboardLang()` in `staff-shared.ts` is the single source of truth for
+   language and direction, fixing a mismatch where `/staff` rendered a
+   supervisor's page in English while the layout set `dir="rtl"`.
+7. Touch targets are ≥52 px, state is carried by colour and shape as well as
+   words, and the English eyebrow labels are gone from the employee screens.
 
 Future enhancement:
 
 - Owner analytics for compliance trends, labor hours, and approval rates.
-- Translate the submission report forms; add Bengali if two languages prove
-  insufficient.
+- Add Bengali (`bn`) to `staff-i18n.ts` if two languages prove insufficient.
+- Let supervisors edit the chip sets per branch instead of shipping them in
+  code.
 
 ## Data and security notes
 

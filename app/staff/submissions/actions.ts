@@ -1,9 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { StaffRole } from "../../lib/staff-shared";
+import { dashboardLang, type StaffRole } from "../../lib/staff-shared";
 import { requireStaff } from "../../lib/staff";
-import { staffSqlErrorMessage, t } from "../../lib/staff-i18n";
+import { staffSqlErrorMessage, t, type Lang } from "../../lib/staff-i18n";
+import {
+  BARISTA_CHECKS,
+  CLEANING_CHECKS,
+  KITCHEN_CHECKS,
+  buildNotes,
+  type CheckItem,
+} from "../../lib/staff-checks";
 import {
   branchDay,
   imageFiles,
@@ -29,6 +36,8 @@ const BEVERAGE_ROLES = new Set<StaffRole>([
   "kitchen_manager",
 ]);
 
+const MAX_NOTE = 1000;
+
 export type SubmissionActionState = {
   error?: string;
   message?: string;
@@ -53,11 +62,27 @@ function number(value: FormDataEntryValue | null) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-async function maySubmitReport(
-  context: StaffContext,
-  table: ReportTable,
-  reportDate: string,
-) {
+type Tapped =
+  | { ok: true; keys: string[]; notes: string }
+  | { ok: false; error: string };
+
+/**
+ * Read the tapped answers and turn them into the Arabic notes string the
+ * supervisor queue reads. Employees no longer type a required paragraph; the
+ * only free text is an optional note appended at the end.
+ */
+function tappedNotes(form: FormData, items: CheckItem[], lang: Lang): Tapped {
+  const keys = form
+    .getAll("checks")
+    .map((value) => String(value))
+    .filter((value) => items.some((item) => item.key === value));
+  if (!keys.length) return { ok: false, error: t("report_pick_one", lang) };
+  const note = text(form.get("note"));
+  if (note.length > MAX_NOTE) return { ok: false, error: t("note_too_long", lang) };
+  return { ok: true, keys, notes: buildNotes(items, keys, note) };
+}
+
+async function maySubmitReport(context: StaffContext, table: ReportTable, reportDate: string, lang: Lang) {
   const { data, error } = await context.supabase
     .from(table)
     .select("status")
@@ -66,13 +91,9 @@ async function maySubmitReport(
     .order("revision", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) return { error: t("report_check_failed", context.profile.preferred_language) } as const;
-  if (data?.status === "pending") {
-    return { error: t("report_pending", context.profile.preferred_language) } as const;
-  }
-  if (data?.status === "confirmed") {
-    return { error: t("report_confirmed", context.profile.preferred_language) } as const;
-  }
+  if (error) return { error: t("report_check_failed", lang) } as const;
+  if (data?.status === "pending") return { error: t("report_pending", lang) } as const;
+  if (data?.status === "confirmed") return { error: t("report_confirmed", lang) } as const;
   return { ok: true } as const;
 }
 
@@ -82,72 +103,68 @@ function finish(operation: string, message: string): SubmissionActionState {
   return { operation, message };
 }
 
-async function submitCleaning(
-  context: StaffContext,
-  form: FormData,
-): Promise<SubmissionActionState> {
+async function submitCleaning(context: StaffContext, form: FormData): Promise<SubmissionActionState> {
+  const lang = dashboardLang(context.profile);
+  const operation = "cleaning";
   if (context.profile.role !== "cleaning_staff") {
-    return { operation: "cleaning", error: "هذا النموذج مخصص لفريق النظافة." };
+    return { operation, error: t("report_wrong_role", lang) };
   }
-  const notes = text(form.get("notes"));
-  if (notes.length < 10 || notes.length > 3000) {
-    return { operation: "cleaning", error: "اكتب ملاحظات واضحة من 10 إلى 3000 حرف." };
-  }
+  const tapped = tappedNotes(form, CLEANING_CHECKS, lang);
+  if (!tapped.ok) return { operation, error: tapped.error };
+
   const files = imageFiles(form, "photos");
-  const imageError = validateImages(files, true, context.profile.preferred_language);
-  if (imageError) return { operation: "cleaning", error: imageError };
+  const imageError = validateImages(files, true, lang);
+  if (imageError) return { operation, error: imageError };
 
   const day = await branchDay(context);
-  if ("error" in day) return { operation: "cleaning", error: day.error };
-  const allowed = await maySubmitReport(context, "cleaning_reports", day.reportDate);
-  if ("error" in allowed) return { operation: "cleaning", error: allowed.error };
+  if ("error" in day) return { operation, error: day.error };
+  const allowed = await maySubmitReport(context, "cleaning_reports", day.reportDate, lang);
+  if ("error" in allowed) return { operation, error: allowed.error };
   const uploaded = await uploadEvidence(context, "cleaning", day.reportDate, files);
-  if ("error" in uploaded) return { operation: "cleaning", error: uploaded.error };
+  if ("error" in uploaded) return { operation, error: uploaded.error };
 
   const { data, error } = await context.supabase.rpc("submit_cleaning_report", {
-    p_cleanliness_notes: notes,
-    p_report_data: {},
+    p_cleanliness_notes: tapped.notes,
+    p_report_data: { checks: tapped.keys },
     p_photo_paths: uploaded.paths,
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) {
     await removeEvidence(context, uploaded.paths);
     return {
-      operation: "cleaning",
-      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ تقرير النظافة.",
+      operation,
+      error: error ? staffSqlErrorMessage(error.code, lang) : t("report_save_failed", lang),
     };
   }
-  return finish("cleaning", "تم إرسال تقرير النظافة للمراجعة.");
+  return finish(operation, t("report_sent", lang));
 }
 
-async function submitBarista(
-  context: StaffContext,
-  form: FormData,
-): Promise<SubmissionActionState> {
+async function submitBarista(context: StaffContext, form: FormData): Promise<SubmissionActionState> {
+  const lang = dashboardLang(context.profile);
+  const operation = "barista";
   if (context.profile.role !== "barista") {
-    return { operation: "barista", error: "هذا النموذج مخصص لفريق البار." };
+    return { operation, error: t("report_wrong_role", lang) };
   }
-  const notes = text(form.get("notes"));
-  if (notes.length < 10 || notes.length > 3000) {
-    return { operation: "barista", error: "اكتب ملاحظات واضحة من 10 إلى 3000 حرف." };
+  const tapped = tappedNotes(form, BARISTA_CHECKS, lang);
+  if (!tapped.ok) return { operation, error: tapped.error };
+  if (text(form.get("bar_clean_confirmed")) !== "on") {
+    return { operation, error: t("bar_clean_required", lang) };
   }
-  if (form.get("bar_clean_confirmed") !== "on") {
-    return { operation: "barista", error: "يجب تأكيد نظافة البار قبل التسليم." };
-  }
+
   const files = imageFiles(form, "photos");
-  const imageError = validateImages(files, false, context.profile.preferred_language);
-  if (imageError) return { operation: "barista", error: imageError };
+  const imageError = validateImages(files, false, lang);
+  if (imageError) return { operation, error: imageError };
 
   const day = await branchDay(context);
-  if ("error" in day) return { operation: "barista", error: day.error };
-  const allowed = await maySubmitReport(context, "barista_reports", day.reportDate);
-  if ("error" in allowed) return { operation: "barista", error: allowed.error };
+  if ("error" in day) return { operation, error: day.error };
+  const allowed = await maySubmitReport(context, "barista_reports", day.reportDate, lang);
+  if ("error" in allowed) return { operation, error: allowed.error };
   const uploaded = await uploadEvidence(context, "barista", day.reportDate, files);
-  if ("error" in uploaded) return { operation: "barista", error: uploaded.error };
+  if ("error" in uploaded) return { operation, error: uploaded.error };
 
   const { data, error } = await context.supabase.rpc("submit_barista_report", {
-    p_handover_notes: notes,
-    p_report_data: {},
+    p_handover_notes: tapped.notes,
+    p_report_data: { checks: tapped.keys },
     p_bar_clean_confirmed: true,
     p_photo_paths: uploaded.paths,
   });
@@ -155,11 +172,11 @@ async function submitBarista(
   if (error || result.ok !== true) {
     await removeEvidence(context, uploaded.paths);
     return {
-      operation: "barista",
-      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ تقرير البار.",
+      operation,
+      error: error ? staffSqlErrorMessage(error.code, lang) : t("report_save_failed", lang),
     };
   }
-  return finish("barista", "تم إرسال تقرير البار للمراجعة.");
+  return finish(operation, t("report_sent", lang));
 }
 
 function parseInventory(raw: string) {
@@ -194,37 +211,30 @@ function parseInventory(raw: string) {
   return items;
 }
 
-async function submitKitchen(
-  context: StaffContext,
-  form: FormData,
-): Promise<SubmissionActionState> {
+async function submitKitchen(context: StaffContext, form: FormData): Promise<SubmissionActionState> {
+  const lang = dashboardLang(context.profile);
+  const operation = "kitchen";
   if (context.profile.role !== "kitchen_manager") {
-    return { operation: "kitchen", error: "هذا النموذج مخصص لمدير المطبخ." };
+    return { operation, error: t("report_wrong_role", lang) };
   }
-  const cleanlinessNotes = text(form.get("cleanliness_notes"));
-  if (cleanlinessNotes.length < 10 || cleanlinessNotes.length > 3000) {
-    return { operation: "kitchen", error: "اكتب ملاحظات واضحة من 10 إلى 3000 حرف." };
-  }
+  const tapped = tappedNotes(form, KITCHEN_CHECKS, lang);
+  if (!tapped.ok) return { operation, error: tapped.error };
   const inventory = parseInventory(text(form.get("inventory_json")));
-  if (!inventory) {
-    return {
-      operation: "kitchen",
-      error: "أدخل جرداً صالحاً يشمل منتجاً وحلوى واحدة على الأقل.",
-    };
-  }
+  if (!inventory) return { operation, error: t("inventory_invalid", lang) };
+
   const files = imageFiles(form, "photos");
-  const imageError = validateImages(files, true, context.profile.preferred_language);
-  if (imageError) return { operation: "kitchen", error: imageError };
+  const imageError = validateImages(files, true, lang);
+  if (imageError) return { operation, error: imageError };
 
   const day = await branchDay(context);
-  if ("error" in day) return { operation: "kitchen", error: day.error };
-  const allowed = await maySubmitReport(context, "kitchen_reports", day.reportDate);
-  if ("error" in allowed) return { operation: "kitchen", error: allowed.error };
+  if ("error" in day) return { operation, error: day.error };
+  const allowed = await maySubmitReport(context, "kitchen_reports", day.reportDate, lang);
+  if ("error" in allowed) return { operation, error: allowed.error };
   const uploaded = await uploadEvidence(context, "kitchen", day.reportDate, files);
-  if ("error" in uploaded) return { operation: "kitchen", error: uploaded.error };
+  if ("error" in uploaded) return { operation, error: uploaded.error };
 
   const { data, error } = await context.supabase.rpc("submit_kitchen_report", {
-    p_cleanliness_notes: cleanlinessNotes,
+    p_cleanliness_notes: tapped.notes,
     p_inventory_counts: inventory,
     p_photo_paths: uploaded.paths,
   });
@@ -232,41 +242,39 @@ async function submitKitchen(
   if (error || result.ok !== true) {
     await removeEvidence(context, uploaded.paths);
     return {
-      operation: "kitchen",
-      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ تقرير المطبخ.",
+      operation,
+      error: error ? staffSqlErrorMessage(error.code, lang) : t("report_save_failed", lang),
     };
   }
-  return finish("kitchen", "تم إرسال تقرير المطبخ والجرد للمراجعة.");
+  return finish(operation, t("report_sent", lang));
 }
 
-async function submitWater(
-  context: StaffContext,
-  form: FormData,
-): Promise<SubmissionActionState> {
+async function submitWater(context: StaffContext, form: FormData): Promise<SubmissionActionState> {
+  const lang = dashboardLang(context.profile);
+  const operation = "water";
   if (!WATER_ROLES.has(context.profile.role)) {
-    return { operation: "water", error: "ليس لديك صلاحية تسجيل فحص المياه." };
+    return { operation, error: t("report_not_allowed", lang) };
   }
   const saltRatio = number(form.get("salt_ratio"));
   if (saltRatio == null || saltRatio < 0 || saltRatio > 1_000_000) {
-    return { operation: "water", error: "أدخل قراءة ملوحة صحيحة أكبر من أو تساوي صفر." };
+    return { operation, error: t("water_invalid", lang) };
   }
   const files = imageFiles(form, "photo");
-  const imageError = validateImages(files, true, context.profile.preferred_language);
-  if (imageError) return { operation: "water", error: imageError };
-  if (files.length !== 1) {
-    return { operation: "water", error: "أرفق صورة واحدة لقراءة فحص المياه." };
-  }
+  const imageError = validateImages(files, true, lang);
+  if (imageError) return { operation, error: imageError };
+  if (files.length !== 1) return { operation, error: t("water_photo_one", lang) };
 
   const day = await branchDay(context);
-  if ("error" in day) return { operation: "water", error: day.error };
-  const uploaded = await uploadEvidence(context, "water-quality", day.reportDate, files);
-  if ("error" in uploaded) return { operation: "water", error: uploaded.error };
+  if ("error" in day) return { operation, error: day.error };
 
-  const notes = text(form.get("notes"));
-  if (notes.length > 1000) {
-    await removeEvidence(context, uploaded.paths);
-    return { operation: "water", error: "ملاحظات المياه يجب ألا تتجاوز 1000 حرف." };
-  }
+  // Accept both field names: the inline card posts `note`, the older
+  // Arabic admin form on /staff/submissions posts `notes`.
+  const notes = text(form.get("note")) || text(form.get("notes"));
+  if (notes.length > MAX_NOTE) return { operation, error: t("note_too_long", lang) };
+
+  const uploaded = await uploadEvidence(context, "water-quality", day.reportDate, files);
+  if ("error" in uploaded) return { operation, error: uploaded.error };
+
   const { data, error } = await context.supabase.rpc("record_water_quality_check", {
     p_salt_ratio: saltRatio,
     p_photo_path: uploaded.paths[0],
@@ -276,22 +284,18 @@ async function submitWater(
   if (error || result.ok !== true) {
     await removeEvidence(context, uploaded.paths);
     return {
-      operation: "water",
-      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ فحص المياه.",
+      operation,
+      error: error ? staffSqlErrorMessage(error.code, lang) : t("report_save_failed", lang),
     };
   }
-  return finish("water", "تم تسجيل فحص جودة المياه.");
+  return finish(operation, t("water_saved", lang));
 }
 
-async function submitBeverage(
-  context: StaffContext,
-  form: FormData,
-): Promise<SubmissionActionState> {
+async function submitBeverage(context: StaffContext, form: FormData): Promise<SubmissionActionState> {
+  const lang = dashboardLang(context.profile);
+  const operation = "beverage";
   if (!BEVERAGE_ROLES.has(context.profile.role)) {
-    return { operation: "beverage", error: "ليس لديك صلاحية تسجيل استهلاك المشروبات." };
-  }
-  if (context.profile.role === "shift_manager") {
-    return { operation: "beverage", error: "حساب مدير الوردية للعرض فقط." };
+    return { operation, error: t("report_not_allowed", lang) };
   }
   const consumed = form.get("consumed") === "true";
   const { data, error } = await context.supabase.rpc("log_daily_beverage", {
@@ -301,11 +305,11 @@ async function submitBeverage(
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) {
     return {
-      operation: "beverage",
-      error: error ? staffSqlErrorMessage(error.code, context.profile.preferred_language) : "تعذّر حفظ استهلاك المشروبات.",
+      operation,
+      error: error ? staffSqlErrorMessage(error.code, lang) : t("report_save_failed", lang),
     };
   }
-  return finish("beverage", "تم تحديث استهلاك مشروبات اليوم.");
+  return finish(operation, t("beverage_saved", lang));
 }
 
 export async function submitStaffModule(
@@ -319,5 +323,5 @@ export async function submitStaffModule(
   if (operation === "kitchen") return submitKitchen(context, form);
   if (operation === "water") return submitWater(context, form);
   if (operation === "beverage") return submitBeverage(context, form);
-  return { operation, error: "النموذج غير مدعوم." };
+  return { operation, error: t("generic_error", dashboardLang(context.profile)) };
 }

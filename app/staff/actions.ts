@@ -12,6 +12,7 @@ import {
   validateImages,
 } from "./evidence";
 import { staffErrorMessage, staffSqlErrorMessage, t } from "../lib/staff-i18n";
+import { resolveShareLink } from "../lib/geo-link";
 
 export type StaffActionState = {
   error?: string;
@@ -176,6 +177,20 @@ export async function completeChecklistTask(
 
   revalidatePath("/staff");
   return { message: t("ok_task_photo", lang), operation, result };
+}
+
+/** Short Google Maps share links carry no coordinates until they are followed. */
+export async function resolveOwnBranchLocation(
+  link: string,
+): Promise<{ latitude: number; longitude: number } | { error: string }> {
+  const context = await getStaffContext();
+  if (!context?.user || !context.profile) redirect("/staff/login");
+  if (!["owner", "manager"].includes(context.profile.role)) {
+    return { error: "ليس لديك صلاحية تعديل الفرع." };
+  }
+  const found = await resolveShareLink(link);
+  if (!found) return { error: "تعذّر قراءة الموقع من الرابط — افتح الرابط في الخرائط وانسخ الرابط الكامل." };
+  return found;
 }
 
 export async function updateOwnBranch(

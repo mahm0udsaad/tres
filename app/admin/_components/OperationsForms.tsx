@@ -11,7 +11,8 @@ import {
   languageForNationality,
   type StaffRole,
 } from "../../lib/staff-shared";
-import { saveOperations } from "../actions";
+import { resolveBranchLocation, saveOperations } from "../actions";
+import LocationPicker from "../../components/LocationPicker";
 
 type Branch = {
   id: string;
@@ -87,15 +88,9 @@ export default function OperationsForms({
             <label>اسم الفرع</label>
             <input className="a-input" name="name" required />
           </div>
-          <div className="a-row-2">
-            <div className="a-field">
-              <label>خط العرض</label>
-              <input className="a-input" name="latitude" type="number" step="any" required />
-            </div>
-            <div className="a-field">
-              <label>خط الطول</label>
-              <input className="a-input" name="longitude" type="number" step="any" required />
-            </div>
+          <div className="a-field">
+            <label>موقع الفرع</label>
+            <LocationPicker resolveShare={resolveBranchLocation} />
           </div>
           <div className="a-field">
             <label>نصف القطر المسموح (متر)</label>
@@ -113,10 +108,11 @@ export default function OperationsForms({
                 <input type="hidden" name="operation" value="save_branch" />
                 <input type="hidden" name="id" value={branch.id} />
                 <input className="a-input" name="name" defaultValue={branch.name} aria-label="اسم الفرع" required />
-                <div className="a-row-2">
-                  <input className="a-input" name="latitude" type="number" step="any" defaultValue={branch.latitude} aria-label="خط العرض" required />
-                  <input className="a-input" name="longitude" type="number" step="any" defaultValue={branch.longitude} aria-label="خط الطول" required />
-                </div>
+                <LocationPicker
+                  latitude={branch.latitude}
+                  longitude={branch.longitude}
+                  resolveShare={resolveBranchLocation}
+                />
                 <div className="a-ops-actions">
                   <input className="a-input" name="radius_meters" type="number" min="10" max="5000" defaultValue={branch.radius_meters} aria-label="نصف القطر بالمتر" required />
                   <button type="submit" className="a-btn a-btn--ghost a-btn--sm">تحديث</button>

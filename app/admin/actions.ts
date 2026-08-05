@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "../lib/supabase";
 import { uploadImage } from "../lib/admin-data";
 import { ADMIN_COOKIE, SESSION_MAX_AGE, checkPin, signSession, verifySession } from "../lib/auth";
+import { resolveShareLink } from "../lib/geo-link";
 import {
   NATIONALITY_VALUES,
   STAFF_ROLES,
@@ -231,6 +232,21 @@ export async function saveSettings(form: FormData) {
 }
 
 // ── staff operations bootstrap ───────────────────────────────────────────────
+
+/**
+ * Resolves a short Google Maps share link (maps.app.goo.gl/…) into coordinates.
+ * Full links are parsed in the browser; only the short form needs a server hop,
+ * and `resolveShareLink` restricts that hop to known map hosts.
+ */
+export async function resolveBranchLocation(
+  link: string,
+): Promise<{ latitude: number; longitude: number } | { error: string }> {
+  await requireAdmin();
+  const found = await resolveShareLink(link);
+  if (!found) return { error: "تعذّر قراءة الموقع من الرابط — افتح الرابط في الخرائط وانسخ الرابط الكامل." };
+  return found;
+}
+
 export async function saveOperations(
   _previous: OperationsActionState | undefined,
   form: FormData,

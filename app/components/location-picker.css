@@ -1,0 +1,150 @@
+/* Branch location picker — shared by the owner panel and the supervisor screen.
+   Neutral by design: it inherits whichever surface it is dropped into. */
+
+.loc-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.loc-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+.loc-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.loc-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.loc-input:focus-visible {
+  outline: 2px solid color-mix(in srgb, currentColor 45%, transparent);
+  outline-offset: 1px;
+}
+
+.loc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.loc-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.loc-btn--ghost {
+  justify-self: start;
+  background: transparent;
+}
+
+.loc-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.loc-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+.loc-status[data-state="empty"] {
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.loc-status[data-state="set"] {
+  background: color-mix(in srgb, #1c7a4a 14%, transparent);
+  color: #14603a;
+}
+
+.loc-verify {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  color: inherit;
+}
+
+.loc-verify svg {
+  width: 13px;
+  height: 13px;
+}
+
+.loc-error {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #a3253b;
+}
+
+.loc-manual > summary {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.loc-manual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.loc-manual-grid label {
+  display: grid;
+  gap: 5px;
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+
+.loc-manual-grid input {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 520px) {
+  .loc-input-row {
+    grid-template-columns: 1fr;
+  }
+}

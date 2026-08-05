@@ -56,6 +56,17 @@ const DICT: Record<string, Entry> = {
   streak_days: { ar: "أيام متتالية", en: "day streak" },
   first_badge_hint: { ar: "أكمل أول وردية لفتح شارة", en: "Complete your first shift to earn a badge" },
 
+  // role chip — ROLE_LABELS in staff-shared.ts stays Arabic for the management
+  // surfaces; an employee sees their own role in their own language.
+  role_owner: { ar: "المالك", en: "Owner" },
+  role_manager: { ar: "المدير", en: "Manager" },
+  role_supervisor: { ar: "المشرف", en: "Supervisor" },
+  role_employee: { ar: "موظف", en: "Employee" },
+  role_cleaning_staff: { ar: "فريق النظافة", en: "Cleaning team" },
+  role_barista: { ar: "باريستا", en: "Barista" },
+  role_kitchen_manager: { ar: "مدير المطبخ", en: "Kitchen manager" },
+  role_shift_manager: { ar: "مدير الوردية", en: "Shift manager" },
+
   // tasks
   today_tasks: { ar: "مهام اليوم", en: "Daily tasks" },
   required: { ar: "مطلوبة", en: "Required" },
@@ -150,6 +161,86 @@ const DICT: Record<string, Entry> = {
   },
   no_branch_account: { ar: "لم يتم تعيين فرع لهذا الحساب.", en: "No branch assigned to this account." },
   branch_check_failed: { ar: "تعذّر التحقق من فرعك.", en: "Couldn't verify your branch." },
+
+  // ── the four steps of a shift ───────────────────────────────────────────
+  step_start: { ar: "ابدأ الوردية", en: "Start your shift" },
+  step_tasks: { ar: "مهام اليوم", en: "Today's tasks" },
+  step_report: { ar: "تقرير اليوم", en: "Today's report" },
+  step_finish: { ar: "أنهِ الوردية", en: "Finish your shift" },
+  step_state_done: { ar: "تم", en: "Done" },
+  step_state_now: { ar: "الآن", en: "Now" },
+  step_state_wait: { ar: "لاحقاً", en: "Later" },
+  items_left: {
+    ar: (p) => (Number(p.count) === 1 ? "بقي عنصر واحد" : `بقي ${p.count} عناصر`),
+    en: (p) => (Number(p.count) === 1 ? "1 item left" : `${p.count} items left`),
+  },
+  all_done: { ar: "كل شيء مكتمل", en: "Everything is done" },
+  finish_blocked_hint: {
+    ar: "أكمل العناصر أعلاه ثم أنهِ الوردية.",
+    en: "Finish the items above, then end your shift.",
+  },
+
+  // ── photo capture ───────────────────────────────────────────────────────
+  photo_take: { ar: "التقط صورة", en: "Take a photo" },
+  photo_take_more: { ar: "أضف صوراً", en: "Add photos" },
+  photo_retake: { ar: "إعادة التصوير", en: "Retake" },
+  photo_confirm: { ar: "تأكيد الصورة", en: "Use this photo" },
+  photo_selected: {
+    ar: (p) => (Number(p.count) === 1 ? "صورة واحدة" : `${p.count} صور`),
+    en: (p) => (Number(p.count) === 1 ? "1 photo" : `${p.count} photos`),
+  },
+  photo_optional: { ar: "صورة (اختياري)", en: "Photo (optional)" },
+
+  // ── daily reports (tap-to-answer) ───────────────────────────────────────
+  report_cleaning: { ar: "تقرير النظافة", en: "Cleaning report" },
+  report_barista: { ar: "تسليم البار", en: "Bar handover" },
+  report_kitchen: { ar: "تقرير المطبخ", en: "Kitchen report" },
+  report_pick_hint: { ar: "اضغط على ما أنجزته اليوم", en: "Tap what you finished today" },
+  report_pick_one: { ar: "اختر عنصراً واحداً على الأقل.", en: "Tap at least one item." },
+  report_note_label: { ar: "ملاحظة (اختياري)", en: "Note (optional)" },
+  report_note_hint: { ar: "اكتب فقط إذا كان هناك شيء غير عادي.", en: "Only write if something is unusual." },
+  report_send: { ar: "إرسال", en: "Send" },
+  report_sending: { ar: "جارٍ الإرسال…", en: "Sending…" },
+  report_resend: { ar: "إعادة الإرسال", en: "Send again" },
+  report_state_pending: { ar: "بانتظار المشرف", en: "Waiting for supervisor" },
+  report_state_confirmed: { ar: "معتمد", en: "Approved" },
+  report_state_rejected: { ar: "يحتاج تعديل", en: "Needs fixing" },
+  report_supervisor_notes: { ar: "ملاحظة المشرف", en: "Supervisor's note" },
+  bar_clean_confirm: { ar: "البار نظيف وجاهز للتسليم", en: "The bar is clean and ready to hand over" },
+  bar_clean_required: { ar: "أكد أن البار نظيف قبل الإرسال.", en: "Confirm the bar is clean before sending." },
+
+  // ── kitchen stock count ─────────────────────────────────────────────────
+  inventory_title: { ar: "جرد اليوم", en: "Today's count" },
+  inventory_hint: { ar: "اضبط العدد بزر − و +", en: "Set each count with − and +" },
+  inventory_product: { ar: "منتج", en: "Product" },
+  inventory_dessert: { ar: "حلوى", en: "Dessert" },
+  inventory_decrease: { ar: (p) => `إنقاص ${p.name}`, en: (p) => `Decrease ${p.name}` },
+  inventory_increase: { ar: (p) => `زيادة ${p.name}`, en: (p) => `Increase ${p.name}` },
+  inventory_invalid: { ar: "تعذّر قراءة الجرد — حاول مرة أخرى.", en: "Couldn't read the count — try again." },
+
+  // ── water check ─────────────────────────────────────────────────────────
+  water_title: { ar: "فحص المياه", en: "Water check" },
+  water_salt: { ar: "نسبة الملوحة", en: "Salt reading" },
+  water_latest: { ar: "آخر قراءة اليوم", en: "Latest reading today" },
+  water_send: { ar: "تسجيل الفحص", en: "Log the check" },
+  water_sending: { ar: "جارٍ التسجيل…", en: "Logging…" },
+  water_invalid: { ar: "أدخل قراءة صحيحة (0 أو أكثر).", en: "Enter a valid reading (0 or more)." },
+  water_photo_one: { ar: "أرفق صورة واحدة للقراءة.", en: "Attach one photo of the reading." },
+  water_saved: { ar: "تم تسجيل فحص المياه.", en: "Water check logged." },
+
+  // ── daily beverage ──────────────────────────────────────────────────────
+  beverage_title: { ar: "مشروبك اليوم", en: "Your drink today" },
+  beverage_yes: { ar: "أخذته", en: "I had it" },
+  beverage_no: { ar: "لم آخذه", en: "I didn't" },
+  beverage_none_yet: { ar: "لم تسجّل بعد", en: "Not logged yet" },
+  beverage_saved: { ar: "تم التسجيل.", en: "Saved." },
+
+  // ── report action results ───────────────────────────────────────────────
+  report_sent: { ar: "تم إرسال التقرير للمراجعة.", en: "Report sent for review." },
+  report_save_failed: { ar: "تعذّر حفظ التقرير — حاول مرة أخرى.", en: "Couldn't save the report — try again." },
+  report_wrong_role: { ar: "هذا التقرير ليس مخصصاً لدورك.", en: "This report isn't for your role." },
+  report_not_allowed: { ar: "ليس لديك صلاحية لهذا الإجراء.", en: "You are not allowed to do this." },
+  note_too_long: { ar: "الملاحظة طويلة جداً.", en: "That note is too long." },
 
   // submissions chrome
   daily_operations: { ar: "تقارير ومهام اليوم", en: "Today's reports & tasks" },

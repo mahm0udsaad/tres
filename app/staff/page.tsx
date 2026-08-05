@@ -1,5 +1,6 @@
 import { ClipboardList, LogOut, MapPin } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   type AttendanceRecord,
   type Branch,
@@ -36,6 +37,9 @@ function dateInTimeZone(timeZone: string) {
 
 export default async function StaffDashboard() {
   const { profile, supabase } = await requireStaff();
+  // The owner runs the company, not a shift: send them straight to the panel
+  // that shows every branch instead of this single-branch dashboard.
+  if (profile.role === "owner") redirect("/staff/owner");
   const lang: Lang = dashboardLang(profile);
   const locale = lang === "ar" ? "ar-SA" : "en-US";
   const attends = usesAttendance(profile.role);

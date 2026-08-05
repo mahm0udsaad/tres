@@ -1,0 +1,263 @@
+/* Owner panel — built for someone who wants one glance, not a report tool.
+   Big numbers, one plain sentence under each, no controls to learn. */
+
+.owner-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px 16px 64px;
+  display: grid;
+  gap: 16px;
+}
+
+.owner-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 2px;
+}
+.owner-topbar h1 { margin: 2px 0 0; font-size: clamp(24px, 7vw, 32px); }
+.owner-subtitle { margin: 4px 0 0; color: var(--staff-muted); font-size: 14px; }
+.owner-logout {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--staff-line);
+  border-radius: 14px;
+  color: var(--staff-wine);
+  background: var(--staff-surface);
+}
+.owner-logout svg { width: 20px; }
+
+/* ── hero ─────────────────────────────────────────────────────────────── */
+.owner-hero {
+  padding: 26px 24px;
+  border-radius: 26px;
+  color: white;
+  background: linear-gradient(145deg, var(--staff-wine), var(--staff-wine-deep));
+  box-shadow: 0 20px 44px rgba(85, 9, 30, .22);
+}
+.owner-hero.is-quiet { background: linear-gradient(145deg, #4a4340, #2c2523); }
+.owner-hero-label {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  opacity: .82;
+}
+.owner-hero-number {
+  margin: 6px 0 10px;
+  font-size: clamp(56px, 20vw, 88px);
+  font-weight: 800;
+  line-height: 1;
+}
+.owner-hero-number span {
+  margin-inline-start: 10px;
+  font-size: clamp(16px, 5vw, 22px);
+  font-weight: 600;
+  opacity: .8;
+}
+.owner-hero-help { margin: 0; font-size: 15px; line-height: 1.7; opacity: .92; }
+
+/* ── tiles ────────────────────────────────────────────────────────────── */
+.owner-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.owner-tile {
+  padding: 18px 16px;
+  border: 1px solid var(--staff-line);
+  border-radius: 22px;
+  background: var(--staff-surface);
+}
+.owner-tile-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+  border-radius: 13px;
+  color: var(--staff-wine);
+  background: var(--staff-blush-soft);
+}
+.owner-tile-icon svg { width: 21px; }
+.owner-tile-value { margin: 0; font-size: 42px; font-weight: 800; line-height: 1; }
+.owner-tile-title { margin: 8px 0 2px; font-size: 16px; font-weight: 700; }
+.owner-tile-help { margin: 0; color: var(--staff-muted); font-size: 13px; line-height: 1.6; }
+
+.owner-tile.is-good .owner-tile-icon { color: var(--staff-green); background: var(--staff-green-soft); }
+.owner-tile.is-good .owner-tile-value { color: var(--staff-green); }
+.owner-tile.is-bad .owner-tile-icon,
+.owner-tile.is-warn .owner-tile-icon { color: var(--staff-danger); background: var(--staff-danger-soft); }
+.owner-tile.is-bad .owner-tile-value,
+.owner-tile.is-warn .owner-tile-value { color: var(--staff-danger); }
+
+/* ── cards ────────────────────────────────────────────────────────────── */
+.owner-card {
+  padding: 20px 18px;
+  border: 1px solid var(--staff-line);
+  border-radius: 24px;
+  background: var(--staff-surface);
+}
+.owner-card h2 { margin: 0; font-size: 20px; }
+.owner-card-help {
+  margin: 6px 0 16px;
+  color: var(--staff-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.owner-bar {
+  height: 22px;
+  border-radius: 999px;
+  background: var(--staff-blush-soft);
+  overflow: hidden;
+}
+.owner-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--staff-green);
+}
+.owner-bar-caption { margin: 10px 0 0; font-size: 15px; }
+.owner-bar-caption strong { font-size: 20px; }
+
+/* ── branches ─────────────────────────────────────────────────────────── */
+.owner-branches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.owner-branch {
+  padding: 16px;
+  border: 1px solid var(--staff-line);
+  border-radius: 18px;
+  background: var(--staff-bg);
+}
+.owner-branch header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 17px;
+}
+.owner-branch header svg { width: 19px; color: var(--staff-wine); }
+.owner-branch ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.owner-branch li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 15px;
+}
+.owner-branch li span { display: inline-flex; align-items: center; gap: 6px; color: var(--staff-muted); }
+.owner-branch li span svg { width: 15px; }
+.owner-branch li b { font-size: 17px; }
+.is-good-text { color: var(--staff-green); }
+.is-bad-text,
+.is-warn-text { color: var(--staff-danger); }
+
+/* ── chart ────────────────────────────────────────────────────────────── */
+/* 14 columns must fit a phone: the tracks are allowed to shrink to 18px and
+   the strip scrolls on its own if the screen is narrower still. */
+.owner-chart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(18px, 1fr);
+  align-items: end;
+  gap: 6px;
+  height: 190px;
+  overflow-x: auto;
+}
+.owner-chart-col {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+  grid-template-rows: auto 1fr auto;
+}
+.owner-chart-value { text-align: center; font-size: 12px; font-weight: 700; color: var(--staff-muted); }
+.owner-chart-track {
+  position: relative;
+  height: 100%;
+  border-radius: 10px 10px 4px 4px;
+  background: var(--staff-bg);
+  overflow: hidden;
+}
+.owner-chart-fill,
+.owner-chart-ontime {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: block;
+  border-radius: 10px 10px 0 0;
+}
+.owner-chart-fill { background: var(--staff-blush); }
+.owner-chart-ontime { background: var(--staff-green); opacity: .9; }
+.owner-chart-day { text-align: center; font-size: 12px; color: var(--staff-muted); }
+.owner-chart-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--staff-muted);
+}
+.owner-key-dot { width: 12px; height: 12px; border-radius: 4px; }
+.owner-key-dot--all { background: var(--staff-blush); }
+.owner-key-dot--ontime { margin-inline-start: 12px; background: var(--staff-green); }
+
+/* ── staff list ───────────────────────────────────────────────────────── */
+.owner-staff { display: grid; gap: 8px; }
+.owner-staff-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 13px 14px;
+  border: 1px solid var(--staff-line);
+  border-radius: 16px;
+  background: var(--staff-bg);
+}
+.owner-staff-row.is-working { border-color: var(--staff-green); background: var(--staff-green-soft); }
+.owner-staff-row.is-absent { border-color: var(--staff-blush); }
+.owner-staff-main strong { display: block; font-size: 16px; }
+.owner-staff-main small,
+.owner-staff-side small { color: var(--staff-muted); font-size: 13px; }
+.owner-staff-side { display: grid; justify-items: end; gap: 4px; text-align: end; }
+.owner-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--staff-ink);
+  background: white;
+  border: 1px solid var(--staff-line);
+}
+.owner-pill.is-working { color: white; background: var(--staff-green); border-color: transparent; }
+.owner-pill.is-absent { color: white; background: var(--staff-danger); border-color: transparent; }
+.owner-pill.is-finished { color: var(--staff-muted); }
+
+/* ── pending reports ──────────────────────────────────────────────────── */
+.owner-pending { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.owner-pending li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 13px 14px;
+  border: 1px solid var(--staff-line);
+  border-radius: 16px;
+  background: var(--staff-bg);
+  font-size: 15px;
+}
+.owner-pending li span { color: var(--staff-muted); }
+.owner-pending li small { color: var(--staff-muted); font-size: 13px; }
+
+@media (max-width: 560px) {
+  .owner-staff-side { justify-items: start; text-align: start; }
+  .owner-chart { height: 160px; }
+}

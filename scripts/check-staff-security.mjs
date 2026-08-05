@@ -65,6 +65,7 @@ for (const rpc of [
   "set_checklist_template_active",
   "supervisor_override_shift",
   "get_branch_shift_status",
+  "get_owner_overview",
 ]) {
   requirePattern(
     `anonymous execute revoked for ${rpc}`,

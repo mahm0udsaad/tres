@@ -3,7 +3,6 @@ import {
   Activity,
   AlertTriangle,
   BarChart3,
-  Bell,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -12,7 +11,6 @@ import {
   Coffee,
   Droplets,
   FileCheck2,
-  LayoutDashboard,
   LogOut,
   MapPin,
   ShieldCheck,
@@ -28,6 +26,8 @@ import {
   type OwnerStaffRow,
   type StaffStatusToday,
 } from "./overview";
+import OwnerNavigation from "./OwnerNavigation";
+import OwnerThemeToggle from "./OwnerThemeToggle";
 import "./owner.css";
 
 export const dynamic = "force-dynamic";
@@ -168,14 +168,20 @@ export default async function OwnerPanel() {
   const { totals, today_stats: today, branches, trend, staff, pending_reports } = overview;
   const staffRows = sortStaff(staff);
   const activeStaffRows = staffRows.filter((row) => row.is_active);
-  const visibleStaff = activeStaffRows.slice(0, 8);
+  const visibleStaff = activeStaffRows.filter((row) => row.uses_attendance).slice(0, 8);
   const maxAttended = Math.max(1, ...trend.map((day) => day.attended));
+  const hasTasks = today.tasks_total > 0;
+  const hasFieldStaff = totals.field_staff > 0;
+  const hasAttendance = today.attended > 0;
+  const hasTrendData = trend.some(
+    (day) => day.attended > 0 || day.on_time > 0 || day.hours > 0 || day.reports > 0,
+  );
   const taskPercent = percent(today.tasks_done, today.tasks_total);
   const attendancePercent = percent(today.attended, totals.field_staff);
   const onTimePercent = percent(today.on_time, today.attended);
   const waterCheckedBranches = branches.filter((branch) => branch.water_ratio_today != null).length;
   const branchesReady = branches.filter(
-    (branch) => branch.pending_reports === 0 && branch.late_today === 0,
+    (branch) => branch.staff > 0 && branch.pending_reports === 0 && branch.late_today === 0,
   ).length;
   const branchReadiness = percent(branchesReady, branches.length);
   const dateLabel = new Intl.DateTimeFormat("ar-EG-u-ca-gregory", {
@@ -186,6 +192,13 @@ export default async function OwnerPanel() {
   }).format(new Date(`${overview.today}T12:00:00Z`));
 
   const alerts = [
+    !hasFieldStaff
+      ? {
+          tone: "neutral",
+          title: "لا يوجد موظفون مسجلون",
+          detail: "أضف فريق العمل لبدء متابعة التشغيل",
+        }
+      : null,
     today.absent
       ? { tone: "danger", title: `${today.absent} موظف لم يحضر`, detail: "لم يبدأوا ورديتهم اليوم" }
       : null,
@@ -195,7 +208,7 @@ export default async function OwnerPanel() {
     today.reports_pending
       ? { tone: "warn", title: `${today.reports_pending} تقارير معلّقة`, detail: "بانتظار المراجعة والاعتماد" }
       : null,
-    waterCheckedBranches < branches.length
+    hasFieldStaff && waterCheckedBranches < branches.length
       ? {
           tone: "neutral",
           title: `${branches.length - waterCheckedBranches} فرع بلا فحص مياه`,
@@ -212,15 +225,7 @@ export default async function OwnerPanel() {
           <span>COFFEE ROASTERS</span>
         </div>
 
-        <nav className="owner-nav" aria-label="أقسام لوحة المالك">
-          <a className="is-active" href="#overview"><LayoutDashboard /> لوحة المدير</a>
-          <a href="#operations"><Activity /> التشغيل</a>
-          <a href="#branches"><Store /> الفروع</a>
-          <a href="#team"><Users /> الموظفون</a>
-          <a href="#quality"><ShieldCheck /> الجودة</a>
-          <a href="#reports"><FileCheck2 /> التقارير</a>
-          <a href="#alerts"><Bell /> التنبيهات</a>
-        </nav>
+        <OwnerNavigation />
 
         <div className="owner-account">
           <span className="owner-avatar">{profile.full_name.trim().slice(0, 1)}</span>
@@ -237,7 +242,7 @@ export default async function OwnerPanel() {
       </aside>
 
       <div className="owner-main">
-        <header className="owner-command-header" id="overview">
+        <header className="owner-command-header owner-section-anchor" id="overview">
           <div className="owner-command-title">
             <span><Coffee /></span>
             <div>
@@ -246,7 +251,11 @@ export default async function OwnerPanel() {
             </div>
           </div>
           <div className="owner-command-tools">
-            <span><Store /> جميع الفروع</span>
+            <OwnerThemeToggle />
+            <span>
+              <Store />
+              {branches.length === 1 ? branches[0].name : branches.length ? "جميع الفروع" : "لا توجد فروع"}
+            </span>
             <time dateTime={overview.today}><CalendarDays /> {dateLabel}</time>
           </div>
         </header>
@@ -255,52 +264,52 @@ export default async function OwnerPanel() {
           <MetricCard
             icon={<Activity />}
             label="جاهزية التشغيل"
-            value={`${taskPercent}٪`}
-            note={`${today.tasks_done} من ${today.tasks_total} مهمة`}
-            tone={taskPercent >= 85 ? "good" : taskPercent >= 60 ? "warn" : "danger"}
-            progress={taskPercent}
+            value={hasTasks ? `${taskPercent}٪` : "—"}
+            note={hasTasks ? `${today.tasks_done} من ${today.tasks_total} مهمة` : "لا توجد مهام مسندة"}
+            tone={!hasTasks ? "neutral" : taskPercent >= 85 ? "good" : taskPercent >= 60 ? "warn" : "danger"}
+            progress={hasTasks ? taskPercent : undefined}
           />
           <MetricCard
             icon={<Users />}
             label="الحضور اليوم"
             value={today.attended}
-            note={`من أصل ${totals.field_staff} موظف`}
-            tone={attendancePercent >= 85 ? "good" : "warn"}
-            progress={attendancePercent}
+            note={hasFieldStaff ? `من أصل ${totals.field_staff} موظف` : "لا يوجد موظفون بعد"}
+            tone={!hasFieldStaff ? "neutral" : attendancePercent >= 85 ? "good" : "warn"}
+            progress={hasFieldStaff ? attendancePercent : undefined}
           />
           <MetricCard
             icon={<Clock3 />}
             label="الالتزام بالوقت"
-            value={`${onTimePercent}٪`}
-            note={`${today.on_time} حضروا في موعدهم`}
-            tone={today.late ? "warn" : "good"}
-            progress={onTimePercent}
+            value={hasAttendance ? `${onTimePercent}٪` : "—"}
+            note={hasAttendance ? `${today.on_time} حضروا في موعدهم` : "لا توجد سجلات حضور"}
+            tone={!hasAttendance ? "neutral" : today.late ? "warn" : "good"}
+            progress={hasAttendance ? onTimePercent : undefined}
           />
           <MetricCard
             icon={<MapPin />}
             label="في العمل الآن"
             value={today.working_now}
-            note={`${today.finished} أنهوا ورديتهم`}
+            note={hasAttendance ? `${today.finished} أنهوا ورديتهم` : "لا توجد ورديات اليوم"}
             tone={today.working_now ? "good" : "neutral"}
           />
           <MetricCard
             icon={<CheckCircle2 />}
             label="المهام المنجزة"
             value={today.tasks_done}
-            note={`${today.tasks_total - today.tasks_done} متبقية`}
-            tone={today.tasks_total > today.tasks_done ? "warn" : "good"}
+            note={hasTasks ? `${today.tasks_total - today.tasks_done} متبقية` : "لا توجد مهام اليوم"}
+            tone={!hasTasks ? "neutral" : today.tasks_total > today.tasks_done ? "warn" : "good"}
           />
           <MetricCard
             icon={<FileCheck2 />}
             label="تقارير معلّقة"
             value={today.reports_pending}
-            note={`${today.reports_today} تقارير رُفعت اليوم`}
-            tone={today.reports_pending ? "danger" : "good"}
+            note={today.reports_today ? `${today.reports_today} تقارير رُفعت اليوم` : "لا توجد تقارير اليوم"}
+            tone={today.reports_pending ? "danger" : today.reports_today ? "good" : "neutral"}
           />
         </section>
 
-        <div className="owner-dashboard-grid" id="operations">
-          <section className="owner-panel owner-attention-panel" id="alerts">
+        <div className="owner-dashboard-grid">
+          <section className="owner-panel owner-attention-panel owner-section-anchor" id="operations">
             <PanelTitle
               icon={<ClipboardCheck />}
               title="متابعة التشغيل اليومي"
@@ -308,15 +317,22 @@ export default async function OwnerPanel() {
             />
             <div className="owner-task-summary">
               <div>
-                <strong>{taskPercent}٪</strong>
-                <span>نسبة إنجاز مهام اليوم</span>
+                <strong>{hasTasks ? `${taskPercent}٪` : "—"}</strong>
+                <span>{hasTasks ? "نسبة إنجاز مهام اليوم" : "لا توجد مهام اليوم"}</span>
               </div>
-              <div className="owner-wide-progress" aria-label={`${taskPercent}٪ من المهام منجزة`}>
+              <div
+                className="owner-wide-progress"
+                aria-label={hasTasks ? `${taskPercent}٪ من المهام منجزة` : "لا توجد مهام اليوم"}
+              >
                 <span style={{ width: `${taskPercent}%` }} />
               </div>
-              <small>{today.tasks_done} مكتملة · {today.tasks_total - today.tasks_done} متبقية</small>
+              <small>
+                {hasTasks
+                  ? `${today.tasks_done} مكتملة · ${today.tasks_total - today.tasks_done} متبقية`
+                  : "ستظهر نسبة الإنجاز بعد إسناد المهام"}
+              </small>
             </div>
-            <div className="owner-alert-list">
+            <div className="owner-alert-list owner-section-anchor" id="alerts">
               {alerts.length ? alerts.map((alert) => (
                 <article key={alert.title} data-tone={alert.tone}>
                   <i />
@@ -335,7 +351,7 @@ export default async function OwnerPanel() {
             </div>
           </section>
 
-          <section className="owner-panel owner-branches-panel" id="branches">
+          <section className="owner-panel owner-branches-panel owner-section-anchor" id="branches">
             <PanelTitle
               icon={<Store />}
               title="حالة الفروع الآن"
@@ -363,46 +379,52 @@ export default async function OwnerPanel() {
             </div>
           </section>
 
-          <section className="owner-panel owner-quality-panel" id="quality">
+          <section className="owner-panel owner-quality-panel owner-section-anchor" id="quality">
             <PanelTitle icon={<ShieldCheck />} title="جودة التشغيل" meta="اليوم" />
-            <Gauge value={taskPercent} label="مكتمل" />
+            <Gauge value={taskPercent} label={hasTasks ? "مكتمل" : "لا بيانات"} />
             <ul className="owner-quality-list">
-              <li><span><Check /> إنجاز المهام</span><b>{taskPercent}٪</b></li>
-              <li><span><Check /> الحضور</span><b>{attendancePercent}٪</b></li>
-              <li><span><Check /> الالتزام بالوقت</span><b>{onTimePercent}٪</b></li>
+              <li><span><Check /> إنجاز المهام</span><b>{hasTasks ? `${taskPercent}٪` : "—"}</b></li>
+              <li><span><Check /> الحضور</span><b>{hasFieldStaff ? `${attendancePercent}٪` : "—"}</b></li>
+              <li><span><Check /> الالتزام بالوقت</span><b>{hasAttendance ? `${onTimePercent}٪` : "—"}</b></li>
               <li><span><Droplets /> فحص المياه</span><b>{waterCheckedBranches}/{branches.length}</b></li>
             </ul>
           </section>
 
           <section className="owner-panel owner-trend-panel">
             <PanelTitle icon={<BarChart3 />} title="الحضور خلال ١٤ يومًا" meta="حضروا / في وقتهم" />
-            <div className="owner-chart" aria-label="مخطط الحضور خلال أربعة عشر يومًا">
-              {trend.map((day) => (
-                <div className="owner-chart-col" key={day.date}>
-                  <span className="owner-chart-value">{day.attended}</span>
-                  <div className="owner-chart-track">
-                    <span
-                      className="owner-chart-fill"
-                      style={{ height: `${Math.round((day.attended / maxAttended) * 100)}%` }}
-                    />
-                    <span
-                      className="owner-chart-ontime"
-                      style={{ height: `${Math.round((day.on_time / maxAttended) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="owner-chart-day">{dayLabel(day.date)}</span>
+            {hasTrendData ? (
+              <>
+                <div className="owner-chart" aria-label="مخطط الحضور خلال أربعة عشر يومًا">
+                  {trend.map((day) => (
+                    <div className="owner-chart-col" key={day.date}>
+                      <span className="owner-chart-value">{day.attended}</span>
+                      <div className="owner-chart-track">
+                        <span
+                          className="owner-chart-fill"
+                          style={{ height: `${Math.round((day.attended / maxAttended) * 100)}%` }}
+                        />
+                        <span
+                          className="owner-chart-ontime"
+                          style={{ height: `${Math.round((day.on_time / maxAttended) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="owner-chart-day">{dayLabel(day.date)}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="owner-chart-legend">
-              <span><i className="is-attended" /> الحضور</span>
-              <span><i className="is-ontime" /> في الوقت</span>
-              <strong>{trend.reduce((sum, day) => sum + day.hours, 0).toFixed(1)} ساعة عمل</strong>
-            </div>
+                <div className="owner-chart-legend">
+                  <span><i className="is-attended" /> الحضور</span>
+                  <span><i className="is-ontime" /> في الوقت</span>
+                  <strong>{trend.reduce((sum, day) => sum + day.hours, 0).toFixed(1)} ساعة عمل</strong>
+                </div>
+              </>
+            ) : (
+              <p className="owner-empty owner-chart-empty">لا توجد سجلات حضور خلال هذه الفترة.</p>
+            )}
           </section>
 
-          <section className="owner-panel owner-team-panel" id="team">
-            <PanelTitle icon={<Users />} title="أداء الفريق اليوم" meta={`${totals.staff} موظف`} />
+          <section className="owner-panel owner-team-panel owner-section-anchor" id="team">
+            <PanelTitle icon={<Users />} title="أداء الفريق اليوم" meta={`${totals.field_staff} موظف`} />
             <div className="owner-table-scroll">
               <table className="owner-team-table">
                 <thead>
@@ -417,6 +439,9 @@ export default async function OwnerPanel() {
                       <td>{row.points}</td>
                     </tr>
                   ))}
+                  {!visibleStaff.length ? (
+                    <tr><td colSpan={4}><p className="owner-empty">لا يوجد موظفون مضافون بعد.</p></td></tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>
@@ -436,7 +461,7 @@ export default async function OwnerPanel() {
             </div>
           </section>
 
-          <section className="owner-panel owner-reports-panel" id="reports">
+          <section className="owner-panel owner-reports-panel owner-section-anchor" id="reports">
             <PanelTitle icon={<FileCheck2 />} title="تقارير بانتظار المراجعة" meta={today.reports_pending} />
             <ul className="owner-report-list">
               {pending_reports.slice(0, 6).map((report) => (
@@ -447,7 +472,7 @@ export default async function OwnerPanel() {
                 </li>
               ))}
               {!pending_reports.length ? (
-                <li className="owner-report-clear"><CheckCircle2 /><span>كل التقارير تمت مراجعتها</span></li>
+                <li className="owner-report-clear"><CheckCircle2 /><span>لا توجد تقارير حتى الآن</span></li>
               ) : null}
             </ul>
           </section>
@@ -455,11 +480,21 @@ export default async function OwnerPanel() {
           <section className="owner-panel owner-branch-readiness-panel">
             <PanelTitle icon={<ShieldCheck />} title="جاهزية الفروع" meta={`${branchesReady}/${branches.length}`} />
             <div className="owner-readiness-body">
-              <Gauge value={branchReadiness} label="جاهز" />
+              <Gauge value={branchReadiness} label={hasFieldStaff ? "جاهز" : "لا بيانات"} />
               <div>
-                <p>الفرع الجاهز لا يملك حالات تأخير أو تقارير معلّقة.</p>
-                <span><Check /> {branchesReady} فروع مستقرة</span>
-                <span><AlertTriangle /> {branches.length - branchesReady} تحتاج متابعة</span>
+                <p>
+                  {hasFieldStaff
+                    ? "الفرع الجاهز لا يملك حالات تأخير أو تقارير معلّقة."
+                    : "ستظهر الجاهزية بعد إضافة الموظفين وبدء تسجيل التشغيل."}
+                </p>
+                {hasFieldStaff ? (
+                  <>
+                    <span><Check /> {branchesReady} فروع مستقرة</span>
+                    <span><AlertTriangle /> {branches.length - branchesReady} تحتاج متابعة</span>
+                  </>
+                ) : (
+                  <span><AlertTriangle /> لا توجد بيانات تشغيل بعد</span>
+                )}
               </div>
             </div>
           </section>

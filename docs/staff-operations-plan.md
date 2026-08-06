@@ -138,15 +138,16 @@ Implemented:
 
 Implemented:
 
-1. `nationality` and `preferred_language` (`ar`/`en`) on every staff profile,
-   set by owner and supervisor at creation (nationality dropdown auto-suggests
-   the dashboard language — Arabic for Saudi Arabia, English otherwise).
+1. `nationality` and nationality-derived `preferred_language` (`ar`/`bn`/`en`)
+   on every staff profile. Arabic-speaking nationalities use Arabic,
+   Bangladesh uses Bengali, and the remaining configured nationalities use
+   English. The owner/supervisor forms show this mapping but cannot override it.
 2. Owner creates staff for any branch/role at `/admin/operations`; supervisors
    stay branch- and role-scoped at `/staff/team` (both gained nationality +
    language fields).
 3. Per-user i18n for the **employee dashboard** (`app/lib/staff-i18n.ts`,
    `t(key, lang)`): `/staff` renders in the member's language and flips
-   direction (rtl/ar, ltr/en). Seeded role task titles are single-language.
+   direction (rtl/ar, ltr/bn/en). Seeded role task titles are single-language.
    RPC failure `code`s map to localized text; the 100 m geofence rejection
    shows live distance vs. allowed radius. Admin/owner/supervisor/shift-manager
    surfaces stay Arabic.
@@ -169,7 +170,7 @@ screen and one action at a time:
 
 1. `/staff` before a shift is a single circular **start** button; during a
    shift it is a dark progress header (elapsed hours, completion bar, items
-   left) followed by the to-do rows, the daily forms, break, rewards, and a
+   left) followed by the daily forms, the to-do rows, break, rewards, and a
    sticky **end shift** bar. Employee roles get no nav at all; the admin nav
    is gated on `isAdminRole`.
 2. The daily forms render inline on `/staff` (`DailyReport.tsx`), so nothing
@@ -189,7 +190,7 @@ screen and one action at a time:
 5. `PhotoCapture.tsx` adds a preview step: photos are shown back with retake
    before anything is uploaded, replacing the bare camera icon that fired the
    upload the instant the picker returned.
-6. Every employee-facing string is now bilingual — the report forms, their
+6. Every employee-facing string is localized in Arabic, Bengali, and English — the report forms, their
    action errors, the stock count, the beverage log, and the photo flow.
    `dashboardLang()` in `staff-shared.ts` is the single source of truth for
    language and direction, fixing a mismatch where `/staff` rendered a
@@ -200,7 +201,6 @@ screen and one action at a time:
 Future enhancement:
 
 - Owner analytics for compliance trends, labor hours, and approval rates.
-- Add Bengali (`bn`) to `staff-i18n.ts` if two languages prove insufficient.
 - Let supervisors edit the chip sets per branch instead of shipping them in
   code.
 

@@ -74,7 +74,7 @@ function ChipGrid({ items, lang }: { items: CheckItem[]; lang: Lang }) {
               onClick={() => toggle(item.key)}
             >
               <span className="staff-chip-mark">{on ? <Check /> : null}</span>
-              {lang === "ar" ? item.ar : item.en}
+              {item[lang]}
             </button>
           );
         })}
@@ -208,7 +208,7 @@ function KitchenInventory({ lang }: { lang: Lang }) {
       />
       <ul>
         {INVENTORY_PRESET.map((item) => {
-          const name = lang === "ar" ? item.ar : item.en;
+          const name = item[lang];
           return (
             <li key={item.key}>
               <span className="staff-stock-name">

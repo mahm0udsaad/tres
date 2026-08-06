@@ -10,7 +10,7 @@ import {
   usesAttendance,
 } from "../lib/staff";
 import { dashboardLang, isAdminRole } from "../lib/staff-shared";
-import { t, type Lang } from "../lib/staff-i18n";
+import { localeFor, t, type Lang } from "../lib/staff-i18n";
 import BranchSettings from "./BranchSettings";
 import ShiftControls from "./ShiftControls";
 import type { ReportStatus } from "./DailyReport";
@@ -41,7 +41,7 @@ export default async function StaffDashboard() {
   // that shows every branch instead of this single-branch dashboard.
   if (profile.role === "owner") redirect("/staff/owner");
   const lang: Lang = dashboardLang(profile);
-  const locale = lang === "ar" ? "ar-SA" : "en-US";
+  const locale = localeFor(lang);
   const attends = usesAttendance(profile.role);
 
   const [branchResult, attendanceResult, gamificationResult] = await Promise.all([

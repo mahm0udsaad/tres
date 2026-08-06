@@ -41,7 +41,7 @@ const RPC_ERRORS: Record<string, string> = {
   cannot_target_self: "لا يمكنك تعديل حسابك من هنا.",
   target_not_allowed: "لا يمكن تنفيذ الإجراء — الحساب خارج فرعك أو دوره محمي.",
   nationality_invalid: "اختر جنسية صحيحة.",
-  language_invalid: "اختر لغة صحيحة (العربية أو الإنجليزية).",
+  language_invalid: "اختر لغة صحيحة (العربية أو البنغالية أو الإنجليزية).",
   reason_required: "أدخل سبباً لا يقل عن 10 أحرف.",
   active_shift_exists: "لدى الموظف وردية جارية بالفعل.",
   no_active_shift: "لا توجد وردية جارية لهذا الموظف.",
@@ -71,7 +71,6 @@ export async function createBranchStaff(
   const email = text(form.get("email")).toLowerCase();
   const scheduledStart = text(form.get("scheduled_start"));
   const nationality = text(form.get("nationality")) || "Other";
-  const langValue = text(form.get("preferred_language"));
   let password = text(form.get("password"));
 
   if (!fullName) return { error: "أدخل اسم الموظف." };
@@ -84,8 +83,7 @@ export async function createBranchStaff(
   if (!NATIONALITY_VALUES.includes(nationality)) {
     return { error: RPC_ERRORS.nationality_invalid };
   }
-  const preferredLanguage =
-    langValue === "ar" || langValue === "en" ? langValue : languageForNationality(nationality);
+  const preferredLanguage = languageForNationality(nationality);
   if (password && password.length < 8) {
     return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا." };
   }

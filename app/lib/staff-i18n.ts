@@ -1,5 +1,5 @@
 /**
- * Lightweight per-user i18n for the employee-facing staff app (Phase 1: ar/en).
+ * Lightweight per-user i18n for the employee-facing staff app (ar/bn/en).
  * Each staff member has a `preferred_language`; their `/staff` views render in
  * that language and switch direction (rtl/ltr). Supervisor and owner surfaces
  * stay Arabic-only, so those strings are NOT in this dictionary.
@@ -9,13 +9,22 @@
  * distance). RPC failure `code`s map straight to dictionary keys.
  */
 
-export type Lang = "ar" | "en";
+import type { StaffLanguage } from "./staff-shared";
+
+export type Lang = StaffLanguage;
 
 export function dirFor(lang: Lang): "rtl" | "ltr" {
   return lang === "ar" ? "rtl" : "ltr";
 }
 
-type Entry = Record<Lang, string | ((params: Record<string, unknown>) => string)>;
+export function localeFor(lang: Lang): string {
+  if (lang === "ar") return "ar-SA";
+  if (lang === "bn") return "bn-BD";
+  return "en-US";
+}
+
+type Translation = string | ((params: Record<string, unknown>) => string);
+type Entry = Record<"ar" | "en", Translation>;
 
 const DICT: Record<string, Entry> = {
   // dashboard chrome
@@ -40,6 +49,7 @@ const DICT: Record<string, Entry> = {
   start_hint: { ar: "يجب أن تكون داخل نطاق الفرع", en: "Be inside the branch area" },
   end_hint: { ar: "سيتم التحقق من مهام اليوم أولاً", en: "Today's tasks are checked first" },
   hours_since: { ar: "ساعة منذ تسجيل الحضور", en: "hours since clock-in" },
+  hour_short: { ar: "ساعة", en: "h" },
   manual_by_supervisor: { ar: "تم التسجيل يدوياً بواسطة المشرف", en: "Manually logged by supervisor" },
 
   // break
@@ -255,6 +265,156 @@ const DICT: Record<string, Entry> = {
   report_check_failed: { ar: "تعذّر التحقق من تقرير اليوم.", en: "Couldn't check today's report." },
 };
 
+/** Bengali employee pack. Arabic and English remain inline above because they
+ *  are the management and fallback languages; nationality selects this pack
+ *  automatically for Bangladeshi employees. */
+const BENGALI: Record<string, Translation> = {
+  panel_title: "কর্মীদের ড্যাশবোর্ড",
+  greeting: (p) => `স্বাগতম, ${p.name}`,
+  nav_home: "হোম",
+  nav_daily_forms: "দৈনিক ফর্ম",
+  nav_reports: "রিপোর্ট",
+  nav_team: "শাখার দল",
+  nav_checklist: "চেকলিস্ট",
+  branch_unassigned: "এই অ্যাকাউন্টে কোনো শাখা নির্ধারিত নেই। কাজ শুরু করার আগে ব্যবস্থাপনার সাথে যোগাযোগ করুন।",
+  logout: "সাইন আউট",
+  ready_to_start: "শিফট শুরু করতে প্রস্তুত",
+  shift_running: "শিফট চলছে",
+  start_shift: "শিফট শুরু করুন",
+  end_shift: "শিফট শেষ করুন",
+  start_hint: "শাখার নির্ধারিত এলাকার ভেতরে থাকুন",
+  end_hint: "প্রথমে আজকের কাজগুলো যাচাই করা হবে",
+  hours_since: "ঘণ্টা আগে উপস্থিতি নথিভুক্ত হয়েছে",
+  hour_short: "ঘণ্টা",
+  manual_by_supervisor: "সুপারভাইজার ম্যানুয়ালি নথিভুক্ত করেছেন",
+  break: "শিফটের বিরতি",
+  break_minutes_used: "মিনিট ব্যবহার হয়েছে",
+  break_start: "বিরতি শুরু করুন",
+  break_end: "বিরতি শেষ করুন",
+  break_done: "বিরতি নেওয়া হয়েছে",
+  break_after_start: "শিফট শুরু করার পর পাওয়া যাবে।",
+  rewards: "আপনার অর্জন",
+  total_points: "মোট পয়েন্ট",
+  streak_days: "টানা দিনের ধারা",
+  first_badge_hint: "প্রথম ব্যাজ পেতে আপনার প্রথম শিফট শেষ করুন",
+  role_owner: "মালিক",
+  role_manager: "ম্যানেজার",
+  role_supervisor: "সুপারভাইজার",
+  role_employee: "কর্মী",
+  role_cleaning_staff: "পরিচ্ছন্নতা দল",
+  role_barista: "বারিস্তা",
+  role_kitchen_manager: "রান্নাঘর ব্যবস্থাপক",
+  role_shift_manager: "শিফট ম্যানেজার",
+  today_tasks: "আজকের কাজ",
+  required: "আবশ্যক",
+  photo_required_tag: "ছবি আবশ্যক",
+  photo_attached_tag: "ছবি সংযুক্ত হয়েছে",
+  no_tasks: "আজ আপনার জন্য কোনো কাজ নির্ধারিত নেই।",
+  attach_photo_label: (p) => `${p.title} সম্পন্ন করতে ছবি সংযুক্ত করুন`,
+  complete_label: (p) => `${p.title} সম্পন্ন করুন`,
+  missing_title: "অসম্পূর্ণ প্রয়োজনীয়তা",
+  missing_intro: "শিফট শেষ করার আগে এগুলো সম্পন্ন করুন:",
+  open_daily_forms: "দৈনিক ফর্ম খুলুন",
+  end_active_break: "চলমান বিরতি শেষ করুন",
+  ok_shift_started: "শিফট শুরু হয়েছে।",
+  ok_shift_ended: "দারুণ! শিফট সম্পন্ন হয়েছে।",
+  ok_task_completed: "কাজটি সম্পন্ন হয়েছে।",
+  ok_task_photo: "ছবির প্রমাণসহ কাজটি সম্পন্ন হয়েছে।",
+  ok_break_started: "বিরতি শুরু হয়েছে।",
+  ok_break_ended: "বিরতি শেষ হয়েছে।",
+  geo_unsupported: "এই ব্রাউজার অবস্থান শনাক্তকরণ সমর্থন করে না।",
+  geo_denied: "শিফট শুরু বা শেষ করতে অবস্থান ব্যবহারের অনুমতি দিন।",
+  geo_unavailable: "সঠিক অবস্থান পাওয়া যায়নি—খোলা জায়গায় গিয়ে আবার চেষ্টা করুন।",
+  geo_unreadable: "অবস্থান পড়া যায়নি। অবস্থানের অনুমতি চালু করে আবার চেষ্টা করুন।",
+  outside_branch: (p) => `আপনি শাখার এলাকার বাইরে—দূরত্ব ${round(p.distance_meters)} মিটার, অনুমোদিত ${round(p.allowed_radius_meters)} মিটার।`,
+  low_accuracy: "GPS সংকেত দুর্বল—খোলা জায়গায় গিয়ে আবার চেষ্টা করুন।",
+  no_branch: "আপনার অ্যাকাউন্টে কোনো শাখা নির্ধারিত নেই।",
+  active_shift_exists: "আপনার একটি শিফট ইতিমধ্যে চলছে।",
+  no_active_shift: "কোনো চলমান শিফট পাওয়া যায়নি।",
+  break_active: "শিফট শেষ করার আগে চলমান বিরতি শেষ করুন।",
+  break_already_used: "আজকের বিরতি ইতিমধ্যে নেওয়া হয়েছে।",
+  break_not_started: "বিরতি এখনো শুরু হয়নি।",
+  break_already_ended: "বিরতি ইতিমধ্যে শেষ হয়েছে।",
+  incomplete_tasks: "শিফট শেষ করার আগে সব আবশ্যক কাজ সম্পন্ন করুন।",
+  task_not_found: "কাজটি পাওয়া যায়নি।",
+  task_already_completed: "এই কাজটি ইতিমধ্যে সম্পন্ন হয়েছে।",
+  task_not_manual: "এই কাজটি দৈনিক ফর্ম জমা দিলে স্বয়ংক্রিয়ভাবে সম্পন্ন হবে।",
+  photo_required: "এই কাজের জন্য প্রমাণের ছবি আবশ্যক।",
+  attach_one_photo: "কাজ সম্পন্নের প্রমাণ হিসেবে একটি ছবি সংযুক্ত করুন।",
+  generic_error: "কিছু ভুল হয়েছে—আবার চেষ্টা করুন।",
+  photo_one_min: "অন্তত একটি ছবি সংযুক্ত করুন।",
+  photo_max: (p) => `সর্বোচ্চ ${p.max}টি ছবি সংযুক্ত করা যাবে।`,
+  photo_format: "ছবির ধরন সমর্থিত নয়—JPG, PNG, WebP অথবা HEIC ব্যবহার করুন।",
+  photo_size: "প্রতিটি ছবির আকার ৩ মেগাবাইটের কম হতে হবে।",
+  photo_upload_failed: "ছবি আপলোড করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।",
+  no_branch_account: "এই অ্যাকাউন্টে কোনো শাখা নির্ধারিত নেই।",
+  branch_check_failed: "আপনার শাখা যাচাই করা যায়নি।",
+  step_start: "শিফট শুরু করুন",
+  step_tasks: "আজকের কাজ",
+  step_report: "আজকের রিপোর্ট",
+  step_finish: "শিফট শেষ করুন",
+  step_state_done: "সম্পন্ন",
+  step_state_now: "এখন",
+  step_state_wait: "পরে",
+  items_left: (p) => `${p.count}টি বাকি`,
+  all_done: "সব কাজ সম্পন্ন",
+  finish_blocked_hint: "উপরের কাজগুলো শেষ করে শিফট শেষ করুন।",
+  photo_take: "ছবি তুলুন",
+  photo_take_more: "আরও ছবি যোগ করুন",
+  photo_retake: "আবার তুলুন",
+  photo_confirm: "এই ছবি ব্যবহার করুন",
+  photo_selected: (p) => `${p.count}টি ছবি`,
+  photo_optional: "ছবি (ঐচ্ছিক)",
+  report_cleaning: "পরিচ্ছন্নতার রিপোর্ট",
+  report_barista: "বার হস্তান্তর",
+  report_kitchen: "রান্নাঘরের রিপোর্ট",
+  report_pick_hint: "আজ যা সম্পন্ন করেছেন সেগুলো নির্বাচন করুন",
+  report_pick_one: "অন্তত একটি বিষয় নির্বাচন করুন।",
+  report_note_label: "নোট (ঐচ্ছিক)",
+  report_note_hint: "অস্বাভাবিক কিছু থাকলেই শুধু লিখুন।",
+  report_send: "পাঠান",
+  report_sending: "পাঠানো হচ্ছে…",
+  report_resend: "আবার পাঠান",
+  report_state_pending: "সুপারভাইজারের অপেক্ষায়",
+  report_state_confirmed: "অনুমোদিত",
+  report_state_rejected: "সংশোধন প্রয়োজন",
+  report_supervisor_notes: "সুপারভাইজারের নোট",
+  bar_clean_confirm: "বার পরিষ্কার এবং হস্তান্তরের জন্য প্রস্তুত",
+  bar_clean_required: "পাঠানোর আগে বার পরিষ্কার আছে নিশ্চিত করুন।",
+  inventory_title: "আজকের মজুত গণনা",
+  inventory_hint: "− এবং + বোতাম দিয়ে সংখ্যা ঠিক করুন",
+  inventory_product: "পণ্য",
+  inventory_dessert: "মিষ্টান্ন",
+  inventory_decrease: (p) => `${p.name} কমান`,
+  inventory_increase: (p) => `${p.name} বাড়ান`,
+  inventory_invalid: "মজুতের সংখ্যা পড়া যায়নি—আবার চেষ্টা করুন।",
+  water_title: "পানি পরীক্ষা",
+  water_salt: "লবণাক্ততার মাত্রা",
+  water_latest: "আজকের সর্বশেষ মাপ",
+  water_send: "পরীক্ষা নথিভুক্ত করুন",
+  water_sending: "নথিভুক্ত হচ্ছে…",
+  water_invalid: "সঠিক মান লিখুন (০ বা তার বেশি)।",
+  water_photo_one: "মাপের একটি ছবি সংযুক্ত করুন।",
+  water_saved: "পানি পরীক্ষা নথিভুক্ত হয়েছে।",
+  beverage_title: "আজকের আপনার পানীয়",
+  beverage_yes: "নিয়েছি",
+  beverage_no: "নিইনি",
+  beverage_none_yet: "এখনো নথিভুক্ত হয়নি",
+  beverage_saved: "সংরক্ষিত হয়েছে।",
+  report_sent: "রিপোর্ট পর্যালোচনার জন্য পাঠানো হয়েছে।",
+  report_save_failed: "রিপোর্ট সংরক্ষণ করা যায়নি—আবার চেষ্টা করুন।",
+  report_wrong_role: "এই রিপোর্টটি আপনার ভূমিকার জন্য নয়।",
+  report_not_allowed: "এই কাজের অনুমতি আপনার নেই।",
+  note_too_long: "নোটটি অনেক বড়।",
+  daily_operations: "আজকের রিপোর্ট ও কাজ",
+  submit_report: "রিপোর্ট জমা দিন",
+  attach_photo: "ছবি সংযুক্ত করুন",
+  report_submitted: "আজকের রিপোর্ট পাঠানো হয়েছে। সুপারভাইজারের সিদ্ধান্ত এখানে দেখা যাবে।",
+  report_pending: "আজকের রিপোর্ট পাঠানো হয়েছে এবং সুপারভাইজারের পর্যালোচনার অপেক্ষায় আছে।",
+  report_confirmed: "আজকের রিপোর্ট ইতিমধ্যে অনুমোদিত।",
+  report_check_failed: "আজকের রিপোর্ট যাচাই করা যায়নি।",
+};
+
 // SQLSTATE fallbacks for thrown (non-soft) DB errors.
 const SQLSTATE: Record<string, Entry> = {
   "42501": {
@@ -269,24 +429,38 @@ function round(value: unknown): number {
   return Math.round(Number(value ?? 0));
 }
 
-function resolve(entry: Entry | undefined, lang: Lang, params: Record<string, unknown>): string | null {
+function resolve(
+  key: string,
+  entry: Entry | undefined,
+  lang: Lang,
+  params: Record<string, unknown>,
+): string | null {
   if (!entry) return null;
-  const value = entry[lang] ?? entry.en;
+  const value = lang === "bn" ? BENGALI[key] ?? entry.en : entry[lang];
   return typeof value === "function" ? value(params) : value;
 }
 
 /** Translate a dictionary key. Unknown keys fall back to the generic error. */
 export function t(key: string, lang: Lang, params: Record<string, unknown> = {}): string {
-  return resolve(DICT[key], lang, params) ?? resolve(DICT.generic_error, lang, params) ?? key;
+  return resolve(key, DICT[key], lang, params) ?? resolve("generic_error", DICT.generic_error, lang, params) ?? key;
 }
 
 /** Translate an RPC soft-failure result ({code, ...params}) in the member's language. */
 export function staffErrorMessage(result: Record<string, unknown> | null | undefined, lang: Lang): string {
   const code = typeof result?.code === "string" ? result.code : "";
-  return resolve(DICT[code], lang, result ?? {}) ?? resolve(DICT.generic_error, lang, {})!;
+  return resolve(code, DICT[code], lang, result ?? {}) ?? resolve("generic_error", DICT.generic_error, lang, {})!;
 }
 
 /** Translate a thrown Postgres error (by SQLSTATE) in the member's language. */
 export function staffSqlErrorMessage(code: string | undefined | null, lang: Lang): string {
-  return resolve(code ? SQLSTATE[code] : undefined, lang, {}) ?? resolve(DICT.generic_error, lang, {})!;
+  if (lang === "bn") {
+    const messages: Record<string, string> = {
+      "42501": "এই কাজ করার অনুমতি আপনার নেই।",
+      "22023": "তথ্য সঠিক নয়—আবার চেষ্টা করুন।",
+      "28000": "সেশনের মেয়াদ শেষ—আবার সাইন ইন করুন।",
+    };
+    return (code ? messages[code] : null) ?? String(BENGALI.generic_error);
+  }
+  return resolve(code ?? "", code ? SQLSTATE[code] : undefined, lang, {})
+    ?? resolve("generic_error", DICT.generic_error, lang, {})!;
 }

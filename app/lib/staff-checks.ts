@@ -12,40 +12,40 @@
  * and the stored text can never drift apart.
  */
 
-export type CheckItem = { key: string; ar: string; en: string };
+export type CheckItem = { key: string; ar: string; bn: string; en: string };
 
 /** Areas a cleaning shift covers. */
 export const CLEANING_CHECKS: CheckItem[] = [
-  { key: "floor", ar: "الأرضيات", en: "Floors" },
-  { key: "tables", ar: "الطاولات", en: "Tables" },
-  { key: "counter", ar: "الكاونتر", en: "Counter" },
-  { key: "bathrooms", ar: "دورات المياه", en: "Bathrooms" },
-  { key: "windows", ar: "الزجاج والواجهة", en: "Glass & storefront" },
-  { key: "entrance", ar: "المدخل", en: "Entrance" },
-  { key: "trash", ar: "النفايات", en: "Trash" },
-  { key: "storage", ar: "المستودع", en: "Storage" },
+  { key: "floor", ar: "الأرضيات", bn: "মেঝে", en: "Floors" },
+  { key: "tables", ar: "الطاولات", bn: "টেবিল", en: "Tables" },
+  { key: "counter", ar: "الكاونتر", bn: "কাউন্টার", en: "Counter" },
+  { key: "bathrooms", ar: "دورات المياه", bn: "শৌচাগার", en: "Bathrooms" },
+  { key: "windows", ar: "الزجاج والواجهة", bn: "কাচ ও সামনের অংশ", en: "Glass & storefront" },
+  { key: "entrance", ar: "المدخل", bn: "প্রবেশপথ", en: "Entrance" },
+  { key: "trash", ar: "النفايات", bn: "আবর্জনা", en: "Trash" },
+  { key: "storage", ar: "المستودع", bn: "গুদাম", en: "Storage" },
 ];
 
 /** Bar handover state at end of shift. */
 export const BARISTA_CHECKS: CheckItem[] = [
-  { key: "machine", ar: "تنظيف المكينة", en: "Machine cleaned" },
-  { key: "grinder", ar: "تنظيف المطحنة", en: "Grinder cleaned" },
-  { key: "beans", ar: "تعبئة البن", en: "Beans refilled" },
-  { key: "milk", ar: "تعبئة الحليب", en: "Milk restocked" },
-  { key: "syrups", ar: "فحص النكهات", en: "Syrups checked" },
-  { key: "cups", ar: "تجهيز الأكواب", en: "Cups stocked" },
-  { key: "ice", ar: "تعبئة الثلج", en: "Ice refilled" },
-  { key: "fridge", ar: "ترتيب ثلاجة البار", en: "Bar fridge tidied" },
+  { key: "machine", ar: "تنظيف المكينة", bn: "মেশিন পরিষ্কার", en: "Machine cleaned" },
+  { key: "grinder", ar: "تنظيف المطحنة", bn: "গ্রাইন্ডার পরিষ্কার", en: "Grinder cleaned" },
+  { key: "beans", ar: "تعبئة البن", bn: "কফি বিন ভরা", en: "Beans refilled" },
+  { key: "milk", ar: "تعبئة الحليب", bn: "দুধ পুনরায় মজুত", en: "Milk restocked" },
+  { key: "syrups", ar: "فحص النكهات", bn: "সিরাপ পরীক্ষা", en: "Syrups checked" },
+  { key: "cups", ar: "تجهيز الأكواب", bn: "কাপ মজুত", en: "Cups stocked" },
+  { key: "ice", ar: "تعبئة الثلج", bn: "বরফ ভরা", en: "Ice refilled" },
+  { key: "fridge", ar: "ترتيب ثلاجة البار", bn: "বার ফ্রিজ গুছানো", en: "Bar fridge tidied" },
 ];
 
 /** Kitchen cleanliness areas. */
 export const KITCHEN_CHECKS: CheckItem[] = [
-  { key: "surfaces", ar: "الأسطح", en: "Surfaces" },
-  { key: "equipment", ar: "المعدات", en: "Equipment" },
-  { key: "prep", ar: "منطقة التحضير", en: "Prep area" },
-  { key: "fridge", ar: "الثلاجات", en: "Fridges" },
-  { key: "floor", ar: "أرضية المطبخ", en: "Kitchen floor" },
-  { key: "waste", ar: "النفايات", en: "Waste" },
+  { key: "surfaces", ar: "الأسطح", bn: "কাজের পৃষ্ঠ", en: "Surfaces" },
+  { key: "equipment", ar: "المعدات", bn: "সরঞ্জাম", en: "Equipment" },
+  { key: "prep", ar: "منطقة التحضير", bn: "প্রস্তুতির স্থান", en: "Prep area" },
+  { key: "fridge", ar: "الثلاجات", bn: "ফ্রিজ", en: "Fridges" },
+  { key: "floor", ar: "أرضية المطبخ", bn: "রান্নাঘরের মেঝে", en: "Kitchen floor" },
+  { key: "waste", ar: "النفايات", bn: "বর্জ্য", en: "Waste" },
 ];
 
 export type InventoryPreset = CheckItem & { category: "product" | "dessert" };
@@ -56,12 +56,12 @@ export type InventoryPreset = CheckItem & { category: "product" | "dessert" };
  * least one product and one dessert; the preset always satisfies that.
  */
 export const INVENTORY_PRESET: InventoryPreset[] = [
-  { key: "sandwiches", ar: "ساندويتشات", en: "Sandwiches", category: "product" },
-  { key: "croissants", ar: "كرواسون", en: "Croissants", category: "product" },
-  { key: "salads", ar: "سلطات", en: "Salads", category: "product" },
-  { key: "cake", ar: "كيك", en: "Cake slices", category: "dessert" },
-  { key: "cheesecake", ar: "تشيز كيك", en: "Cheesecake", category: "dessert" },
-  { key: "cookies", ar: "كوكيز", en: "Cookies", category: "dessert" },
+  { key: "sandwiches", ar: "ساندويتشات", bn: "স্যান্ডউইচ", en: "Sandwiches", category: "product" },
+  { key: "croissants", ar: "كرواسون", bn: "ক্রোসাঁ", en: "Croissants", category: "product" },
+  { key: "salads", ar: "سلطات", bn: "সালাদ", en: "Salads", category: "product" },
+  { key: "cake", ar: "كيك", bn: "কেকের টুকরা", en: "Cake slices", category: "dessert" },
+  { key: "cheesecake", ar: "تشيز كيك", bn: "চিজকেক", en: "Cheesecake", category: "dessert" },
+  { key: "cookies", ar: "كوكيز", bn: "কুকিজ", en: "Cookies", category: "dessert" },
 ];
 
 export const CHECK_SETS = {

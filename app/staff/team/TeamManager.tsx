@@ -7,7 +7,9 @@ import {
   NATIONALITIES,
   PROVISIONABLE_ROLES,
   ROLE_LABELS,
+  STAFF_LANGUAGES,
   languageForNationality,
+  type StaffLanguage,
   suggestStaffEmail,
   type StaffProfile,
 } from "../../lib/staff-shared";
@@ -30,7 +32,7 @@ export default function TeamManager({
   const formRef = useRef<HTMLFormElement>(null);
   const [copied, setCopied] = useState(false);
   const [nationality, setNationality] = useState("Saudi Arabia");
-  const [language, setLanguage] = useState<"ar" | "en">(languageForNationality("Saudi Arabia"));
+  const [language, setLanguage] = useState<StaffLanguage>(languageForNationality("Saudi Arabia"));
   const [overrideFor, setOverrideFor] = useState<string | null>(null);
   const active = new Set(activeShiftIds);
 
@@ -153,13 +155,13 @@ export default function TeamManager({
             </select>
           </label>
           <label>
-            <span>لغة اللوحة</span>
+            <span>لغة اللوحة (حسب الجنسية)</span>
+            <input type="hidden" name="preferred_language" value={language} />
             <select
-              name="preferred_language"
               value={language}
-              onChange={(event) => setLanguage(event.target.value as "ar" | "en")}
+              disabled
             >
-              {(["ar", "en"] as const).map((code) => (
+              {STAFF_LANGUAGES.map((code) => (
                 <option key={code} value={code}>{LANGUAGE_LABELS[code]}</option>
               ))}
             </select>

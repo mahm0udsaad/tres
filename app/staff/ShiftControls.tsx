@@ -15,7 +15,7 @@ import {
   MapPin,
 } from "lucide-react";
 import type { AttendanceRecord, Gamification, StaffRole, StaffTask } from "../lib/staff-shared";
-import { t, type Lang } from "../lib/staff-i18n";
+import { localeFor, t, type Lang } from "../lib/staff-i18n";
 import DailyReport, { type ReportStatus } from "./DailyReport";
 import PhotoCapture from "./PhotoCapture";
 import { completeChecklistTask, staffOperation } from "./actions";
@@ -49,7 +49,7 @@ type Props = {
 
 function hoursSince(iso: string, lang: Lang) {
   const hours = Math.max(0, (Date.now() - new Date(iso).getTime()) / 3_600_000);
-  return hours.toLocaleString(lang === "ar" ? "ar-SA" : "en-US", { maximumFractionDigits: 1 });
+  return hours.toLocaleString(localeFor(lang), { maximumFractionDigits: 1 });
 }
 
 export default function ShiftControls({
@@ -180,7 +180,7 @@ export default function ShiftControls({
           <h2>{t("ok_shift_ended", lang)}</h2>
           <div>
             <span>
-              {String(state?.result?.hours_worked ?? 0)} {lang === "ar" ? "ساعة" : "h"}
+              {String(state?.result?.hours_worked ?? 0)} {t("hour_short", lang)}
             </span>
             <span>
               +{String(state?.result?.points_earned ?? 0)} {t("total_points", lang)}
@@ -198,7 +198,7 @@ export default function ShiftControls({
             <i /> {t("shift_running", lang)}
           </span>
           <strong suppressHydrationWarning>
-            {elapsedHours ?? "—"} <small>{lang === "ar" ? "ساعة" : "h"}</small>
+            {elapsedHours ?? "—"} <small>{t("hour_short", lang)}</small>
           </strong>
         </div>
         {attendance.supervisor_override_by ? (
@@ -211,6 +211,14 @@ export default function ShiftControls({
           {remaining ? t("items_left", lang, { count: remaining }) : t("all_done", lang)}
         </p>
       </section>
+
+      <DailyReport
+        role={role}
+        lang={lang}
+        reports={reports}
+        latestWater={latestWater}
+        beverageConsumed={beverageConsumed}
+      />
 
       {tasks.length ? (
         <section className="staff-block-card">
@@ -281,14 +289,6 @@ export default function ShiftControls({
           </ul>
         </section>
       ) : null}
-
-      <DailyReport
-        role={role}
-        lang={lang}
-        reports={reports}
-        latestWater={latestWater}
-        beverageConsumed={beverageConsumed}
-      />
 
       <section className="staff-block-card staff-break-row">
         <h2 className="staff-block-title">

@@ -12,6 +12,7 @@ import {
   validateImages,
 } from "./evidence";
 import { staffErrorMessage, staffSqlErrorMessage, t } from "../lib/staff-i18n";
+import { dashboardLang } from "../lib/staff-shared";
 import { resolveShareLink } from "../lib/geo-link";
 
 export type StaffActionState = {
@@ -63,7 +64,7 @@ export async function staffOperation(
   form: FormData,
 ): Promise<StaffActionState> {
   const { supabase, profile } = await requireStaff();
-  const lang = profile.preferred_language;
+  const lang = dashboardLang(profile);
   const operation = text(form.get("operation"));
   let rpc:
     | "start_shift"
@@ -135,7 +136,7 @@ export async function completeChecklistTask(
   form: FormData,
 ): Promise<StaffActionState> {
   const context = await requireStaff();
-  const lang = context.profile.preferred_language;
+  const lang = dashboardLang(context.profile);
   const operation = "complete_task";
 
   const taskId = text(form.get("task_id"));

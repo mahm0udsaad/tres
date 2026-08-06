@@ -1,5 +1,6 @@
 import "server-only";
 import type { requireStaff } from "../lib/staff";
+import { dashboardLang } from "../lib/staff-shared";
 import { t, type Lang } from "../lib/staff-i18n";
 
 /**
@@ -48,7 +49,7 @@ export function dateInTimeZone(timeZone: string) {
 }
 
 export async function branchDay(context: StaffContext) {
-  const lang = context.profile.preferred_language;
+  const lang = dashboardLang(context.profile);
   if (!context.profile.branch_id) {
     return { error: t("no_branch_account", lang) } as const;
   }
@@ -96,7 +97,7 @@ export async function uploadEvidence(
     if (successfulPaths.length) {
       await context.supabase.storage.from(EVIDENCE_BUCKET).remove(successfulPaths);
     }
-    return { error: t("photo_upload_failed", context.profile.preferred_language) };
+    return { error: t("photo_upload_failed", dashboardLang(context.profile)) };
   }
   return { paths: successfulPaths };
 }

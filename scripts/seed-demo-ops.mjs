@@ -148,7 +148,7 @@ async function uploadEvidence(path, colour) {
 // ── the demo crew ────────────────────────────────────────────────────────────
 const CREW = [
   { key: "saud", name: "سعود العتيبي", role: "supervisor", start: "07:00", nationality: "Saudi Arabia", lang: "ar", reliability: 0.98, punctual: 0.95 },
-  { key: "rahim", name: "رحيم الإسلام", role: "barista", start: "07:00", nationality: "Bangladesh", lang: "en", reliability: 0.93, punctual: 0.8 },
+  { key: "rahim", name: "رحيم الإسلام", role: "barista", start: "07:00", nationality: "Bangladesh", lang: "bn", reliability: 0.93, punctual: 0.8 },
   { key: "joseph", name: "جوزيف كيبيت", role: "cleaning_staff", start: "06:30", nationality: "Kenya", lang: "en", reliability: 0.9, punctual: 0.85 },
   { key: "hassan", name: "محمد حسن", role: "kitchen_manager", start: "08:00", nationality: "Egypt", lang: "ar", reliability: 0.88, punctual: 0.7 },
   { key: "anita", name: "أنيتا واتشيرا", role: "employee", start: "09:00", nationality: "Kenya", lang: "en", reliability: 0.82, punctual: 0.75 },

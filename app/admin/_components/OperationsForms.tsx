@@ -7,8 +7,10 @@ import {
   LANGUAGE_LABELS,
   NATIONALITIES,
   ROLE_LABELS,
+  STAFF_LANGUAGES,
   STAFF_ROLES,
   languageForNationality,
+  type StaffLanguage,
   type StaffRole,
 } from "../../lib/staff-shared";
 import { resolveBranchLocation, saveOperations } from "../actions";
@@ -68,7 +70,7 @@ export default function OperationsForms({
   const [staffState, staffAction] = useActionState(saveOperations, undefined);
   const [taskState, taskAction] = useActionState(saveOperations, undefined);
   const [nationality, setNationality] = useState("Saudi Arabia");
-  const [language, setLanguage] = useState<"ar" | "en">(languageForNationality("Saudi Arabia"));
+  const [language, setLanguage] = useState<StaffLanguage>(languageForNationality("Saudi Arabia"));
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Riyadh",
     year: "numeric",
@@ -176,14 +178,14 @@ export default function OperationsForms({
               </select>
             </div>
             <div className="a-field">
-              <label>لغة لوحة الموظف</label>
+              <label>لغة اللوحة (حسب الجنسية)</label>
+              <input type="hidden" name="preferred_language" value={language} />
               <select
                 className="a-select"
-                name="preferred_language"
                 value={language}
-                onChange={(event) => setLanguage(event.target.value as "ar" | "en")}
+                disabled
               >
-                {(["ar", "en"] as const).map((code) => (
+                {STAFF_LANGUAGES.map((code) => (
                   <option value={code} key={code}>{LANGUAGE_LABELS[code]}</option>
                 ))}
               </select>

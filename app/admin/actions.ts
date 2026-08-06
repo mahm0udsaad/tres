@@ -288,7 +288,6 @@ export async function saveOperations(
     const branch_id = str(form.get("branch_id"));
     const scheduled_start = str(form.get("scheduled_start"));
     const nationality = str(form.get("nationality")) ?? "Other";
-    const langValue = str(form.get("preferred_language"));
     if (!full_name || !email || !password || !roleValue) {
       return { error: "أكمل بيانات الموظف.", operation };
     }
@@ -301,8 +300,7 @@ export async function saveOperations(
     if (!NATIONALITY_VALUES.includes(nationality)) {
       return { error: "الجنسية غير صحيحة.", operation };
     }
-    const preferred_language =
-      langValue === "ar" || langValue === "en" ? langValue : languageForNationality(nationality);
+    const preferred_language = languageForNationality(nationality);
 
     const { data: created, error: authError } = await sb.auth.admin.createUser({
       email,

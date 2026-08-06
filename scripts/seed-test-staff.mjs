@@ -28,7 +28,7 @@ const ACCOUNTS = [
   { email: `supervisor@${TEST_DOMAIN}`, full_name: "سلمان المشرف [TEST]", role: "supervisor", nationality: "Saudi Arabia", preferred_language: "ar", scheduled_start: "08:00" },
   { email: `shift@${TEST_DOMAIN}`, full_name: "فهد مدير الوردية [TEST]", role: "shift_manager", nationality: "Saudi Arabia", preferred_language: "ar", scheduled_start: "08:00" },
   { email: `barista@${TEST_DOMAIN}`, full_name: "ماجد الباريستا [TEST]", role: "barista", nationality: "Saudi Arabia", preferred_language: "ar", scheduled_start: "09:00" },
-  { email: `kitchen@${TEST_DOMAIN}`, full_name: "Rahim Kitchen [TEST]", role: "kitchen_manager", nationality: "Bangladesh", preferred_language: "en", scheduled_start: "07:00" },
+  { email: `kitchen@${TEST_DOMAIN}`, full_name: "Rahim Kitchen [TEST]", role: "kitchen_manager", nationality: "Bangladesh", preferred_language: "bn", scheduled_start: "07:00" },
   { email: `cleaner@${TEST_DOMAIN}`, full_name: "Joseph Cleaning [TEST]", role: "cleaning_staff", nationality: "Kenya", preferred_language: "en", scheduled_start: "06:00" },
   { email: `employee@${TEST_DOMAIN}`, full_name: "Amina Employee [TEST]", role: "employee", nationality: "Kenya", preferred_language: "en", scheduled_start: "10:00" },
 ];

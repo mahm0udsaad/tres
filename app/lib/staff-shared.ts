@@ -11,6 +11,9 @@ export const STAFF_ROLES = [
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
+export const STAFF_LANGUAGES = ["ar", "bn", "en"] as const;
+export type StaffLanguage = (typeof STAFF_LANGUAGES)[number];
+
 export type StaffProfile = {
   user_id: string;
   full_name: string;
@@ -19,7 +22,7 @@ export type StaffProfile = {
   scheduled_start: string | null;
   is_active: boolean;
   nationality: string;
-  preferred_language: "ar" | "en";
+  preferred_language: StaffLanguage;
 };
 
 export type Branch = {
@@ -138,15 +141,20 @@ export const NATIONALITIES: { value: string; label: string }[] = [
 
 export const NATIONALITY_VALUES = NATIONALITIES.map((n) => n.value);
 
-export const LANGUAGE_LABELS: Record<"ar" | "en", string> = {
+export const LANGUAGE_LABELS: Record<StaffLanguage, string> = {
   ar: "العربية",
+  bn: "বাংলা · البنغالية",
   en: "الإنجليزية",
 };
 
-/** Auto-suggested dashboard language for a nationality. Per spec: Arabic only
- *  for Saudi Arabia, English for everyone else (editable before submit). */
-export function languageForNationality(nationality: string): "ar" | "en" {
-  return nationality === "Saudi Arabia" ? "ar" : "en";
+/** Employee language follows nationality. TRES currently supports the three
+ *  languages used by its team: Arabic, Bengali, and English. */
+export function languageForNationality(nationality: string): StaffLanguage {
+  if (["Saudi Arabia", "Egypt", "Yemen", "Sudan", "Jordan"].includes(nationality)) {
+    return "ar";
+  }
+  if (nationality === "Bangladesh") return "bn";
+  return "en";
 }
 
 /** Roles whose surfaces stay Arabic-only: they read the review queue, branch
@@ -159,7 +167,9 @@ export function isAdminRole(role: StaffRole): boolean {
 
 /** The language a signed-in member's dashboard renders in. Single source of
  *  truth for the layout direction and every page under /staff. */
-export function dashboardLang(profile: Pick<StaffProfile, "role" | "preferred_language">): "ar" | "en" {
+export function dashboardLang(
+  profile: Pick<StaffProfile, "role" | "preferred_language">,
+): StaffLanguage {
   return isAdminRole(profile.role) ? "ar" : profile.preferred_language;
 }
 

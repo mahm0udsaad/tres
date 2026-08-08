@@ -94,6 +94,16 @@ export type ProvisionableRole = (typeof PROVISIONABLE_ROLES)[number];
  *  identifiers handed over with a temporary password — no mail is sent. */
 export const STAFF_EMAIL_DOMAIN = "tres-staff.com";
 
+/** Supabase Auth phone identifiers must be E.164. We accept common display
+ * punctuation and international dialing prefix 00 in management forms. */
+export function normalizeStaffPhone(value: string): string {
+  return value.trim().replace(/[\s()-]/g, "").replace(/^00/, "+");
+}
+
+export function isStaffPhone(value: string): boolean {
+  return /^\+[1-9]\d{7,14}$/.test(normalizeStaffPhone(value));
+}
+
 const ARABIC_TO_LATIN: Record<string, string> = {
   ا: "a", أ: "a", إ: "e", آ: "a", ب: "b", ت: "t", ث: "th", ج: "j", ح: "h",
   خ: "kh", د: "d", ذ: "th", ر: "r", ز: "z", س: "s", ش: "sh", ص: "s", ض: "d",

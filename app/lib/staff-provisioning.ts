@@ -17,7 +17,7 @@ export type CreatedAuthUser =
   | { userId: string; error: null }
   | { userId: null; error: string };
 
-export async function createStaffAuthUser(email: string, password: string): Promise<CreatedAuthUser> {
+export async function createStaffAuthUser(phone: string, password: string): Promise<CreatedAuthUser> {
   let admin;
   try {
     admin = supabaseAdmin();
@@ -26,15 +26,15 @@ export async function createStaffAuthUser(email: string, password: string): Prom
   }
 
   const { data, error } = await admin.auth.admin.createUser({
-    email,
+    phone,
     password,
-    email_confirm: true,
+    phone_confirm: true,
   });
 
   if (error || !data?.user) {
     const code = (error as { code?: string } | null)?.code;
-    if (code === "email_exists") {
-      return { userId: null, error: "هذا البريد الإلكتروني مستخدم مسبقًا لحساب آخر." };
+    if (code === "phone_exists") {
+      return { userId: null, error: "رقم الجوال مستخدم مسبقًا لحساب آخر." };
     }
     if (code === "weak_password") {
       return { userId: null, error: "كلمة المرور ضعيفة — استخدم 8 أحرف على الأقل." };

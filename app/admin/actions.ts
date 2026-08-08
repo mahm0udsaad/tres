@@ -282,13 +282,13 @@ export async function saveOperations(
 
   if (operation === "create_staff") {
     const full_name = str(form.get("full_name"));
-    const email = str(form.get("email"))?.toLowerCase();
+    const phone = str(form.get("phone"));
     const password = str(form.get("password"));
     const roleValue = str(form.get("role"));
     const branch_id = str(form.get("branch_id"));
     const scheduled_start = str(form.get("scheduled_start"));
     const nationality = str(form.get("nationality")) ?? "Other";
-    if (!full_name || !email || !password || !roleValue) {
+    if (!full_name || !phone || !password || !roleValue) {
       return { error: "أكمل بيانات الموظف.", operation };
     }
     if (password.length < 8) {
@@ -303,9 +303,9 @@ export async function saveOperations(
     const preferred_language = languageForNationality(nationality);
 
     const { data: created, error: authError } = await sb.auth.admin.createUser({
-      email,
+      phone,
       password,
-      email_confirm: true,
+      phone_confirm: true,
       user_metadata: { full_name },
     });
     if (authError || !created.user) {

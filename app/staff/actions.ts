@@ -35,9 +35,9 @@ export async function loginStaff(
   _previous: StaffActionState | undefined,
   form: FormData,
 ): Promise<StaffActionState> {
-  const email = text(form.get("email")).toLowerCase();
+  const identifier = text(form.get("phone"));
   const password = text(form.get("password"));
-  if (!email || !password) return { error: "أدخل البريد الإلكتروني وكلمة المرور." };
+  if (!identifier || !password) return { error: "أدخل رقم الجوال وكلمة المرور." };
 
   let supabase;
   try {
@@ -46,7 +46,11 @@ export async function loginStaff(
     return { error: "لم يتم إعداد اتصال Supabase بعد." };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const normalized = identifier.replace(/[\s()-]/g, "").replace(/^00/, "+");
+  const credentials = normalized.startsWith("+")
+    ? { phone: normalized, password }
+    : { email: normalized.toLowerCase(), password };
+  const { error } = await supabase.auth.signInWithPassword(credentials);
   if (error) return { error: "بيانات الدخول غير صحيحة." };
 
   const next = text(form.get("next"));

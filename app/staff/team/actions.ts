@@ -10,6 +10,8 @@ import {
   NATIONALITY_VALUES,
   PROVISIONABLE_ROLES,
   languageForNationality,
+  normalizeStaffPhone,
+  isStaffPhone,
   type ProvisionableRole,
 } from "../../lib/staff-shared";
 
@@ -17,10 +19,9 @@ export type TeamActionState = {
   error?: string;
   message?: string;
   /** Shown exactly once after a successful creation — not stored anywhere. */
-  credentials?: { fullName: string; email: string; password: string };
+  credentials?: { fullName: string; phone: string; password: string };
 };
 
-const EMAIL_PATTERN = /^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 // No ambiguous characters (0/O, 1/l/I) — these get read out loud on handover.
 const PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
@@ -78,7 +79,7 @@ export async function createBranchStaff(
 
   const fullName = text(form.get("full_name"));
   const role = text(form.get("role")) as ProvisionableRole;
-  const email = text(form.get("email")).toLowerCase();
+  const phone = normalizeStaffPhone(text(form.get("phone")));
   const scheduledStart = text(form.get("scheduled_start"));
   const nationality = text(form.get("nationality")) || "Other";
   let password = text(form.get("password"));
@@ -87,8 +88,8 @@ export async function createBranchStaff(
   if (!PROVISIONABLE_ROLES.includes(role)) {
     return { error: RPC_ERRORS.role_not_allowed };
   }
-  if (!EMAIL_PATTERN.test(email)) {
-    return { error: "أدخل بريدًا إلكترونيًا صالحًا لتسجيل الدخول." };
+  if (!isStaffPhone(phone)) {
+    return { error: "أدخل رقم جوال دولياً صالحاً، مثل +9665XXXXXXXX." };
   }
   if (!NATIONALITY_VALUES.includes(nationality)) {
     return { error: RPC_ERRORS.nationality_invalid };
@@ -100,7 +101,7 @@ export async function createBranchStaff(
   if (!password) password = generatePassword();
 
   // 1. Bare auth account via the service role (app/lib/staff-provisioning.ts).
-  const created = await createStaffAuthUser(email, password);
+  const created = await createStaffAuthUser(phone, password);
   if (created.error !== null) return { error: created.error };
 
   // 2. Profile registration under the SUPERVISOR'S session — Postgres enforces
@@ -132,7 +133,7 @@ export async function createBranchStaff(
   revalidatePath("/staff/team");
   return {
     message: "تم إنشاء الحساب بنجاح.",
-    credentials: { fullName, email, password },
+    credentials: { fullName, phone, password },
   };
 }
 
@@ -148,7 +149,7 @@ export async function createOwnerStaff(
   const fullName = text(form.get("full_name"));
   const role = text(form.get("role")) as OwnerProvisionableRole;
   const branchId = text(form.get("branch_id"));
-  const email = text(form.get("email")).toLowerCase();
+  const phone = normalizeStaffPhone(text(form.get("phone")));
   const scheduledStart = text(form.get("scheduled_start"));
   const nationality = text(form.get("nationality")) || "Other";
   let password = text(form.get("password"));
@@ -156,14 +157,14 @@ export async function createOwnerStaff(
   if (!fullName) return { error: "أدخل اسم الموظف." };
   if (!OWNER_PROVISIONABLE_ROLES.includes(role)) return { error: "يمكن للمالك إنشاء حسابات المشرفين والموظفين فقط." };
   if (!branchId) return { error: RPC_ERRORS.branch_invalid };
-  if (!EMAIL_PATTERN.test(email)) return { error: "أدخل بريدًا إلكترونيًا صالحًا لتسجيل الدخول." };
+  if (!isStaffPhone(phone)) return { error: "أدخل رقم جوال دولياً صالحاً، مثل +9665XXXXXXXX." };
   if (!NATIONALITY_VALUES.includes(nationality)) return { error: RPC_ERRORS.nationality_invalid };
   if (password && password.length < 8) {
     return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا." };
   }
   if (!password) password = generatePassword();
 
-  const created = await createStaffAuthUser(email, password);
+  const created = await createStaffAuthUser(phone, password);
   if (created.error !== null) return { error: created.error };
 
   const { data, error } = await supabase.rpc("register_owner_staff", {
@@ -185,7 +186,7 @@ export async function createOwnerStaff(
 
   revalidatePath("/staff/owner");
   revalidatePath("/staff/owner/team");
-  return { message: "تم إنشاء الحساب بنجاح.", credentials: { fullName, email, password } };
+  return { message: "تم إنشاء الحساب بنجاح.", credentials: { fullName, phone, password } };
 }
 
 export async function toggleBranchStaffActive(

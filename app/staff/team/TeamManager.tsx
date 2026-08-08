@@ -10,7 +10,7 @@ import {
   STAFF_LANGUAGES,
   languageForNationality,
   type StaffLanguage,
-  suggestStaffEmail,
+  normalizeStaffPhone,
   type StaffProfile,
 } from "../../lib/staff-shared";
 import { createBranchStaff, overrideBranchShift, toggleBranchStaffActive } from "./actions";
@@ -27,8 +27,7 @@ export default function TeamManager({
   const [createState, createAction, creating] = useActionState(createBranchStaff, undefined);
   const [toggleState, toggleAction, toggling] = useActionState(toggleBranchStaffActive, undefined);
   const [overrideState, overrideAction, overriding] = useActionState(overrideBranchShift, undefined);
-  const [email, setEmail] = useState("");
-  const emailEdited = useRef(false);
+  const [phone, setPhone] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const [copied, setCopied] = useState(false);
   const [nationality, setNationality] = useState("Saudi Arabia");
@@ -38,15 +37,11 @@ export default function TeamManager({
 
   const credentials = createState?.credentials;
 
-  function onNameChange(name: string) {
-    if (!emailEdited.current) setEmail(name.trim() ? suggestStaffEmail(name) : "");
-  }
-
   async function copyCredentials() {
     if (!credentials) return;
     try {
       await navigator.clipboard.writeText(
-        `الموظف: ${credentials.fullName}\nالبريد: ${credentials.email}\nكلمة المرور: ${credentials.password}`,
+        `الموظف: ${credentials.fullName}\nالجوال: ${credentials.phone}\nكلمة المرور: ${credentials.password}`,
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
@@ -77,8 +72,8 @@ export default function TeamManager({
             </div>
             <dl>
               <div>
-                <dt>البريد الإلكتروني</dt>
-                <dd dir="ltr">{credentials.email}</dd>
+                <dt>رقم الجوال</dt>
+                <dd dir="ltr">{credentials.phone}</dd>
               </div>
               <div>
                 <dt>كلمة المرور المؤقتة</dt>
@@ -103,7 +98,6 @@ export default function TeamManager({
               required
               maxLength={120}
               placeholder="مثال: أحمد السالم"
-              onChange={(event) => onNameChange(event.target.value)}
             />
           </label>
           <label>
@@ -115,18 +109,18 @@ export default function TeamManager({
             </select>
           </label>
           <label className="staff-field-wide">
-            <span>البريد الإلكتروني لتسجيل الدخول</span>
+            <span>رقم الجوال لتسجيل الدخول</span>
             <input
-              name="email"
-              type="email"
+              name="phone"
+              type="tel"
+              inputMode="tel"
               dir="ltr"
               required
-              value={email}
+              value={phone}
               onChange={(event) => {
-                emailEdited.current = true;
-                setEmail(event.target.value);
+                setPhone(normalizeStaffPhone(event.target.value));
               }}
-              placeholder="name@tres-staff.com"
+              placeholder="+966 5X XXX XXXX"
             />
           </label>
           <label>

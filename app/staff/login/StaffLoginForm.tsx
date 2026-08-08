@@ -19,14 +19,15 @@ export default function StaffLoginForm({ next }: { next: string }) {
     <form action={action} className="staff-form">
       <input type="hidden" name="next" value={next} />
       <label>
-        <span>البريد الإلكتروني</span>
+        <span>رقم الجوال</span>
         <input
-          name="email"
-          type="email"
-          autoComplete="email"
+          name="phone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           required
           autoFocus
-          placeholder="name@tres.sa"
+          placeholder="+966 5X XXX XXXX"
         />
       </label>
       <label>

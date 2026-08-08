@@ -137,8 +137,8 @@ export default function OperationsForms({
           </div>
           <div className="a-row-2">
             <div className="a-field">
-              <label>البريد الإلكتروني</label>
-              <input className="a-input" name="email" type="email" required />
+              <label>رقم الجوال</label>
+              <input className="a-input" name="phone" type="tel" inputMode="tel" dir="ltr" placeholder="+966 5X XXX XXXX" required />
             </div>
             <div className="a-field">
               <label>كلمة مرور مؤقتة</label>

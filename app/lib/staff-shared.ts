@@ -59,6 +59,7 @@ export type StaffTask = {
   completed_at: string | null;
   is_required: boolean;
   requires_photo: boolean;
+  requires_note: boolean;
   photo_path: string | null;
   sort_order: number;
 };

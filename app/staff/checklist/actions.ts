@@ -51,6 +51,7 @@ export async function assignOwnerTask(
     p_requires_photo: form.get("task_photo") === "on",
     p_sort_order: Number(text(form.get("task_sort_order"))) || 0,
     p_notes: text(form.get("task_notes")) || null,
+    p_requires_note: form.get("task_note_required") === "on",
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر إسناد المهمة.") };

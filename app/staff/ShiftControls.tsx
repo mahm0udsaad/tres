@@ -13,6 +13,7 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  MessageSquareText,
 } from "lucide-react";
 import type { AttendanceRecord, Gamification, StaffRole, StaffTask } from "../lib/staff-shared";
 import { localeFor, t, type Lang } from "../lib/staff-i18n";
@@ -69,6 +70,8 @@ export default function ShiftControls({
   const [showSuccess, setShowSuccess] = useState(false);
   const [elapsedHours, setElapsedHours] = useState<string | null>(null);
   const [photoTaskId, setPhotoTaskId] = useState<string | null>(null);
+  const [noteTaskId, setNoteTaskId] = useState<string | null>(null);
+  const [taskNote, setTaskNote] = useState("");
 
   useEffect(() => {
     if (!attendance) {
@@ -259,6 +262,8 @@ export default function ShiftControls({
                       >
                         {taskBusy ? <LoaderCircle className="spin" /> : <Camera />}
                       </button>
+                    ) : manual && task.requires_note ? (
+                      <button type="button" className="staff-todo-action staff-todo-action--go" onClick={() => { setNoteTaskId(noteTaskId === task.id ? null : task.id); setTaskNote(""); }} disabled={taskBusy} aria-label="إضافة ملاحظة لإكمال المهمة"><MessageSquareText /></button>
                     ) : manual ? (
                       <button
                         type="button"
@@ -284,6 +289,7 @@ export default function ShiftControls({
                       />
                     </div>
                   ) : null}
+                  {noteTaskId === task.id ? <div className="staff-todo-note-entry"><textarea value={taskNote} onChange={(event) => setTaskNote(event.target.value)} maxLength={1000} rows={3} placeholder="اكتب ملاحظتك قبل إكمال المهمة" /><button type="button" className="staff-primary" disabled={taskBusy || !taskNote.trim()} onClick={() => { setNoteTaskId(null); submit("complete_task", { task_id: task.id, task_note: taskNote.trim() }); }}>إرسال الملاحظة وإكمال المهمة</button></div> : null}
                 </li>
               );
             })}

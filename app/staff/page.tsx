@@ -89,7 +89,7 @@ export default async function StaffDashboard() {
       supabase
         .from("tasks")
         .select(
-          "id,title,notes,task_type,completed,completed_at,is_required,requires_photo,photo_path,sort_order",
+          "id,title,notes,task_type,completed,completed_at,is_required,requires_photo,requires_note,photo_path,sort_order",
         )
         .eq("user_id", profile.user_id)
         .eq("task_date", attendance.shift_date)

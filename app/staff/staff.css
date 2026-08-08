@@ -750,3 +750,11 @@ li[data-completed="true"] .staff-todo-title { color: var(--staff-muted); text-de
   font-size: .78rem;
   white-space: pre-wrap;
 }
+
+.staff-todo-note-entry {
+  display: grid;
+  gap: .6rem;
+  margin: .7rem 0 0 2rem;
+}
+
+.staff-todo-note-entry textarea { width: 100%; min-height: 4.5rem; resize: vertical; }

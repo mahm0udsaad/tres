@@ -811,3 +811,15 @@ html[data-owner-theme="dark"] .owner-console {
   .owner-nav a,
   .owner-section-anchor { transition: none; }
 }
+.owner-panel-action {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin: 0 0 .8rem;
+  color: var(--owner-accent);
+  font-size: .82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.owner-panel-action:hover { text-decoration: underline; }

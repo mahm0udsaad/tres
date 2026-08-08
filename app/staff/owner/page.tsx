@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { ROLE_LABELS, requireStaff } from "../../lib/staff";
 import { logoutStaff } from "../actions";
 import {
@@ -425,6 +426,7 @@ export default async function OwnerPanel() {
 
           <section className="owner-panel owner-team-panel owner-section-anchor" id="team">
             <PanelTitle icon={<Users />} title="أداء الفريق اليوم" meta={`${totals.field_staff} موظف`} />
+            <Link className="owner-panel-action" href="/staff/owner/team">إدارة الفريق وإنشاء الحسابات</Link>
             <div className="owner-table-scroll">
               <table className="owner-team-table">
                 <thead>

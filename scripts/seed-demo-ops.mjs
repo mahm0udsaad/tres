@@ -153,6 +153,9 @@ const CREW = [
   { key: "hassan", name: "محمد حسن", role: "kitchen_manager", start: "08:00", nationality: "Egypt", lang: "ar", reliability: 0.88, punctual: 0.7 },
   { key: "anita", name: "أنيتا واتشيرا", role: "employee", start: "09:00", nationality: "Kenya", lang: "en", reliability: 0.82, punctual: 0.75 },
   { key: "fahad", name: "فهد الشهري", role: "shift_manager", start: null, nationality: "Saudi Arabia", lang: "ar", reliability: 0, punctual: 0 },
+  // Deliberately never attends: reliability 0 leaves this account with a clean
+  // slate so the geofenced start-shift flow is always testable.
+  { key: "test", name: "حساب تجربة بدء الوردية", role: "employee", start: "09:00", nationality: "Saudi Arabia", lang: "ar", reliability: 0, punctual: 0 },
 ];
 const email = (key) => `demo.${key}@tres-staff.com`;
 

@@ -47,7 +47,17 @@ const RPC_ERRORS: Record<string, string> = {
   no_active_shift: "لا توجد وردية جارية لهذا الموظف.",
   incomplete_tasks: "لا يمكن إنهاء الوردية — لدى الموظف مهام مطلوبة غير مكتملة.",
   break_active: "لدى الموظف استراحة جارية — يجب إنهاؤها أولاً.",
+  branch_invalid: "اختر فرعاً صالحاً.",
 };
+
+const OWNER_PROVISIONABLE_ROLES = [
+  "supervisor",
+  "employee",
+  "cleaning_staff",
+  "barista",
+  "kitchen_manager",
+] as const;
+type OwnerProvisionableRole = (typeof OWNER_PROVISIONABLE_ROLES)[number];
 
 function rpcError(result: Record<string, unknown>, fallback: string): string {
   const code = typeof result.code === "string" ? result.code : "";
@@ -124,6 +134,58 @@ export async function createBranchStaff(
     message: "تم إنشاء الحساب بنجاح.",
     credentials: { fullName, email, password },
   };
+}
+
+/** Owner-wide provisioning: the database re-checks the owner role, branch, and
+ * role allowlist, while the service-role auth helper only creates the login. */
+export async function createOwnerStaff(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+
+  const fullName = text(form.get("full_name"));
+  const role = text(form.get("role")) as OwnerProvisionableRole;
+  const branchId = text(form.get("branch_id"));
+  const email = text(form.get("email")).toLowerCase();
+  const scheduledStart = text(form.get("scheduled_start"));
+  const nationality = text(form.get("nationality")) || "Other";
+  let password = text(form.get("password"));
+
+  if (!fullName) return { error: "أدخل اسم الموظف." };
+  if (!OWNER_PROVISIONABLE_ROLES.includes(role)) return { error: "يمكن للمالك إنشاء حسابات المشرفين والموظفين فقط." };
+  if (!branchId) return { error: RPC_ERRORS.branch_invalid };
+  if (!EMAIL_PATTERN.test(email)) return { error: "أدخل بريدًا إلكترونيًا صالحًا لتسجيل الدخول." };
+  if (!NATIONALITY_VALUES.includes(nationality)) return { error: RPC_ERRORS.nationality_invalid };
+  if (password && password.length < 8) {
+    return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا." };
+  }
+  if (!password) password = generatePassword();
+
+  const created = await createStaffAuthUser(email, password);
+  if (created.error !== null) return { error: created.error };
+
+  const { data, error } = await supabase.rpc("register_owner_staff", {
+    p_new_user_id: created.userId,
+    p_full_name: fullName,
+    p_role: role,
+    p_branch_id: branchId,
+    p_scheduled_start: scheduledStart || null,
+    p_nationality: nationality,
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) {
+    await deleteStaffAuthUser(created.userId);
+    if (error) {
+      return { error: error.code === "42501" ? "هذا الإجراء متاح للمالك فقط." : "تعذّر تسجيل ملف الموظف. حاول مرة أخرى." };
+    }
+    return { error: rpcError(result, "تعذّر تسجيل ملف الموظف. حاول مرة أخرى.") };
+  }
+
+  revalidatePath("/staff/owner");
+  revalidatePath("/staff/owner/team");
+  return { message: "تم إنشاء الحساب بنجاح.", credentials: { fullName, email, password } };
 }
 
 export async function toggleBranchStaffActive(

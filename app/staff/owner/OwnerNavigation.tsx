@@ -6,6 +6,7 @@ import {
   Bell,
   FileCheck2,
   LayoutDashboard,
+  ListTodo,
   ShieldCheck,
   Store,
   Users,
@@ -58,6 +59,10 @@ export default function OwnerNavigation() {
       <a className="owner-nav-accounts" href="/staff/owner/team">
         <UserPlus />
         إدارة حسابات الموظفين
+      </a>
+      <a className="owner-nav-accounts" href="/staff/checklist">
+        <ListTodo />
+        إدارة المهام والإسناد
       </a>
     </nav>
   );

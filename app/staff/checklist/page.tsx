@@ -44,6 +44,9 @@ export default async function StaffChecklistPage() {
     .order("created_at");
   if (profile.role === "supervisor" && branch) templateQuery = templateQuery.eq("branch_id", branch.id);
   const { data: templates } = await templateQuery;
+  const { data: employees } = profile.role === "owner"
+    ? await supabase.from("staff_profiles").select("user_id,full_name,role,branch_id,is_active").neq("role", "owner").neq("role", "manager").neq("role", "shift_manager").eq("is_active", true).order("full_name")
+    : { data: null };
 
   return (
     <main className="staff-content staff-checklist-page">
@@ -61,7 +64,7 @@ export default async function StaffChecklistPage() {
         <div className="staff-branch-pill"><MapPin /> {profile.role === "owner" ? `${branches?.length ?? 0} فروع` : branch?.name}</div>
       </section>
 
-      <ChecklistManager templates={(templates ?? []) as ChecklistTemplate[]} branches={branches ?? []} owner={profile.role === "owner"} />
+      <ChecklistManager templates={(templates ?? []) as ChecklistTemplate[]} branches={branches ?? []} employees={employees ?? []} owner={profile.role === "owner"} />
     </main>
   );
 }

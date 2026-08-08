@@ -22,11 +22,39 @@ const RPC_ERRORS: Record<string, string> = {
   role_not_allowed: "لا يمكن استهداف الأدوار الإدارية ببنود القائمة.",
   template_not_found: "البند غير موجود في فرعك.",
   duplicate_template: "يوجد بند نشط بنفس العنوان لنفس الدور.",
+  employee_invalid: "اختر موظفاً نشطاً صالحاً.",
+  task_invalid: "أكمل عنوان المهمة وتاريخها.",
+  duplicate_task: "هذه المهمة موجودة بالفعل لهذا الموظف في نفس اليوم.",
   branch_invalid: "اختر فرعاً صالحاً.",
 };
 
 function text(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
+}
+
+export async function assignOwnerTask(
+  _previous: ChecklistActionState | undefined,
+  form: FormData,
+): Promise<ChecklistActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  const employeeId = text(form.get("employee_id"));
+  const taskDate = text(form.get("task_date"));
+  const title = text(form.get("task_title"));
+  if (!employeeId) return { error: RPC_ERRORS.employee_invalid };
+  if (!taskDate || !title) return { error: RPC_ERRORS.task_invalid };
+  const { data, error } = await supabase.rpc("owner_assign_task", {
+    p_employee_id: employeeId,
+    p_task_date: taskDate,
+    p_title: title,
+    p_is_required: form.get("task_required") === "on",
+    p_requires_photo: form.get("task_photo") === "on",
+    p_sort_order: Number(text(form.get("task_sort_order"))) || 0,
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) return { error: fail(error, result, "تعذّر إسناد المهمة.") };
+  revalidatePath("/staff/checklist");
+  return { message: "تم إسناد المهمة للموظف." };
 }
 
 function fail(error?: { code?: string } | null, result?: Record<string, unknown>, fallback = "تعذّر حفظ البند. حاول مرة أخرى.") {

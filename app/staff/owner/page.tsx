@@ -252,6 +252,9 @@ export default async function OwnerPanel() {
             </div>
           </div>
           <div className="owner-command-tools">
+            <Link className="owner-header-action" href="/staff/owner/team">
+              <Users /> إدارة الحسابات
+            </Link>
             <OwnerThemeToggle />
             <span>
               <Store />

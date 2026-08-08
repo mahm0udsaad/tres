@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Store,
   Users,
+  UserPlus,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -54,6 +55,10 @@ export default function OwnerNavigation() {
           {label}
         </a>
       ))}
+      <a className="owner-nav-accounts" href="/staff/owner/team">
+        <UserPlus />
+        إدارة حسابات الموظفين
+      </a>
     </nav>
   );
 }

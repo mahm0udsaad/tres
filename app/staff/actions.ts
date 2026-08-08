@@ -35,7 +35,9 @@ export async function loginStaff(
   _previous: StaffActionState | undefined,
   form: FormData,
 ): Promise<StaffActionState> {
-  const identifier = text(form.get("phone"));
+  const countryCode = text(form.get("phone_country")) || "+966";
+  const phoneNumber = text(form.get("phone_number"));
+  const identifier = phoneNumber ? `${countryCode}${phoneNumber}` : text(form.get("phone"));
   const password = text(form.get("password"));
   if (!identifier || !password) return { error: "أدخل رقم الجوال وكلمة المرور." };
 

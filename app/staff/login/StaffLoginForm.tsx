@@ -20,15 +20,20 @@ export default function StaffLoginForm({ next }: { next: string }) {
       <input type="hidden" name="next" value={next} />
       <label>
         <span>رقم الجوال</span>
-        <input
-          name="phone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          required
-          autoFocus
-          placeholder="+966 5X XXX XXXX"
-        />
+        <div className="staff-phone-input" dir="ltr">
+          <span className="staff-phone-prefix">+966</span>
+          <input
+            name="phone_number"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            required
+            autoFocus
+            placeholder="5X XXX XXXX"
+            aria-label="رقم الجوال بدون مفتاح الدولة"
+          />
+        </div>
+        <input type="hidden" name="phone_country" value="+966" />
       </label>
       <label>
         <span>كلمة المرور</span>

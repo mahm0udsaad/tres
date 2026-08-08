@@ -18,7 +18,7 @@ function roleLabel(role: StaffRole | null) {
   return role ? ROLE_LABELS[role] : "جميع أدوار الحضور";
 }
 
-export default function ChecklistManager({ templates }: { templates: ChecklistTemplate[] }) {
+export default function ChecklistManager({ templates, branches, owner = false }: { templates: ChecklistTemplate[]; branches?: { id: string; name: string }[]; owner?: boolean }) {
   const [saveState, saveAction, saving] = useActionState(saveChecklistTemplate, undefined);
   const [toggleState, toggleAction, toggling] = useActionState(toggleChecklistTemplate, undefined);
   const [editing, setEditing] = useState<ChecklistTemplate | null>(null);
@@ -61,6 +61,7 @@ export default function ChecklistManager({ templates }: { templates: ChecklistTe
           onSubmit={() => setEditing(null)}
         >
           {editing ? <input type="hidden" name="template_id" value={editing.id} /> : null}
+          {owner ? <label className="staff-field-wide"><span>الفرع</span><select name="branch_id" required defaultValue={editing?.branch_id ?? branches?.[0]?.id ?? ""}>{branches?.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label> : null}
           <label className="staff-field-wide">
             <span>عنوان البند</span>
             <input

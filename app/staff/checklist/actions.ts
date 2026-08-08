@@ -22,6 +22,7 @@ const RPC_ERRORS: Record<string, string> = {
   role_not_allowed: "لا يمكن استهداف الأدوار الإدارية ببنود القائمة.",
   template_not_found: "البند غير موجود في فرعك.",
   duplicate_template: "يوجد بند نشط بنفس العنوان لنفس الدور.",
+  branch_invalid: "اختر فرعاً صالحاً.",
 };
 
 function text(value: FormDataEntryValue | null) {
@@ -41,9 +42,7 @@ export async function saveChecklistTemplate(
   form: FormData,
 ): Promise<ChecklistActionState> {
   const { profile, supabase } = await requireStaff();
-  if (profile.role !== "supervisor") {
-    return { error: "هذا الإجراء متاح للمشرف فقط." };
-  }
+  if (profile.role !== "supervisor" && profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك أو المشرف." };
 
   const templateId = text(form.get("template_id"));
   const title = text(form.get("title"));
@@ -56,14 +55,23 @@ export async function saveChecklistTemplate(
     return { error: RPC_ERRORS.role_not_allowed };
   }
 
-  const { data, error } = await supabase.rpc("save_checklist_template", {
+  const branchId = text(form.get("branch_id"));
+  if (profile.role === "owner" && !branchId) return { error: RPC_ERRORS.branch_invalid };
+
+  const rpc = profile.role === "owner" ? "owner_save_checklist_template" : "save_checklist_template";
+  const args = profile.role === "owner" ? {
+    p_template_id: templateId || null, p_branch_id: branchId, p_title: title, p_role: role,
+    p_requires_photo: form.get("requires_photo") === "on", p_is_required: form.get("is_required") === "on",
+    p_sort_order: Number(text(form.get("sort_order"))) || 0,
+  } : {
     p_template_id: templateId || null,
     p_title: title,
     p_role: role,
     p_requires_photo: form.get("requires_photo") === "on",
     p_is_required: form.get("is_required") === "on",
     p_sort_order: Number(text(form.get("sort_order"))) || 0,
-  });
+  };
+  const { data, error } = await supabase.rpc(rpc, args);
 
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) {
@@ -79,15 +87,14 @@ export async function toggleChecklistTemplate(
   form: FormData,
 ): Promise<ChecklistActionState> {
   const { profile, supabase } = await requireStaff();
-  if (profile.role !== "supervisor") {
-    return { error: "هذا الإجراء متاح للمشرف فقط." };
-  }
+  if (profile.role !== "supervisor" && profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك أو المشرف." };
 
   const templateId = text(form.get("template_id"));
   const nextActive = text(form.get("next_active")) === "true";
   if (!templateId) return { error: RPC_ERRORS.template_not_found };
 
-  const { data, error } = await supabase.rpc("set_checklist_template_active", {
+  const rpc = profile.role === "owner" ? "owner_set_checklist_template_active" : "set_checklist_template_active";
+  const { data, error } = await supabase.rpc(rpc, {
     p_template_id: templateId,
     p_is_active: nextActive,
   });

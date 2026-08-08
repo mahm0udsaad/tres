@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 
 export default async function StaffChecklistPage() {
   const { profile, supabase } = await requireStaff();
-  if (profile.role !== "supervisor") redirect("/staff");
+  if (profile.role !== "supervisor" && profile.role !== "owner") redirect("/staff");
 
-  const { data: branch } = profile.branch_id
+  const { data: branch } = profile.role === "supervisor" && profile.branch_id
     ? await supabase
         .from("branches")
         .select("id,name")
@@ -20,7 +20,11 @@ export default async function StaffChecklistPage() {
         .maybeSingle()
     : { data: null };
 
-  if (!branch) {
+  const { data: branches } = profile.role === "owner"
+    ? await supabase.from("branches").select("id,name").order("name")
+    : { data: null };
+
+  if (profile.role === "supervisor" && !branch) {
     return (
       <main className="staff-content">
         <Link className="staff-back-link" href="/staff"><ArrowRight /> لوحة الموظفين</Link>
@@ -33,12 +37,13 @@ export default async function StaffChecklistPage() {
     );
   }
 
-  const { data: templates } = await supabase
+  let templateQuery = supabase
     .from("checklist_templates")
     .select("id,branch_id,role,title,requires_photo,is_required,sort_order,is_active")
-    .eq("branch_id", branch.id)
     .order("sort_order")
     .order("created_at");
+  if (profile.role === "supervisor" && branch) templateQuery = templateQuery.eq("branch_id", branch.id);
+  const { data: templates } = await templateQuery;
 
   return (
     <main className="staff-content staff-checklist-page">
@@ -53,10 +58,10 @@ export default async function StaffChecklistPage() {
             صورة لا يمكن إكمالها بدون إثبات مصوّر.
           </p>
         </div>
-        <div className="staff-branch-pill"><MapPin /> {branch.name}</div>
+        <div className="staff-branch-pill"><MapPin /> {profile.role === "owner" ? `${branches?.length ?? 0} فروع` : branch?.name}</div>
       </section>
 
-      <ChecklistManager templates={(templates ?? []) as ChecklistTemplate[]} />
+      <ChecklistManager templates={(templates ?? []) as ChecklistTemplate[]} branches={branches ?? []} owner={profile.role === "owner"} />
     </main>
   );
 }

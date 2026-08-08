@@ -53,6 +53,7 @@ export type AttendanceRecord = {
 export type StaffTask = {
   id: string;
   title: string;
+  notes: string | null;
   task_type: string;
   completed: boolean;
   completed_at: string | null;

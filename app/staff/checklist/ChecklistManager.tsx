@@ -42,6 +42,7 @@ export default function ChecklistManager({ templates, branches, employees, owner
           <label><span>تاريخ التنفيذ</span><input name="task_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></label>
           <label><span>ترتيب المهمة</span><input name="task_sort_order" type="number" min="0" max="999" defaultValue="0" /></label>
           <label className="staff-field-wide"><span>وصف المهمة</span><input name="task_title" required maxLength={200} placeholder="مثال: فحص مخزون الحليب" /></label>
+          <label className="staff-field-wide"><span>ملاحظات (اختياري)</span><textarea name="task_notes" maxLength={1000} rows={3} placeholder="أضف أي تعليمات أو تفاصيل للموظف" /></label>
           <label className="staff-checklist-check"><input name="task_photo" type="checkbox" /><span><Camera /> تتطلب تصويراً كإثبات</span></label>
           <label className="staff-checklist-check"><input name="task_required" type="checkbox" defaultChecked /><span>مهمة إلزامية</span></label>
           <div className="staff-field-wide">{assignState?.error ? <p className="staff-form-error">{assignState.error}</p> : null}{assignState?.message ? <p className="staff-form-success">{assignState.message}</p> : null}<button type="submit" className="staff-primary" disabled={assigning}><Save /> {assigning ? "جارٍ الإسناد…" : "إسناد المهمة"}</button></div>

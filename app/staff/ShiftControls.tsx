@@ -246,6 +246,7 @@ export default function ShiftControls({
                       {task.completed ? <Check /> : null}
                     </span>
                     <span className="staff-todo-title">{task.title}</span>
+                    {task.notes ? <span className="staff-todo-notes">{task.notes}</span> : null}
 
                     {task.completed ? null : manual && needsPhoto ? (
                       <button

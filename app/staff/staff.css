@@ -742,3 +742,11 @@ li[data-completed="true"] .staff-todo-title { color: var(--staff-muted); text-de
 }
 
 .staff-phone-input input { border-radius: 0 .75rem .75rem 0; }
+
+.staff-todo-notes {
+  flex: 1 1 100%;
+  margin-inline-start: 2rem;
+  color: var(--staff-muted);
+  font-size: .78rem;
+  white-space: pre-wrap;
+}

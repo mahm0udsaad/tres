@@ -10,7 +10,9 @@ import { t, type Lang } from "../lib/staff-i18n";
  */
 
 export const EVIDENCE_BUCKET = "staff-evidence";
-export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+/** The browser compresses normal camera JPEG/PNG/WebP captures before upload.
+ * This is the fallback ceiling for files a browser cannot compress (e.g. HEIC). */
+export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 export const MAX_REPORT_IMAGES = 3;
 export const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",

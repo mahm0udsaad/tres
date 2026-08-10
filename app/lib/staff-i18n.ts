@@ -164,7 +164,7 @@ const DICT: Record<string, Entry> = {
     ar: "صيغة الصورة غير مدعومة — استخدم JPG أو PNG أو WebP أو HEIC.",
     en: "Unsupported image format — use JPG, PNG, WebP, or HEIC.",
   },
-  photo_size: { ar: "حجم كل صورة يجب ألا يتجاوز 3 ميجابايت.", en: "Each photo must be under 3 MB." },
+  photo_size: { ar: "حجم كل صورة يجب ألا يتجاوز 8 ميجابايت.", en: "Each photo must be under 8 MB." },
   photo_upload_failed: {
     ar: "تعذّر رفع الصور. تحقق من الاتصال وحاول مرة أخرى.",
     en: "Photo upload failed. Check your connection and try again.",
@@ -345,7 +345,7 @@ const BENGALI: Record<string, Translation> = {
   photo_one_min: "অন্তত একটি ছবি সংযুক্ত করুন।",
   photo_max: (p) => `সর্বোচ্চ ${p.max}টি ছবি সংযুক্ত করা যাবে।`,
   photo_format: "ছবির ধরন সমর্থিত নয়—JPG, PNG, WebP অথবা HEIC ব্যবহার করুন।",
-  photo_size: "প্রতিটি ছবির আকার ৩ মেগাবাইটের কম হতে হবে।",
+  photo_size: "প্রতিটি ছবির আকার ৮ মেগাবাইটের কম হতে হবে।",
   photo_upload_failed: "ছবি আপলোড করা যায়নি। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।",
   no_branch_account: "এই অ্যাকাউন্টে কোনো শাখা নির্ধারিত নেই।",
   branch_check_failed: "আপনার শাখা যাচাই করা যায়নি।",

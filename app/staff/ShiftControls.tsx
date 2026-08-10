@@ -251,7 +251,9 @@ export default function ShiftControls({
                     <span className="staff-todo-title">{task.title}</span>
                     {task.notes ? <span className="staff-todo-notes">{task.notes}</span> : null}
 
-                    {task.completed ? null : manual && needsPhoto ? (
+                    {task.completed ? null : manual && task.response_type === "yes_no" ? (
+                      <div className="staff-todo-yes-no"><button type="button" className="staff-secondary" disabled={taskBusy} onClick={() => submit("complete_task", { task_id: task.id, task_yes_no_answer: "true" })}>نعم</button><button type="button" className="staff-secondary" disabled={taskBusy} onClick={() => submit("complete_task", { task_id: task.id, task_yes_no_answer: "false" })}>لا</button></div>
+                    ) : manual && needsPhoto ? (
                       <button
                         type="button"
                         className="staff-todo-action"

@@ -48,7 +48,7 @@ export default async function StaffChecklistPage() {
     ? await supabase.from("staff_profiles").select("user_id,full_name,role,branch_id,is_active").neq("role", "owner").neq("role", "manager").neq("role", "shift_manager").eq("is_active", true).order("full_name")
     : { data: null };
   const { data: assignedTasks } = profile.role === "owner"
-    ? await supabase.from("tasks").select("id,user_id,task_date,title,notes,is_required,requires_photo,requires_note,sort_order").eq("task_type", "general_duty").eq("completed", false).order("task_date").order("sort_order")
+    ? await supabase.from("tasks").select("id,user_id,task_date,title,notes,is_required,requires_photo,requires_note,response_type,sort_order").eq("task_type", "general_duty").eq("completed", false).order("task_date").order("sort_order")
     : { data: null };
 
   return (

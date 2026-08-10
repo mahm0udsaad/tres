@@ -16,7 +16,7 @@ const TARGET_ROLES: (StaffRole | "")[] = [
 
 type AssignedTask = {
   id: string; user_id: string; task_date: string; title: string; notes: string | null;
-  is_required: boolean; requires_photo: boolean; requires_note: boolean; sort_order: number;
+  is_required: boolean; requires_photo: boolean; requires_note: boolean; response_type: "completion" | "yes_no"; sort_order: number;
 };
 
 function roleLabel(role: StaffRole | null) {
@@ -65,6 +65,7 @@ export default function ChecklistManager({ templates, branches, employees, assig
           <label><span>تاريخ التنفيذ</span><input name="task_date" type="date" required defaultValue={editingAssigned.task_date} /></label>
           <label><span>ترتيب المهمة</span><input name="task_sort_order" type="number" min="0" max="999" defaultValue={editingAssigned.sort_order} /></label>
           <label className="staff-field-wide"><span>وصف المهمة</span><input name="task_title" required maxLength={200} defaultValue={editingAssigned.title} /></label>
+          <label><span>نوع الإجابة</span><select name="task_response_type" defaultValue={editingAssigned.response_type}><option value="completion">إكمال المهمة</option><option value="yes_no">نعم أو لا</option></select></label>
           <label className="staff-field-wide"><span>ملاحظات (اختياري)</span><textarea name="task_notes" maxLength={1000} rows={3} defaultValue={editingAssigned.notes ?? ""} /></label>
           <label className="staff-checklist-check"><input name="task_photo" type="checkbox" defaultChecked={editingAssigned.requires_photo} /><span><Camera /> تتطلب تصويراً كإثبات</span></label>
           <label className="staff-checklist-check"><input name="task_note_required" type="checkbox" defaultChecked={editingAssigned.requires_note} /><span>تتطلب ملاحظة من الموظف عند الإنجاز</span></label>
@@ -79,6 +80,7 @@ export default function ChecklistManager({ templates, branches, employees, assig
           <label><span>تاريخ التنفيذ</span><input name="task_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></label>
           <label><span>ترتيب المهمة</span><input name="task_sort_order" type="number" min="0" max="999" defaultValue="0" /></label>
           <label className="staff-field-wide"><span>وصف المهمة</span><input name="task_title" required maxLength={200} placeholder="مثال: فحص مخزون الحليب" /></label>
+          <label><span>نوع الإجابة</span><select name="task_response_type" defaultValue="completion"><option value="completion">إكمال المهمة</option><option value="yes_no">نعم أو لا</option></select></label>
           <label className="staff-field-wide"><span>ملاحظات (اختياري)</span><textarea name="task_notes" maxLength={1000} rows={3} placeholder="أضف أي تعليمات أو تفاصيل للموظف" /></label>
           <label className="staff-checklist-check"><input name="task_photo" type="checkbox" /><span><Camera /> تتطلب تصويراً كإثبات</span></label>
           <label className="staff-checklist-check"><input name="task_note_required" type="checkbox" /><span>تتطلب ملاحظة من الموظف عند الإنجاز</span></label>

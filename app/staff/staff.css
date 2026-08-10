@@ -758,3 +758,6 @@ li[data-completed="true"] .staff-todo-title { color: var(--staff-muted); text-de
 }
 
 .staff-todo-note-entry textarea { width: 100%; min-height: 4.5rem; resize: vertical; }
+
+.staff-todo-yes-no { display: flex; gap: .45rem; margin-inline-start: auto; }
+.staff-todo-yes-no .staff-secondary { min-height: 2.25rem; padding: .35rem .75rem; }

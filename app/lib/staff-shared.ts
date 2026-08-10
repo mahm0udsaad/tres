@@ -60,6 +60,8 @@ export type StaffTask = {
   is_required: boolean;
   requires_photo: boolean;
   requires_note: boolean;
+  response_type: "completion" | "yes_no";
+  yes_no_answer: boolean | null;
   photo_path: string | null;
   sort_order: number;
 };

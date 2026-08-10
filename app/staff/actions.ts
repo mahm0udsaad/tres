@@ -100,7 +100,9 @@ export async function staffOperation(
     const taskId = text(form.get("task_id"));
     if (!taskId) return { error: t("task_not_found", lang), operation };
     rpc = "complete_task";
+    const answer = text(form.get("task_yes_no_answer"));
     args = { p_task_id: taskId, p_note: text(form.get("task_note")) };
+    if (answer === "true" || answer === "false") args.p_yes_no_answer = answer;
   } else {
     return { error: t("generic_error", lang), operation };
   }

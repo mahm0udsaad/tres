@@ -53,6 +53,7 @@ export async function assignOwnerTask(
     p_sort_order: Number(text(form.get("task_sort_order"))) || 0,
     p_notes: text(form.get("task_notes")) || null,
     p_requires_note: form.get("task_note_required") === "on",
+    p_response_type: text(form.get("task_response_type")) || "completion",
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر إسناد المهمة.") };
@@ -97,6 +98,7 @@ export async function updateOwnerAssignedTask(
     p_requires_note: form.get("task_note_required") === "on",
     p_sort_order: Number(text(form.get("task_sort_order"))) || 0,
     p_notes: text(form.get("task_notes")) || null,
+    p_response_type: text(form.get("task_response_type")) || "completion",
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر تعديل المهمة.") };

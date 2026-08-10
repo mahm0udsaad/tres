@@ -3,7 +3,7 @@
 import { startTransition, useActionState, useRef, useState } from "react";
 import { Camera, ListPlus, Pencil, Power, Save, X } from "lucide-react";
 import { ROLE_LABELS, type ChecklistTemplate, type StaffRole } from "../../lib/staff-shared";
-import { assignOwnerTask, clearOwnerBranchChecklists, saveChecklistTemplate, toggleChecklistTemplate } from "./actions";
+import { assignOwnerTask, clearOwnerBranchChecklists, saveChecklistTemplate, toggleChecklistTemplate, updateOwnerAssignedTask } from "./actions";
 
 const TARGET_ROLES: (StaffRole | "")[] = [
   "",
@@ -14,16 +14,23 @@ const TARGET_ROLES: (StaffRole | "")[] = [
   "kitchen_manager",
 ];
 
+type AssignedTask = {
+  id: string; user_id: string; task_date: string; title: string; notes: string | null;
+  is_required: boolean; requires_photo: boolean; requires_note: boolean; sort_order: number;
+};
+
 function roleLabel(role: StaffRole | null) {
   return role ? ROLE_LABELS[role] : "جميع أدوار الحضور";
 }
 
-export default function ChecklistManager({ templates, branches, employees, owner = false }: { templates: ChecklistTemplate[]; branches?: { id: string; name: string }[]; employees?: { user_id: string; full_name: string; role: StaffRole }[]; owner?: boolean }) {
+export default function ChecklistManager({ templates, branches, employees, assignedTasks, owner = false }: { templates: ChecklistTemplate[]; branches?: { id: string; name: string }[]; employees?: { user_id: string; full_name: string; role: StaffRole }[]; assignedTasks?: AssignedTask[]; owner?: boolean }) {
   const [saveState, saveAction, saving] = useActionState(saveChecklistTemplate, undefined);
   const [toggleState, toggleAction, toggling] = useActionState(toggleChecklistTemplate, undefined);
   const [assignState, assignAction, assigning] = useActionState(assignOwnerTask, undefined);
   const [clearState, clearAction, clearing] = useActionState(clearOwnerBranchChecklists, undefined);
+  const [updateState, updateAction, updating] = useActionState(updateOwnerAssignedTask, undefined);
   const [editing, setEditing] = useState<ChecklistTemplate | null>(null);
+  const [editingAssigned, setEditingAssigned] = useState<AssignedTask | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   function startEdit(template: ChecklistTemplate) {
@@ -41,6 +48,28 @@ export default function ChecklistManager({ templates, branches, employees, owner
         <form className="staff-form staff-checklist-form" action={(form) => startTransition(() => clearAction(form))}>
           <label className="staff-field-wide"><span>الفرع</span><select name="clear_branch_id" required defaultValue={branches?.[0]?.id ?? ""}>{branches?.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
           <div className="staff-field-wide">{clearState?.error ? <p className="staff-form-error">{clearState.error}</p> : null}{clearState?.message ? <p className="staff-form-success">{clearState.message}</p> : null}<button type="submit" className="staff-secondary" disabled={clearing}>{clearing ? "جارٍ المسح…" : "مسح المهام الموحدة"}</button></div>
+        </form>
+      </section> : null}
+      {owner ? <section className="staff-card staff-checklist-list">
+        <div className="staff-card-head"><div><p className="staff-eyebrow">INDIVIDUAL TASKS</p><h2>المهام الفردية الحالية</h2></div><span className="staff-team-count">{assignedTasks?.length ?? 0}</span></div>
+        {assignedTasks?.length ? <ul className="staff-checklist-items">{assignedTasks.map((task) => {
+          const employee = employees?.find((item) => item.user_id === task.user_id);
+          return <li key={task.id}><div className="staff-checklist-item-info"><strong>{task.title}</strong><span>{employee ? `${employee.full_name} · ${ROLE_LABELS[employee.role]}` : "موظف"} · {task.task_date}</span></div><button type="button" className="staff-checklist-edit" onClick={() => setEditingAssigned(task)} aria-label={`تعديل ${task.title}`}><Pencil /></button></li>;
+        })}</ul> : <p className="staff-empty">لا توجد مهام فردية غير مكتملة.</p>}
+      </section> : null}
+      {owner && editingAssigned ? <section className="staff-card staff-checklist-form-card">
+        <div className="staff-card-head"><div><p className="staff-eyebrow">EDIT ASSIGNMENT</p><h2>تعديل إسناد المهمة</h2></div><button type="button" className="staff-icon-button" onClick={() => setEditingAssigned(null)}><X /> <span>إلغاء</span></button></div>
+        <form key={editingAssigned.id} className="staff-form staff-checklist-form" action={(form) => startTransition(() => updateAction(form))} onSubmit={() => setEditingAssigned(null)}>
+          <input type="hidden" name="assigned_task_id" value={editingAssigned.id} />
+          <label className="staff-field-wide"><span>الموظف</span><select name="employee_id" required defaultValue={editingAssigned.user_id}>{employees?.map((employee) => <option key={employee.user_id} value={employee.user_id}>{employee.full_name} · {ROLE_LABELS[employee.role]}</option>)}</select></label>
+          <label><span>تاريخ التنفيذ</span><input name="task_date" type="date" required defaultValue={editingAssigned.task_date} /></label>
+          <label><span>ترتيب المهمة</span><input name="task_sort_order" type="number" min="0" max="999" defaultValue={editingAssigned.sort_order} /></label>
+          <label className="staff-field-wide"><span>وصف المهمة</span><input name="task_title" required maxLength={200} defaultValue={editingAssigned.title} /></label>
+          <label className="staff-field-wide"><span>ملاحظات (اختياري)</span><textarea name="task_notes" maxLength={1000} rows={3} defaultValue={editingAssigned.notes ?? ""} /></label>
+          <label className="staff-checklist-check"><input name="task_photo" type="checkbox" defaultChecked={editingAssigned.requires_photo} /><span><Camera /> تتطلب تصويراً كإثبات</span></label>
+          <label className="staff-checklist-check"><input name="task_note_required" type="checkbox" defaultChecked={editingAssigned.requires_note} /><span>تتطلب ملاحظة من الموظف عند الإنجاز</span></label>
+          <label className="staff-checklist-check"><input name="task_required" type="checkbox" defaultChecked={editingAssigned.is_required} /><span>مهمة إلزامية</span></label>
+          <div className="staff-field-wide">{updateState?.error ? <p className="staff-form-error">{updateState.error}</p> : null}{updateState?.message ? <p className="staff-form-success">{updateState.message}</p> : null}<button type="submit" className="staff-primary" disabled={updating}><Save /> {updating ? "جارٍ الحفظ…" : "حفظ التعديل"}</button></div>
         </form>
       </section> : null}
       {owner ? <section className="staff-card staff-checklist-form-card">

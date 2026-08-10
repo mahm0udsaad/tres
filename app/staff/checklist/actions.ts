@@ -25,6 +25,7 @@ const RPC_ERRORS: Record<string, string> = {
   employee_invalid: "اختر موظفاً نشطاً صالحاً.",
   task_invalid: "أكمل عنوان المهمة وتاريخها.",
   duplicate_task: "هذه المهمة موجودة بالفعل لهذا الموظف في نفس اليوم.",
+  task_not_editable: "لا يمكن تعديل هذه المهمة لأنها مكتملة أو ليست مهمة فردية.",
   branch_invalid: "اختر فرعاً صالحاً.",
 };
 
@@ -72,6 +73,35 @@ export async function clearOwnerBranchChecklists(
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر مسح مهام الفرع.") };
   revalidatePath("/staff/checklist");
   return { message: "تم مسح المهام الموحدة غير المكتملة وقوالبها من الفرع." };
+}
+
+export async function updateOwnerAssignedTask(
+  _previous: ChecklistActionState | undefined,
+  form: FormData,
+): Promise<ChecklistActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  const taskId = text(form.get("assigned_task_id"));
+  const employeeId = text(form.get("employee_id"));
+  const taskDate = text(form.get("task_date"));
+  const title = text(form.get("task_title"));
+  if (!taskId || !employeeId) return { error: RPC_ERRORS.employee_invalid };
+  if (!taskDate || !title) return { error: RPC_ERRORS.task_invalid };
+  const { data, error } = await supabase.rpc("owner_update_assigned_task", {
+    p_task_id: taskId,
+    p_employee_id: employeeId,
+    p_task_date: taskDate,
+    p_title: title,
+    p_is_required: form.get("task_required") === "on",
+    p_requires_photo: form.get("task_photo") === "on",
+    p_requires_note: form.get("task_note_required") === "on",
+    p_sort_order: Number(text(form.get("task_sort_order"))) || 0,
+    p_notes: text(form.get("task_notes")) || null,
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) return { error: fail(error, result, "تعذّر تعديل المهمة.") };
+  revalidatePath("/staff/checklist");
+  return { message: "تم تحديث المهمة وإسنادها للموظف المختار." };
 }
 
 function fail(error?: { code?: string } | null, result?: Record<string, unknown>, fallback = "تعذّر حفظ البند. حاول مرة أخرى.") {

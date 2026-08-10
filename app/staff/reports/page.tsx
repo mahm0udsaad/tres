@@ -218,7 +218,7 @@ function ReportCard({
           <ShieldCheck />
           <div>
             <strong>
-              {report.status === "confirmed" ? "تم التأكيد" : "تم الرفض"}
+              {report.status === "confirmed" ? report.auto_approved ? "تم الاعتماد تلقائياً" : "تم التأكيد" : "تم الرفض"}
               {report.reviewerName ? ` بواسطة ${report.reviewerName}` : ""}
             </strong>
             {report.review_notes ? <p>{report.review_notes}</p> : null}
@@ -374,7 +374,13 @@ export default async function StaffReportsPage() {
   let beverages: BeverageEmployeeSummary[] = [];
   let reportDate = dateInTimeZone("Africa/Cairo");
 
-  if (allowed && profile.branch_id) {
+  if (profile.role === "owner") {
+    const { data: branches } = await supabase.from("branches").select("id").order("name");
+    const reportResults = await Promise.all((branches ?? []).map((branch) => loadBranchReports(supabase, branch.id)));
+    reports = reportResults.flatMap((result) => result.reports);
+    errors = reportResults.flatMap((result) => result.errors);
+    branchName = "جميع الفروع";
+  } else if (allowed && profile.branch_id) {
     const branchPromise = supabase
       .from("branches")
       .select("name,timezone")

@@ -59,6 +59,21 @@ export async function assignOwnerTask(
   return { message: "تم إسناد المهمة للموظف." };
 }
 
+export async function clearOwnerBranchChecklists(
+  _previous: ChecklistActionState | undefined,
+  form: FormData,
+): Promise<ChecklistActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  const branchId = text(form.get("clear_branch_id"));
+  if (!branchId) return { error: RPC_ERRORS.branch_invalid };
+  const { data, error } = await supabase.rpc("owner_clear_branch_checklists", { p_branch_id: branchId });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) return { error: fail(error, result, "تعذّر مسح مهام الفرع.") };
+  revalidatePath("/staff/checklist");
+  return { message: "تم مسح المهام الموحدة غير المكتملة وقوالبها من الفرع." };
+}
+
 function fail(error?: { code?: string } | null, result?: Record<string, unknown>, fallback = "تعذّر حفظ البند. حاول مرة أخرى.") {
   if (error) {
     return error.code === "42501" ? "هذا الإجراء متاح للمشرف فقط." : fallback;

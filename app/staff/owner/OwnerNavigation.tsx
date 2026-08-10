@@ -64,6 +64,10 @@ export default function OwnerNavigation() {
         <ListTodo />
         إدارة المهام والإسناد
       </a>
+      <a className="owner-nav-accounts" href="/staff/reports">
+        <FileCheck2 />
+        التقارير المعتمدة
+      </a>
     </nav>
   );
 }

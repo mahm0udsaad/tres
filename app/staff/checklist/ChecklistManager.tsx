@@ -3,7 +3,7 @@
 import { startTransition, useActionState, useRef, useState } from "react";
 import { Camera, ListPlus, Pencil, Power, Save, X } from "lucide-react";
 import { ROLE_LABELS, type ChecklistTemplate, type StaffRole } from "../../lib/staff-shared";
-import { assignOwnerTask, saveChecklistTemplate, toggleChecklistTemplate } from "./actions";
+import { assignOwnerTask, clearOwnerBranchChecklists, saveChecklistTemplate, toggleChecklistTemplate } from "./actions";
 
 const TARGET_ROLES: (StaffRole | "")[] = [
   "",
@@ -22,6 +22,7 @@ export default function ChecklistManager({ templates, branches, employees, owner
   const [saveState, saveAction, saving] = useActionState(saveChecklistTemplate, undefined);
   const [toggleState, toggleAction, toggling] = useActionState(toggleChecklistTemplate, undefined);
   const [assignState, assignAction, assigning] = useActionState(assignOwnerTask, undefined);
+  const [clearState, clearAction, clearing] = useActionState(clearOwnerBranchChecklists, undefined);
   const [editing, setEditing] = useState<ChecklistTemplate | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -35,6 +36,13 @@ export default function ChecklistManager({ templates, branches, employees, owner
 
   return (
     <>
+      {owner ? <section className="staff-card staff-checklist-form-card">
+        <div className="staff-card-head"><div><p className="staff-eyebrow">RESET SHARED TASKS</p><h2>مسح المهام الموحدة للفرع</h2><p>يبقي المهام الفردية والتقارير كما هي، ويحذف فقط قائمة المهام المتكررة غير المكتملة.</p></div></div>
+        <form className="staff-form staff-checklist-form" action={(form) => startTransition(() => clearAction(form))}>
+          <label className="staff-field-wide"><span>الفرع</span><select name="clear_branch_id" required defaultValue={branches?.[0]?.id ?? ""}>{branches?.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>
+          <div className="staff-field-wide">{clearState?.error ? <p className="staff-form-error">{clearState.error}</p> : null}{clearState?.message ? <p className="staff-form-success">{clearState.message}</p> : null}<button type="submit" className="staff-secondary" disabled={clearing}>{clearing ? "جارٍ المسح…" : "مسح المهام الموحدة"}</button></div>
+        </form>
+      </section> : null}
       {owner ? <section className="staff-card staff-checklist-form-card">
         <div className="staff-card-head"><div><p className="staff-eyebrow">ASSIGN TASK</p><h2>إسناد مهمة لموظف</h2></div><ListPlus className="staff-checklist-head-icon" /></div>
         <form className="staff-form staff-checklist-form" action={(form) => startTransition(() => assignAction(form))}>

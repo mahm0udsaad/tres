@@ -32,6 +32,7 @@ type RawReport = Record<string, unknown> & {
   reviewed_by?: string | null;
   review_notes?: string | null;
   reviewed_at?: string | null;
+  auto_approved?: boolean;
   photo_paths?: unknown;
   photos?: unknown;
 };

@@ -599,6 +599,13 @@ li[data-completed="true"] .staff-todo-title { color: var(--staff-muted); text-de
 .staff-choice:disabled { opacity: .55; }
 .staff-choice svg { width: 19px; }
 .staff-break-row .staff-block-title { margin-bottom: 12px; }
+.staff-connection-message {
+  margin: 10px 2px 0;
+  color: var(--staff-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.staff-break-row .staff-inline-error { margin-top: 10px; }
 
 /* ── photo capture ────────────────────────────────────────────────────── */
 .staff-photo { display: grid; gap: 10px; }

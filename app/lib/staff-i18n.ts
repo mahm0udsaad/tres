@@ -59,6 +59,11 @@ const DICT: Record<string, Entry> = {
   break_end: { ar: "إنهاء الاستراحة", en: "End break" },
   break_done: { ar: "تمت الاستراحة", en: "Break used" },
   break_after_start: { ar: "تتاح بعد بدء الوردية.", en: "Available after the shift starts." },
+  break_saving: { ar: "جارٍ حفظ الاستراحة…", en: "Saving your break…" },
+  break_offline: {
+    ar: "لا يوجد اتصال. تم حفظ طلب الاستراحة وسيُرسل تلقائياً عند عودة الإنترنت.",
+    en: "You’re offline. Your break request is saved and will send automatically when you reconnect.",
+  },
 
   // rewards
   rewards: { ar: "إنجازك", en: "Your rewards" },
@@ -293,6 +298,8 @@ const BENGALI: Record<string, Translation> = {
   break_end: "বিরতি শেষ করুন",
   break_done: "বিরতি নেওয়া হয়েছে",
   break_after_start: "শিফট শুরু করার পর পাওয়া যাবে।",
+  break_saving: "বিরতির তথ্য সংরক্ষণ করা হচ্ছে…",
+  break_offline: "ইন্টারনেট সংযোগ নেই। বিরতির অনুরোধ সংরক্ষিত আছে এবং সংযোগ ফিরলে স্বয়ংক্রিয়ভাবে পাঠানো হবে।",
   rewards: "আপনার অর্জন",
   total_points: "মোট পয়েন্ট",
   streak_days: "টানা দিনের ধারা",

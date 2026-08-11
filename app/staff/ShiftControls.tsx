@@ -1,6 +1,7 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Award,
   Camera,
@@ -37,6 +38,18 @@ const TASK_ANCHOR: Record<string, string> = {
   inventory_count: "report-kitchen",
 };
 
+const PENDING_BREAK_STORAGE_KEY = "tres:pending-break:v1";
+type BreakOperation = "start_break" | "end_break";
+
+function savedBreakOperation(): BreakOperation | null {
+  try {
+    const value = window.localStorage.getItem(PENDING_BREAK_STORAGE_KEY);
+    return value === "start_break" || value === "end_break" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 type Props = {
   attendance: AttendanceRecord | null;
   tasks: StaffTask[];
@@ -63,6 +76,7 @@ export default function ShiftControls({
   latestWater,
   beverageConsumed,
 }: Props) {
+  const router = useRouter();
   const [state, action, pending] = useActionState(staffOperation, undefined);
   const [photoState, photoAction, photoPending] = useActionState(completeChecklistTask, undefined);
   const [locationPending, setLocationPending] = useState(false);
@@ -72,6 +86,27 @@ export default function ShiftControls({
   const [photoTaskId, setPhotoTaskId] = useState<string | null>(null);
   const [noteTaskId, setNoteTaskId] = useState<string | null>(null);
   const [taskNote, setTaskNote] = useState("");
+  const [online, setOnline] = useState(true);
+  const [pendingBreak, setPendingBreak] = useState<BreakOperation | null>(null);
+  const pendingBreakSentRef = useRef(false);
+
+  const submit = useCallback((operation: string, extras?: Record<string, string>) => {
+    const form = new FormData();
+    form.set("operation", operation);
+    Object.entries(extras ?? {}).forEach(([key, value]) => form.set(key, value));
+    startTransition(() => action(form));
+  }, [action]);
+
+  const savePendingBreak = useCallback((operation: BreakOperation | null) => {
+    setPendingBreak(operation);
+    pendingBreakSentRef.current = false;
+    try {
+      if (operation) window.localStorage.setItem(PENDING_BREAK_STORAGE_KEY, operation);
+      else window.localStorage.removeItem(PENDING_BREAK_STORAGE_KEY);
+    } catch {
+      // The break action still works when browser storage is unavailable.
+    }
+  }, []);
 
   useEffect(() => {
     if (!attendance) {
@@ -85,6 +120,21 @@ export default function ShiftControls({
   }, [attendance, lang]);
 
   useEffect(() => {
+    const updateOnlineState = () => {
+      if (navigator.onLine) pendingBreakSentRef.current = false;
+      setOnline(navigator.onLine);
+    };
+    updateOnlineState();
+    setPendingBreak(savedBreakOperation());
+    window.addEventListener("online", updateOnlineState);
+    window.addEventListener("offline", updateOnlineState);
+    return () => {
+      window.removeEventListener("online", updateOnlineState);
+      window.removeEventListener("offline", updateOnlineState);
+    };
+  }, []);
+
+  useEffect(() => {
     if (state?.operation === "end_shift" && state.result?.ok === true) {
       setShowSuccess(true);
       const timer = window.setTimeout(() => setShowSuccess(false), 7000);
@@ -92,11 +142,43 @@ export default function ShiftControls({
     }
   }, [state]);
 
-  function submit(operation: string, extras?: Record<string, string>) {
-    const form = new FormData();
-    form.set("operation", operation);
-    Object.entries(extras ?? {}).forEach(([key, value]) => form.set(key, value));
-    startTransition(() => action(form));
+  useEffect(() => {
+    if (!pendingBreak || !online || pending || pendingBreakSentRef.current) return;
+    pendingBreakSentRef.current = true;
+    submit(pendingBreak);
+  }, [online, pending, pendingBreak, submit]);
+
+  useEffect(() => {
+    const operation = state?.operation as BreakOperation | undefined;
+    if (operation !== "start_break" && operation !== "end_break") return;
+
+    if (state?.result?.ok === true) {
+      savePendingBreak(null);
+      router.refresh();
+      return;
+    }
+
+    // A response can be lost after the database saved the break. Replaying the
+    // same action then returns one of these idempotency codes, so refresh the
+    // dashboard instead of making the employee retry or sign in again.
+    const code = String(state?.result?.code ?? "");
+    if (
+      (operation === "start_break" && code === "break_already_used") ||
+      (operation === "end_break" && code === "break_already_ended")
+    ) {
+      savePendingBreak(null);
+      router.refresh();
+    }
+  }, [router, savePendingBreak, state]);
+
+  function requestBreak(operation: BreakOperation) {
+    savePendingBreak(operation);
+    if (!navigator.onLine) {
+      setOnline(false);
+      return;
+    }
+    pendingBreakSentRef.current = true;
+    submit(operation);
   }
 
   function locateAndSubmit(operation: "start_shift" | "end_shift") {
@@ -313,19 +395,25 @@ export default function ShiftControls({
             type="button"
             className="staff-choice"
             data-on={breakActive}
-            onClick={() => submit(breakActive ? "end_break" : "start_break")}
-            disabled={pending}
+            onClick={() => requestBreak(breakActive ? "end_break" : "start_break")}
+            disabled={pending || Boolean(pendingBreak)}
           >
-            {breakActive ? t("break_end", lang) : t("break_start", lang)}
+            {pendingBreak ? <LoaderCircle className="spin" /> : null}
+            {pendingBreak ? t("break_saving", lang) : breakActive ? t("break_end", lang) : t("break_start", lang)}
           </button>
         )}
+        {!online ? <p className="staff-connection-message" role="status">{t("break_offline", lang)}</p> : null}
+        {pendingBreak && online ? <p className="staff-connection-message" role="status">{t("break_saving", lang)}</p> : null}
+        {(state?.operation === "start_break" || state?.operation === "end_break") && state?.error ? (
+          <p className="staff-inline-error" role="alert">{state.error}</p>
+        ) : null}
       </section>
 
       <RewardStrip gamification={gamification} lang={lang} />
 
       <div className="staff-finish-bar">
         {locationError ? <p className="staff-inline-error">{locationError}</p> : null}
-        {state?.error ? (
+        {state?.error && state.operation !== "start_break" && state.operation !== "end_break" ? (
           <div className="staff-alert staff-alert--error" role="alert">
             <CircleAlert />
             <span>{state.error}</span>

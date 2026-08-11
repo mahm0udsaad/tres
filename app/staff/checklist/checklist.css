@@ -64,6 +64,20 @@
   font-size: 13px;
 }
 
+.staff-task-assignees {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--staff-line);
+  border-radius: 13px;
+}
+.staff-task-assignees legend { padding: 0 5px; color: var(--staff-muted); font-size: 13px; font-weight: 700; }
+.staff-task-assignees label { display: flex; align-items: center; gap: 10px; padding: 7px 4px; cursor: pointer; }
+.staff-task-assignees input { width: 18px; height: 18px; accent-color: var(--staff-wine); }
+.staff-task-assignees span { display: grid; gap: 2px; font-size: 14px; font-weight: 700; }
+.staff-task-assignees small { color: var(--staff-muted); font-size: 12px; font-weight: 500; }
+
 @media (min-width: 600px) {
   .staff-checklist-form { grid-template-columns: 1fr 1fr; }
 }

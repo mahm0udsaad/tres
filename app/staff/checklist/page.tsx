@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { requireStaff } from "../../lib/staff";
 import type { ChecklistTemplate } from "../../lib/staff-shared";
 import ChecklistManager from "./ChecklistManager";
+import TaskLibraryManager, { type TaskDefinition } from "./TaskLibraryManager";
 import "./checklist.css";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,9 @@ export default async function StaffChecklistPage() {
   const { data: assignedTasks } = profile.role === "owner"
     ? await supabase.from("tasks").select("id,user_id,task_date,title,notes,is_required,requires_photo,requires_note,response_type,sort_order").eq("task_type", "general_duty").eq("completed", false).order("task_date").order("sort_order")
     : { data: null };
+  const { data: taskDefinitions } = profile.role === "owner"
+    ? await supabase.from("task_definitions").select("id,title,notes,is_required,requires_photo,requires_note,response_type,is_active").eq("is_active", true).order("created_at", { ascending: false })
+    : { data: null };
 
   return (
     <main className="staff-content staff-checklist-page">
@@ -59,14 +63,12 @@ export default async function StaffChecklistPage() {
         <div>
           <p className="staff-eyebrow">DAILY CHECKLIST</p>
           <h1>قائمة مهام الفرع</h1>
-          <p>
-            بنود تتكرر يوميًا وتظهر لموظفيك عند بدء الوردية — البنود التي تتطلب
-            صورة لا يمكن إكمالها بدون إثبات مصوّر.
-          </p>
+          <p>{profile.role === "owner" ? "أنشئ المهمة في مكتبة المهام ثم اختر الموظفين الذين سينفذونها." : "بنود تتكرر يوميًا وتظهر لموظفيك عند بدء الوردية — البنود التي تتطلب صورة لا يمكن إكمالها بدون إثبات مصوّر."}</p>
         </div>
         <div className="staff-branch-pill"><MapPin /> {profile.role === "owner" ? `${branches?.length ?? 0} فروع` : branch?.name}</div>
       </section>
 
+      {profile.role === "owner" ? <TaskLibraryManager definitions={(taskDefinitions ?? []) as TaskDefinition[]} employees={employees ?? []} /> : null}
       <ChecklistManager templates={(templates ?? []) as ChecklistTemplate[]} branches={branches ?? []} employees={employees ?? []} assignedTasks={assignedTasks ?? []} owner={profile.role === "owner"} />
     </main>
   );

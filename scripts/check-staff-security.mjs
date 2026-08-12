@@ -120,6 +120,20 @@ requirePattern(
   "checklist photo evidence validated inside Postgres",
   /perform private\.assert_staff_evidence\(p_user_id, array\[p_photo_path\], true\)/i,
 );
+requirePattern(
+  "owner report page is not blocked by a missing branch",
+  /const hasReportScope = allowed && \(isOwner \|\| Boolean\(profile\.branch_id\)\)/,
+  reportSource,
+);
+requirePattern(
+  "owner report review is authorized by the server action",
+  /profile\.role !== "owner" && profile\.role !== "supervisor"/,
+  reportSource,
+);
+requirePattern(
+  "owner report review bypasses only the supervisor branch restriction",
+  /v_profile\.role <> 'owner' and v_branch_id <> v_profile\.branch_id/i,
+);
 
 if (failures.length) {
   console.error(failures.map((failure) => `✗ ${failure}`).join("\n"));

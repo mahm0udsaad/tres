@@ -365,7 +365,9 @@ function BeverageSummary({
 export default async function StaffReportsPage() {
   const { profile, supabase } = await requireStaff();
   const allowed = ALLOWED_ROLES.has(profile.role);
-  const canReview = profile.role === "supervisor";
+  const isOwner = profile.role === "owner";
+  const canReview = isOwner || profile.role === "supervisor";
+  const hasReportScope = allowed && (isOwner || Boolean(profile.branch_id));
 
   let branchName = "الفرع";
   let reports: UnifiedReport[] = [];
@@ -456,7 +458,7 @@ export default async function StaffReportsPage() {
           <div className="staff-alert staff-alert--error" role="alert">
             ليس لديك صلاحية عرض تقارير الفرع.
           </div>
-        ) : !profile.branch_id ? (
+        ) : !hasReportScope ? (
           <div className="staff-alert staff-alert--error" role="alert">
             لا يوجد فرع مرتبط بهذا الحساب.
           </div>
@@ -468,7 +470,7 @@ export default async function StaffReportsPage() {
           </div>
         ) : null}
 
-        {allowed && profile.branch_id ? (
+        {hasReportScope ? (
           <>
             <section className="report-section" aria-labelledby="pending-heading">
               <div className="report-section-heading">
@@ -520,16 +522,18 @@ export default async function StaffReportsPage() {
               </div>
             </section>
 
-            <div className="report-operations-grid">
-              <WaterQualitySummary
-                checks={waterChecks}
-                reportDate={reportDate}
-              />
-              <BeverageSummary
-                employees={beverages}
-                reportDate={reportDate}
-              />
-            </div>
+            {profile.branch_id ? (
+              <div className="report-operations-grid">
+                <WaterQualitySummary
+                  checks={waterChecks}
+                  reportDate={reportDate}
+                />
+                <BeverageSummary
+                  employees={beverages}
+                  reportDate={reportDate}
+                />
+              </div>
+            ) : null}
           </>
         ) : null}
       </div>

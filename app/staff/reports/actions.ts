@@ -24,8 +24,8 @@ export async function reviewStaffReport(
 
   // Server actions are public POST endpoints. Never trust the role or branch
   // included in the submitted form.
-  if (profile.role !== "supervisor") {
-    return { error: "هذا الإجراء متاح للمشرف فقط." };
+  if (profile.role !== "owner" && profile.role !== "supervisor") {
+    return { error: "هذا الإجراء متاح للمالك والمشرف فقط." };
   }
 
   const reportType = formText(form, "report_type");

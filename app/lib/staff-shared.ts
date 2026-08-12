@@ -20,6 +20,7 @@ export type StaffProfile = {
   role: StaffRole;
   branch_id: string | null;
   scheduled_start: string | null;
+  scheduled_end: string | null;
   is_active: boolean;
   nationality: string;
   preferred_language: StaffLanguage;

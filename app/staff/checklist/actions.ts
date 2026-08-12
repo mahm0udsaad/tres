@@ -26,11 +26,56 @@ const RPC_ERRORS: Record<string, string> = {
   task_invalid: "أكمل عنوان المهمة وتاريخها.",
   duplicate_task: "هذه المهمة موجودة بالفعل لهذا الموظف في نفس اليوم.",
   task_not_editable: "لا يمكن تعديل هذه المهمة لأنها مكتملة أو ليست مهمة فردية.",
+  assignment_invalid: "اختر موظفاً واحداً على الأقل وتاريخاً صحيحاً.",
   branch_invalid: "اختر فرعاً صالحاً.",
 };
 
 function text(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
+}
+
+export async function assignOwnerCustomTask(
+  _previous: ChecklistActionState | undefined,
+  form: FormData,
+): Promise<ChecklistActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  const employeeIds = form.getAll("employee_ids").map(String).filter(Boolean);
+  const title = text(form.get("task_title"));
+  const taskDate = text(form.get("task_date"));
+  if (!title) return { error: "أدخل عنوان المهمة." };
+  if (!taskDate || employeeIds.length === 0) return { error: RPC_ERRORS.assignment_invalid };
+  const { data, error } = await supabase.rpc("owner_assign_custom_task", {
+    p_employee_ids: employeeIds,
+    p_task_date: taskDate,
+    p_title: title,
+    p_notes: text(form.get("task_notes")) || null,
+    p_is_required: form.get("task_required") === "on",
+    p_requires_photo: form.get("task_photo") === "on",
+    p_requires_note: form.get("task_note_required") === "on",
+    p_response_type: text(form.get("task_response_type")) || "completion",
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) return { error: fail(error, result, "تعذّر توزيع المهمة.") };
+  revalidatePath("/staff/checklist");
+  revalidatePath("/staff/owner/team");
+  return { message: `تم توزيع المهمة على ${Number(result.assigned ?? 0)} موظف.` };
+}
+
+export async function deleteOwnerAssignedTask(
+  _previous: ChecklistActionState | undefined,
+  form: FormData,
+): Promise<ChecklistActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  const taskId = text(form.get("task_id"));
+  if (!taskId) return { error: RPC_ERRORS.task_not_editable };
+  const { data, error } = await supabase.rpc("owner_delete_assigned_task", { p_task_id: taskId });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) return { error: fail(error, result, "تعذّر حذف المهمة.") };
+  revalidatePath("/staff/checklist");
+  revalidatePath("/staff/owner/team");
+  return { message: "تم حذف المهمة من الموظف." };
 }
 
 export async function assignOwnerTask(

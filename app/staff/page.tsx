@@ -1,4 +1,4 @@
-import { ClipboardList, LogOut, MapPin } from "lucide-react";
+import { ClipboardList, KeyRound, LogOut, MapPin } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -33,6 +33,12 @@ function dateInTimeZone(timeZone: string) {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
+}
+
+function shiftTime(value: string) {
+  const [hourText, minute = "00"] = value.split(":");
+  const hour = Number(hourText);
+  return `${hour % 12 || 12}:${minute} ${hour >= 12 ? "PM" : "AM"}`;
 }
 
 export default async function StaffDashboard() {
@@ -147,6 +153,7 @@ export default async function StaffDashboard() {
               <MapPin /> {branch.name}
             </span>
           ) : null}
+          <Link className="staff-account-link" href="/staff/account" aria-label={lang === "bn" ? "পাসওয়ার্ড পরিবর্তন" : lang === "en" ? "Change password" : "تغيير كلمة المرور"} title={lang === "bn" ? "পাসওয়ার্ড পরিবর্তন" : lang === "en" ? "Change password" : "تغيير كلمة المرور"}><KeyRound /></Link>
           <form action={logoutStaff}>
             <button type="submit" aria-label={t("logout", lang)}>
               <LogOut />
@@ -165,9 +172,6 @@ export default async function StaffDashboard() {
               <Link href="/staff/submissions">{t("nav_daily_forms", lang)}</Link>
             ) : null}
             {profile.role === "supervisor" ? <Link href="/staff/team">{t("nav_team", lang)}</Link> : null}
-            {profile.role === "supervisor" ? (
-              <Link href="/staff/checklist">{t("nav_checklist", lang)}</Link>
-            ) : null}
             <Link href="/staff/reports">{t("nav_reports", lang)}</Link>
           </nav>
         ) : null}
@@ -175,6 +179,7 @@ export default async function StaffDashboard() {
         <section className="staff-greeting">
           <h1>{t("greeting", lang, { name: profile.full_name.split(" ")[0] })}</h1>
           <p>{new Intl.DateTimeFormat(locale, { dateStyle: "full" }).format(new Date())}</p>
+          {profile.scheduled_start && profile.scheduled_end ? <p className="staff-shift-schedule">{lang === "bn" ? "শিফট" : lang === "en" ? "Shift" : "الوردية"}: <b dir="ltr">{shiftTime(profile.scheduled_start)} — {shiftTime(profile.scheduled_end)}</b></p> : null}
         </section>
 
         {!branch ? <div className="staff-alert staff-alert--error">{t("branch_unassigned", lang)}</div> : null}

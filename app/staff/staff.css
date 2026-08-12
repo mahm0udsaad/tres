@@ -25,6 +25,11 @@
 .staff-app input,
 .staff-app select { font: inherit; }
 .staff-app button { cursor: pointer; }
+.staff-account-link { display: inline-grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--staff-line); border-radius: 12px; color: var(--staff-ink); background: var(--staff-surface); }
+.staff-account-link svg { width: 19px; height: 19px; }
+.staff-account-page { max-width: 760px; margin-inline: auto; }
+.staff-account-card { margin-top: 18px; }
+.staff-shift-schedule { margin-top: 7px; color: var(--staff-wine); font-weight: 700; }
 
 .staff-login {
   min-height: 100dvh;

@@ -262,6 +262,9 @@ html[data-owner-theme="dark"] .owner-console {
 .owner-member-list b[data-done="true"] { color: var(--owner-green, var(--staff-green)); }
 .owner-member-task-picker { padding: 14px; border: 1px solid var(--owner-accent-line, var(--staff-blush)); border-radius: 12px; background: var(--owner-accent-soft, var(--staff-blush-soft)); }
 .owner-member-task-picker .staff-form { grid-template-columns: 1fr; }
+.owner-shift-time { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 10px; border: 1px solid var(--staff-line); border-radius: 12px; }
+.owner-shift-time legend { padding-inline: 6px; color: var(--staff-muted); font-size: 12px; font-weight: 700; }
+.owner-shift-time select { min-width: 0; padding: 9px 7px; border: 1px solid var(--staff-line); border-radius: 8px; background: var(--staff-surface); color: var(--staff-ink); }
 
 @media (min-width: 600px) {
   .owner-member-task-picker .staff-form { grid-template-columns: 1fr 1fr; }

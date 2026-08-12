@@ -29,6 +29,15 @@ function text(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
 }
 
+function twelveHourTime(form: FormData, prefix: string): string | null {
+  const hour = Number(text(form.get(`${prefix}_hour`)));
+  const minute = Number(text(form.get(`${prefix}_minute`)));
+  const period = text(form.get(`${prefix}_period`));
+  if (!Number.isInteger(hour) || hour < 1 || hour > 12 || ![0, 15, 30, 45].includes(minute) || !["AM", "PM"].includes(period)) return null;
+  const hour24 = hour % 12 + (period === "PM" ? 12 : 0);
+  return `${String(hour24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
 function generatePassword(length = 12): string {
   const bytes = crypto.getRandomValues(new Uint8Array(length));
   return Array.from(bytes, (byte) => PASSWORD_ALPHABET[byte % PASSWORD_ALPHABET.length]).join("");
@@ -150,7 +159,8 @@ export async function createOwnerStaff(
   const role = text(form.get("role")) as OwnerProvisionableRole;
   const branchId = text(form.get("branch_id"));
   const phone = normalizeStaffPhone(text(form.get("phone")));
-  const scheduledStart = text(form.get("scheduled_start"));
+  const scheduledStart = twelveHourTime(form, "schedule_start");
+  const scheduledEnd = twelveHourTime(form, "schedule_end");
   const nationality = text(form.get("nationality")) || "Other";
   let password = text(form.get("password"));
 
@@ -159,6 +169,7 @@ export async function createOwnerStaff(
   if (!branchId) return { error: RPC_ERRORS.branch_invalid };
   if (!isStaffPhone(phone)) return { error: "أدخل رقم جوال دولياً صالحاً، مثل +9665XXXXXXXX." };
   if (!NATIONALITY_VALUES.includes(nationality)) return { error: RPC_ERRORS.nationality_invalid };
+  if (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd) return { error: "حدد بداية ونهاية الوردية بصورة صحيحة." };
   if (password && password.length < 8) {
     return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا." };
   }
@@ -184,9 +195,42 @@ export async function createOwnerStaff(
     return { error: rpcError(result, "تعذّر تسجيل ملف الموظف. حاول مرة أخرى.") };
   }
 
+  const schedule = await supabase.rpc("owner_set_staff_schedule", {
+    p_employee_id: created.userId,
+    p_scheduled_start: scheduledStart,
+    p_scheduled_end: scheduledEnd,
+  });
+  const scheduleResult = (schedule.data ?? {}) as Record<string, unknown>;
+  if (schedule.error || scheduleResult.ok !== true) {
+    await deleteStaffAuthUser(created.userId);
+    return { error: "تعذّر حفظ توقيت الوردية؛ لم يتم إنشاء الحساب." };
+  }
+
   revalidatePath("/staff/owner");
   revalidatePath("/staff/owner/team");
   return { message: "تم إنشاء الحساب بنجاح.", credentials: { fullName, phone, password } };
+}
+
+export async function setOwnerStaffSchedule(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  const employeeId = text(form.get("employee_id"));
+  const scheduledStart = twelveHourTime(form, "schedule_start");
+  const scheduledEnd = twelveHourTime(form, "schedule_end");
+  if (!employeeId || !scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd) return { error: "حدد بداية ونهاية الوردية بصورة صحيحة." };
+  const { data, error } = await supabase.rpc("owner_set_staff_schedule", {
+    p_employee_id: employeeId,
+    p_scheduled_start: scheduledStart,
+    p_scheduled_end: scheduledEnd,
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) return { error: rpcError(result, "تعذّر حفظ توقيت الوردية.") };
+  revalidatePath("/staff/owner");
+  revalidatePath("/staff/owner/team");
+  return { message: "تم تحديث وقت الوردية." };
 }
 
 export async function toggleBranchStaffActive(

@@ -24,7 +24,7 @@ export const getStaffContext = cache(async () => {
 
   const { data: rawProfile, error } = await supabase
     .from("staff_profiles")
-    .select("user_id,full_name,role,branch_id,scheduled_start,is_active,nationality,preferred_language")
+    .select("user_id,full_name,role,branch_id,scheduled_start,scheduled_end,is_active,nationality,preferred_language")
     .eq("user_id", user.id)
     .single();
 

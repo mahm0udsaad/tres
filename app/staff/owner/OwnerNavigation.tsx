@@ -7,6 +7,7 @@ import {
   FileCheck2,
   LayoutDashboard,
   ListTodo,
+  KeyRound,
   ShieldCheck,
   Store,
   Users,
@@ -67,6 +68,10 @@ export default function OwnerNavigation() {
       <a className="owner-nav-accounts" href="/staff/reports">
         <FileCheck2 />
         التقارير المعتمدة
+      </a>
+      <a className="owner-nav-accounts" href="/staff/account">
+        <KeyRound />
+        تغيير كلمة المرور
       </a>
     </nav>
   );

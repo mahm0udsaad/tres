@@ -34,6 +34,7 @@ export type OwnerStaffRow = {
   is_active: boolean;
   uses_attendance: boolean;
   scheduled_start: string | null;
+  scheduled_end: string | null;
   status_today: StaffStatusToday;
   started_at: string | null;
   on_time_today: boolean | null;

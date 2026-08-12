@@ -5,6 +5,7 @@ import { requireStaff } from "../../lib/staff";
 import {
   createStaffAuthUser,
   deleteStaffAuthUser,
+  updateStaffAuthPassword,
 } from "../../lib/staff-provisioning";
 import {
   NATIONALITY_VALUES,
@@ -231,6 +232,32 @@ export async function setOwnerStaffSchedule(
   revalidatePath("/staff/owner");
   revalidatePath("/staff/owner/team");
   return { message: "تم تحديث وقت الوردية." };
+}
+
+export async function resetOwnerStaffPassword(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  const employeeId = text(form.get("employee_id"));
+  const password = text(form.get("new_password"));
+  const confirmation = text(form.get("new_password_confirmation"));
+  if (!employeeId) return { error: "حساب الموظف غير موجود." };
+  if (password.length < 8) return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل." };
+  if (password !== confirmation) return { error: "تأكيد كلمة المرور غير مطابق." };
+
+  const { data: target } = await supabase
+    .from("staff_profiles")
+    .select("user_id,role,is_active")
+    .eq("user_id", employeeId)
+    .maybeSingle();
+  if (!target || !target.is_active || ["owner", "manager", "shift_manager"].includes(target.role)) {
+    return { error: "لا يمكن تغيير كلمة مرور هذا الحساب من هنا." };
+  }
+  const resetError = await updateStaffAuthPassword(employeeId, password);
+  if (resetError) return { error: resetError };
+  return { message: "تم تغيير كلمة مرور الموظف. سلّمه الكلمة الجديدة بسرية." };
 }
 
 export async function toggleBranchStaffActive(

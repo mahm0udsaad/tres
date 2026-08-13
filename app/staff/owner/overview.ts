@@ -30,11 +30,14 @@ export type OwnerStaffRow = {
   user_id: string;
   name: string;
   role: StaffRole;
+  branch_id: string | null;
   branch_name: string | null;
   is_active: boolean;
   uses_attendance: boolean;
   scheduled_start: string | null;
   scheduled_end: string | null;
+  nationality: string;
+  preferred_language: "ar" | "bn" | "en";
   status_today: StaffStatusToday;
   started_at: string | null;
   on_time_today: boolean | null;
@@ -44,6 +47,18 @@ export type OwnerStaffRow = {
   points: number;
   streak: number;
   pending_reports: number;
+};
+
+export type OwnerEmployeeMetric = {
+  user_id: string;
+  phone: string | null;
+  tasks_done: number;
+  tasks_total: number;
+  break_minutes: number;
+  break_status: "not_taken" | "active" | "completed";
+  shift_status: "not_started" | "working" | "finished";
+  shift_started_at: string | null;
+  shift_ended_at: string | null;
 };
 
 export type OwnerTrendDay = {
@@ -102,7 +117,9 @@ export async function loadOwnerOverview(
   supabase: SupabaseClient,
   days = 14,
 ): Promise<{ overview: OwnerOverview | null; error: string | null }> {
-  const { data, error } = await supabase.rpc("get_owner_overview", { p_days: days });
+  const { data, error } = await supabase.rpc("get_owner_overview", {
+    p_days: days,
+  });
 
   if (error) return { overview: null, error: error.message };
   if (!data || typeof data !== "object") {

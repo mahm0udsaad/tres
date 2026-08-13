@@ -5,7 +5,9 @@ import { requireStaff } from "../../lib/staff";
 import {
   createStaffAuthUser,
   deleteStaffAuthUser,
+  softDeleteStaffAuthUser,
   updateStaffAuthPassword,
+  updateStaffAuthPhone,
 } from "../../lib/staff-provisioning";
 import {
   NATIONALITY_VALUES,
@@ -24,28 +26,44 @@ export type TeamActionState = {
 };
 
 // No ambiguous characters (0/O, 1/l/I) — these get read out loud on handover.
-const PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const PASSWORD_ALPHABET =
+  "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
 function text(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
 }
 
-function twelveHourTime(form: FormData, prefix: string): string | null {
+function shiftTime(form: FormData, prefix: string): string | null {
+  const nativeTime = text(form.get(prefix));
+  if (/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(nativeTime)) return nativeTime;
+
+  // Keep accepting the previous split fields during a rolling deployment.
   const hour = Number(text(form.get(`${prefix}_hour`)));
   const minute = Number(text(form.get(`${prefix}_minute`)));
   const period = text(form.get(`${prefix}_period`));
-  if (!Number.isInteger(hour) || hour < 1 || hour > 12 || ![0, 15, 30, 45].includes(minute) || !["AM", "PM"].includes(period)) return null;
-  const hour24 = hour % 12 + (period === "PM" ? 12 : 0);
+  if (
+    !Number.isInteger(hour) ||
+    hour < 1 ||
+    hour > 12 ||
+    ![0, 15, 30, 45].includes(minute) ||
+    !["AM", "PM"].includes(period)
+  )
+    return null;
+  const hour24 = (hour % 12) + (period === "PM" ? 12 : 0);
   return `${String(hour24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 function generatePassword(length = 12): string {
   const bytes = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(bytes, (byte) => PASSWORD_ALPHABET[byte % PASSWORD_ALPHABET.length]).join("");
+  return Array.from(
+    bytes,
+    (byte) => PASSWORD_ALPHABET[byte % PASSWORD_ALPHABET.length],
+  ).join("");
 }
 
 const RPC_ERRORS: Record<string, string> = {
-  role_not_allowed: "يمكن للمشرف إنشاء حسابات الموظفين فقط (موظف، نظافة، باريستا، مطبخ).",
+  role_not_allowed:
+    "يمكن للمشرف إنشاء حسابات الموظفين فقط (موظف، نظافة، باريستا، مطبخ).",
   name_invalid: "أدخل اسم الموظف (بحد أقصى 120 حرفًا).",
   auth_user_missing: "تعذّر إنشاء الحساب. حاول مرة أخرى.",
   profile_exists: "يوجد ملف موظف لهذا الحساب بالفعل.",
@@ -56,9 +74,11 @@ const RPC_ERRORS: Record<string, string> = {
   reason_required: "أدخل سبباً لا يقل عن 10 أحرف.",
   active_shift_exists: "لدى الموظف وردية جارية بالفعل.",
   no_active_shift: "لا توجد وردية جارية لهذا الموظف.",
-  incomplete_tasks: "لا يمكن إنهاء الوردية — لدى الموظف مهام مطلوبة غير مكتملة.",
+  incomplete_tasks:
+    "لا يمكن إنهاء الوردية — لدى الموظف مهام مطلوبة غير مكتملة.",
   break_active: "لدى الموظف استراحة جارية — يجب إنهاؤها أولاً.",
   branch_invalid: "اختر فرعاً صالحاً.",
+  schedule_invalid: "حدد بداية ونهاية الوردية بصورة صحيحة.",
 };
 
 const OWNER_PROVISIONABLE_ROLES = [
@@ -106,7 +126,10 @@ export async function createBranchStaff(
   }
   const preferredLanguage = languageForNationality(nationality);
   if (password && password.length < 8) {
-    return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا." };
+    return {
+      error:
+        "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا.",
+    };
   }
   if (!password) password = generatePassword();
 
@@ -137,7 +160,9 @@ export async function createBranchStaff(
             : "تعذّر تسجيل ملف الموظف. حاول مرة أخرى.",
       };
     }
-    return { error: rpcError(result, "تعذّر تسجيل ملف الموظف. حاول مرة أخرى.") };
+    return {
+      error: rpcError(result, "تعذّر تسجيل ملف الموظف. حاول مرة أخرى."),
+    };
   }
 
   revalidatePath("/staff/team");
@@ -154,25 +179,33 @@ export async function createOwnerStaff(
   form: FormData,
 ): Promise<TeamActionState> {
   const { profile, supabase } = await requireStaff();
-  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  if (profile.role !== "owner")
+    return { error: "هذا الإجراء متاح للمالك فقط." };
 
   const fullName = text(form.get("full_name"));
   const role = text(form.get("role")) as OwnerProvisionableRole;
   const branchId = text(form.get("branch_id"));
   const phone = normalizeStaffPhone(text(form.get("phone")));
-  const scheduledStart = twelveHourTime(form, "schedule_start");
-  const scheduledEnd = twelveHourTime(form, "schedule_end");
+  const scheduledStart = shiftTime(form, "schedule_start");
+  const scheduledEnd = shiftTime(form, "schedule_end");
   const nationality = text(form.get("nationality")) || "Other";
   let password = text(form.get("password"));
 
   if (!fullName) return { error: "أدخل اسم الموظف." };
-  if (!OWNER_PROVISIONABLE_ROLES.includes(role)) return { error: "يمكن للمالك إنشاء حسابات المشرفين والموظفين فقط." };
+  if (!OWNER_PROVISIONABLE_ROLES.includes(role))
+    return { error: "يمكن للمالك إنشاء حسابات المشرفين والموظفين فقط." };
   if (!branchId) return { error: RPC_ERRORS.branch_invalid };
-  if (!isStaffPhone(phone)) return { error: "أدخل رقم جوال دولياً صالحاً، مثل +9665XXXXXXXX." };
-  if (!NATIONALITY_VALUES.includes(nationality)) return { error: RPC_ERRORS.nationality_invalid };
-  if (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd) return { error: "حدد بداية ونهاية الوردية بصورة صحيحة." };
+  if (!isStaffPhone(phone))
+    return { error: "أدخل رقم جوال دولياً صالحاً، مثل +9665XXXXXXXX." };
+  if (!NATIONALITY_VALUES.includes(nationality))
+    return { error: RPC_ERRORS.nationality_invalid };
+  if (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd)
+    return { error: "حدد بداية ونهاية الوردية بصورة صحيحة." };
   if (password && password.length < 8) {
-    return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا." };
+    return {
+      error:
+        "كلمة المرور يجب أن تكون 8 أحرف على الأقل — أو اتركها فارغة لتوليدها تلقائيًا.",
+    };
   }
   if (!password) password = generatePassword();
 
@@ -191,9 +224,16 @@ export async function createOwnerStaff(
   if (error || result.ok !== true) {
     await deleteStaffAuthUser(created.userId);
     if (error) {
-      return { error: error.code === "42501" ? "هذا الإجراء متاح للمالك فقط." : "تعذّر تسجيل ملف الموظف. حاول مرة أخرى." };
+      return {
+        error:
+          error.code === "42501"
+            ? "هذا الإجراء متاح للمالك فقط."
+            : "تعذّر تسجيل ملف الموظف. حاول مرة أخرى.",
+      };
     }
-    return { error: rpcError(result, "تعذّر تسجيل ملف الموظف. حاول مرة أخرى.") };
+    return {
+      error: rpcError(result, "تعذّر تسجيل ملف الموظف. حاول مرة أخرى."),
+    };
   }
 
   const schedule = await supabase.rpc("owner_set_staff_schedule", {
@@ -209,7 +249,10 @@ export async function createOwnerStaff(
 
   revalidatePath("/staff/owner");
   revalidatePath("/staff/owner/team");
-  return { message: "تم إنشاء الحساب بنجاح.", credentials: { fullName, phone, password } };
+  return {
+    message: "تم إنشاء الحساب بنجاح.",
+    credentials: { fullName, phone, password },
+  };
 }
 
 export async function setOwnerStaffSchedule(
@@ -217,18 +260,26 @@ export async function setOwnerStaffSchedule(
   form: FormData,
 ): Promise<TeamActionState> {
   const { profile, supabase } = await requireStaff();
-  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  if (profile.role !== "owner")
+    return { error: "هذا الإجراء متاح للمالك فقط." };
   const employeeId = text(form.get("employee_id"));
-  const scheduledStart = twelveHourTime(form, "schedule_start");
-  const scheduledEnd = twelveHourTime(form, "schedule_end");
-  if (!employeeId || !scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd) return { error: "حدد بداية ونهاية الوردية بصورة صحيحة." };
+  const scheduledStart = shiftTime(form, "schedule_start");
+  const scheduledEnd = shiftTime(form, "schedule_end");
+  if (
+    !employeeId ||
+    !scheduledStart ||
+    !scheduledEnd ||
+    scheduledStart === scheduledEnd
+  )
+    return { error: "حدد بداية ونهاية الوردية بصورة صحيحة." };
   const { data, error } = await supabase.rpc("owner_set_staff_schedule", {
     p_employee_id: employeeId,
     p_scheduled_start: scheduledStart,
     p_scheduled_end: scheduledEnd,
   });
   const result = (data ?? {}) as Record<string, unknown>;
-  if (error || result.ok !== true) return { error: rpcError(result, "تعذّر حفظ توقيت الوردية.") };
+  if (error || result.ok !== true)
+    return { error: rpcError(result, "تعذّر حفظ توقيت الوردية.") };
   revalidatePath("/staff/owner");
   revalidatePath("/staff/owner/team");
   return { message: "تم تحديث وقت الوردية." };
@@ -239,25 +290,138 @@ export async function resetOwnerStaffPassword(
   form: FormData,
 ): Promise<TeamActionState> {
   const { profile, supabase } = await requireStaff();
-  if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
+  if (profile.role !== "owner")
+    return { error: "هذا الإجراء متاح للمالك فقط." };
   const employeeId = text(form.get("employee_id"));
   const password = text(form.get("new_password"));
   const confirmation = text(form.get("new_password_confirmation"));
   if (!employeeId) return { error: "حساب الموظف غير موجود." };
-  if (password.length < 8) return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل." };
-  if (password !== confirmation) return { error: "تأكيد كلمة المرور غير مطابق." };
+  if (password.length < 8)
+    return { error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل." };
+  if (password !== confirmation)
+    return { error: "تأكيد كلمة المرور غير مطابق." };
 
   const { data: target } = await supabase
     .from("staff_profiles")
     .select("user_id,role,is_active")
     .eq("user_id", employeeId)
     .maybeSingle();
-  if (!target || !target.is_active || ["owner", "manager", "shift_manager"].includes(target.role)) {
+  if (
+    !target ||
+    !target.is_active ||
+    ["owner", "manager", "shift_manager"].includes(target.role)
+  ) {
     return { error: "لا يمكن تغيير كلمة مرور هذا الحساب من هنا." };
   }
   const resetError = await updateStaffAuthPassword(employeeId, password);
   if (resetError) return { error: resetError };
   return { message: "تم تغيير كلمة مرور الموظف. سلّمه الكلمة الجديدة بسرية." };
+}
+
+export async function updateOwnerStaffPhone(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner")
+    return { error: "هذا الإجراء متاح للمالك فقط." };
+  const employeeId = text(form.get("employee_id"));
+  const phone = normalizeStaffPhone(text(form.get("phone")));
+  if (!employeeId) return { error: "حساب الموظف غير موجود." };
+  if (!isStaffPhone(phone))
+    return { error: "أدخل رقم جوال دولياً صالحاً، مثل +9665XXXXXXXX." };
+  const { data: target } = await supabase
+    .from("staff_profiles")
+    .select("user_id,role,is_active")
+    .eq("user_id", employeeId)
+    .maybeSingle();
+  if (
+    !target ||
+    !target.is_active ||
+    !OWNER_PROVISIONABLE_ROLES.includes(target.role as OwnerProvisionableRole)
+  ) {
+    return { error: "لا يمكن تغيير رقم هذا الحساب من هنا." };
+  }
+  const updateError = await updateStaffAuthPhone(employeeId, phone);
+  if (updateError) return { error: updateError };
+  return { message: "تم تغيير رقم دخول الموظف." };
+}
+
+export async function updateOwnerStaff(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner")
+    return { error: "هذا الإجراء متاح للمالك فقط." };
+
+  const employeeId = text(form.get("employee_id"));
+  const fullName = text(form.get("full_name"));
+  const role = text(form.get("role")) as OwnerProvisionableRole;
+  const branchId = text(form.get("branch_id"));
+  const nationality = text(form.get("nationality")) || "Other";
+  const scheduledStart = shiftTime(form, "schedule_start");
+  const scheduledEnd = shiftTime(form, "schedule_end");
+
+  if (!employeeId) return { error: "حساب الموظف غير موجود." };
+  if (!fullName || fullName.length > 120)
+    return { error: RPC_ERRORS.name_invalid };
+  if (!OWNER_PROVISIONABLE_ROLES.includes(role))
+    return { error: RPC_ERRORS.target_not_allowed };
+  if (!branchId) return { error: RPC_ERRORS.branch_invalid };
+  if (!NATIONALITY_VALUES.includes(nationality))
+    return { error: RPC_ERRORS.nationality_invalid };
+  if (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd)
+    return { error: RPC_ERRORS.schedule_invalid };
+
+  const { data, error } = await supabase.rpc("owner_update_staff", {
+    p_employee_id: employeeId,
+    p_full_name: fullName,
+    p_role: role,
+    p_branch_id: branchId,
+    p_nationality: nationality,
+    p_scheduled_start: scheduledStart,
+    p_scheduled_end: scheduledEnd,
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) {
+    if (error?.code === "42501")
+      return { error: "هذا الإجراء متاح للمالك فقط." };
+    return { error: rpcError(result, "تعذّر حفظ بيانات الموظف.") };
+  }
+  revalidatePath("/staff/owner");
+  revalidatePath("/staff/owner/team");
+  return { message: "تم حفظ بيانات الموظف." };
+}
+
+export async function deleteOwnerStaff(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner")
+    return { error: "هذا الإجراء متاح للمالك فقط." };
+  const employeeId = text(form.get("employee_id"));
+  if (!employeeId) return { error: "حساب الموظف غير موجود." };
+
+  const { data, error } = await supabase.rpc("owner_delete_staff", {
+    p_employee_id: employeeId,
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) {
+    if (error?.code === "42501")
+      return { error: "هذا الإجراء متاح للمالك فقط." };
+    return { error: rpcError(result, "تعذّر حذف الموظف.") };
+  }
+
+  const authWarning = await softDeleteStaffAuthUser(employeeId);
+  revalidatePath("/staff/owner");
+  revalidatePath("/staff/owner/team");
+  return {
+    message: authWarning
+      ? `تم حذف الموظف من الفريق وإيقاف وصوله. ${authWarning}`
+      : "تم حذف الموظف من الفريق وإيقاف وصوله.",
+  };
 }
 
 export async function toggleBranchStaffActive(
@@ -327,9 +491,10 @@ export async function overrideBranchShift(
   if (error || result.ok !== true) {
     if (error) {
       return {
-        error: error.code === "42501"
-          ? "هذا الإجراء متاح للمشرف فقط."
-          : "تعذّر تنفيذ الإجراء. حاول مرة أخرى.",
+        error:
+          error.code === "42501"
+            ? "هذا الإجراء متاح للمشرف فقط."
+            : "تعذّر تنفيذ الإجراء. حاول مرة أخرى.",
       };
     }
     return { error: rpcError(result, "تعذّر تنفيذ الإجراء. حاول مرة أخرى.") };
@@ -337,8 +502,9 @@ export async function overrideBranchShift(
 
   revalidatePath("/staff/team");
   return {
-    message: action === "start"
-      ? "تم تسجيل حضور الموظف يدوياً."
-      : "تم تسجيل انصراف الموظف يدوياً.",
+    message:
+      action === "start"
+        ? "تم تسجيل حضور الموظف يدوياً."
+        : "تم تسجيل انصراف الموظف يدوياً.",
   };
 }

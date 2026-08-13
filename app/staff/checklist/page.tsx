@@ -1,16 +1,21 @@
-import Link from "next/link";
-import { ArrowRight, ListTodo } from "lucide-react";
+import { ListTodo } from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireStaff } from "../../lib/staff";
 import OwnerTaskManager from "./OwnerTaskManager";
+import OwnerNavigation from "../owner/OwnerNavigation";
 import "./checklist.css";
 import "../owner/owner.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function StaffChecklistPage() {
+export default async function StaffChecklistPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ employee?: string }>;
+}) {
   const { profile, supabase } = await requireStaff();
   if (profile.role !== "owner") redirect("/staff");
+  const { employee: requestedEmployee } = await searchParams;
 
   const [branches, employees, tasks] = await Promise.all([
     supabase.from("branches").select("id,name").order("name"),
@@ -30,11 +35,15 @@ export default async function StaffChecklistPage() {
       .order("task_date")
       .order("sort_order"),
   ]);
+  const employeeRows = employees.data ?? [];
+  const initialEmployeeId = employeeRows.some((employee) => employee.user_id === requestedEmployee)
+    ? requestedEmployee ?? null
+    : null;
   const branchNames = Object.fromEntries((branches.data ?? []).map((branch) => [branch.id, branch.name]));
 
   return <main className="staff-content staff-checklist-page">
-    <Link className="staff-back-link" href="/staff/owner"><ArrowRight /> لوحة المالك</Link>
-    <section className="staff-welcome"><div><p className="staff-eyebrow">OWNER TASKS</p><h1>إدارة المهام</h1><p>لا توجد مهام تلقائية أو نماذج ثابتة. أنت تنشئ كل مهمة وتختار من ينفذها.</p></div><div className="staff-branch-pill"><ListTodo /> مهام المالك فقط</div></section>
-    <OwnerTaskManager employees={employees.data ?? []} tasks={tasks.data ?? []} branchNames={branchNames} />
+    <OwnerNavigation variant="bar" />
+    <section className="staff-welcome"><div><h1>المهام</h1><p>اكتب المهمة، اختر الموظف، ثم اضغط توزيع.</p></div><div className="staff-branch-pill"><ListTodo /> مهام المالك فقط</div></section>
+    <OwnerTaskManager employees={employeeRows} tasks={tasks.data ?? []} branchNames={branchNames} initialEmployeeId={initialEmployeeId} />
   </main>;
 }

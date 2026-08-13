@@ -66,14 +66,23 @@ for (const rpc of [
   "supervisor_override_shift",
   "get_branch_shift_status",
   "get_owner_overview",
+  "get_owner_employee_table",
+  "owner_update_staff",
+  "owner_delete_staff",
 ]) {
   requirePattern(
     `anonymous execute revoked for ${rpc}`,
-    new RegExp(`revoke all on function public\\.${rpc}\\([^;]+from public, anon;`, "i"),
+    new RegExp(
+      `revoke all on function public\\.${rpc}\\([^;]+from public, anon;`,
+      "i",
+    ),
   );
   requirePattern(
     `authenticated execute granted for ${rpc}`,
-    new RegExp(`grant execute on function public\\.${rpc}\\([^;]+to authenticated;`, "i"),
+    new RegExp(
+      `grant execute on function public\\.${rpc}\\([^;]+to authenticated;`,
+      "i",
+    ),
   );
 }
 
@@ -133,6 +142,14 @@ requirePattern(
 requirePattern(
   "owner report review bypasses only the supervisor branch restriction",
   /v_profile\.role <> 'owner' and v_branch_id <> v_profile\.branch_id/i,
+);
+requirePattern(
+  "owner cannot edit protected administrative accounts",
+  /p_role not in \('supervisor', 'employee', 'cleaning_staff', 'barista', 'kitchen_manager'\)/i,
+);
+requirePattern(
+  "employee deletion preserves operational history by deactivation",
+  /update public\.staff_profiles set is_active = false where user_id = p_employee_id/i,
 );
 
 if (failures.length) {

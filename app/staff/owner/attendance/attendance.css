@@ -1,0 +1,277 @@
+.owner-attendance-page {
+  min-height: 100dvh;
+  color: var(--staff-ink);
+  background: var(--staff-bg);
+}
+
+.owner-attendance-heading {
+  margin-top: 24px;
+}
+
+.owner-attendance-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.2fr) auto auto;
+  align-items: end;
+  gap: 12px;
+  margin: 20px 0 26px;
+  padding: 18px;
+  border: 1px solid var(--staff-line);
+  border-radius: 14px;
+  background: var(--staff-surface);
+}
+
+.owner-attendance-filters label {
+  display: grid;
+  gap: 8px;
+}
+
+.owner-attendance-filters label > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--staff-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.owner-attendance-filters label svg {
+  width: 17px;
+  height: 17px;
+}
+
+.owner-attendance-filters input,
+.owner-attendance-filters select,
+.owner-attendance-filters button {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--staff-line);
+  border-radius: 9px;
+  color: var(--staff-ink);
+  background: var(--staff-surface);
+  font: inherit;
+}
+
+.owner-attendance-filters button {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.owner-attendance-filters > button[type="submit"] {
+  border-color: var(--staff-wine);
+  color: var(--staff-wine);
+}
+
+.owner-attendance-filters .owner-attendance-print {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-color: var(--staff-wine);
+  color: var(--cream);
+  background: var(--staff-wine);
+}
+
+.owner-attendance-print svg {
+  width: 18px;
+  height: 18px;
+}
+
+.owner-attendance-print-header {
+  display: none;
+}
+
+.owner-attendance-sheets {
+  display: grid;
+  gap: 20px;
+}
+
+.owner-attendance-sheet {
+  overflow: hidden;
+  border: 1px solid var(--staff-line);
+  border-radius: 14px;
+  background: var(--staff-surface);
+}
+
+.owner-attendance-sheet > header {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--staff-line);
+  background: var(--staff-blush-soft);
+}
+
+.owner-attendance-sheet header div {
+  display: grid;
+  gap: 3px;
+}
+
+.owner-attendance-sheet header span,
+.owner-attendance-sheet footer {
+  color: var(--staff-muted);
+  font-size: 12px;
+}
+
+.owner-attendance-sheet h2 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.owner-attendance-sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.owner-attendance-sheet th,
+.owner-attendance-sheet td {
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--staff-line);
+  text-align: right;
+}
+
+.owner-attendance-sheet th {
+  color: var(--staff-muted);
+  background: var(--staff-surface-raised, var(--staff-surface));
+  font-size: 12px;
+}
+
+.owner-attendance-sheet td {
+  font-variant-numeric: tabular-nums;
+}
+
+.owner-attendance-sheet td svg {
+  width: 15px;
+  height: 15px;
+  margin-inline-end: 5px;
+  vertical-align: -2px;
+  color: var(--staff-wine);
+}
+
+.owner-attendance-sheet > footer {
+  padding: 11px 22px;
+}
+
+.owner-attendance-empty,
+.owner-attendance-no-employees {
+  padding: 42px !important;
+  color: var(--staff-muted);
+  text-align: center !important;
+}
+
+.owner-attendance-no-employees {
+  border: 1px dashed var(--staff-line);
+  border-radius: 14px;
+  background: var(--staff-surface);
+}
+
+@media (max-width: 780px) {
+  .owner-attendance-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-attendance-sheet > header {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-attendance-sheet th,
+  .owner-attendance-sheet td {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+
+  html,
+  body,
+  .staff-app,
+  .owner-attendance-page {
+    color: #1e1715 !important;
+    background: #fff !important;
+  }
+
+  .owner-attendance-page {
+    width: auto;
+    max-width: none;
+    padding: 0;
+  }
+
+  .owner-attendance-screen-only {
+    display: none !important;
+  }
+
+  .owner-attendance-print-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 10mm;
+    border-bottom: 2px solid #700d28;
+  }
+
+  .owner-attendance-print-header > strong {
+    color: #700d28;
+    font: 700 11px/1 sans-serif;
+    letter-spacing: 0.16em;
+  }
+
+  .owner-attendance-print-header h1,
+  .owner-attendance-print-header p {
+    margin: 0;
+  }
+
+  .owner-attendance-print-header h1 {
+    font-size: 22px;
+  }
+
+  .owner-attendance-print-header p {
+    margin-top: 3px;
+    color: #625552;
+  }
+
+  .owner-attendance-sheets {
+    display: block;
+  }
+
+  .owner-attendance-sheet {
+    break-after: page;
+    margin-top: 10mm;
+    overflow: visible;
+    border: 1px solid #cfc4bf;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .owner-attendance-sheet:last-child {
+    break-after: auto;
+  }
+
+  .owner-attendance-sheet > header {
+    padding: 5mm;
+    border-color: #cfc4bf;
+    background: #f8eeea !important;
+    print-color-adjust: exact;
+  }
+
+  .owner-attendance-sheet th,
+  .owner-attendance-sheet td {
+    padding: 3.5mm 5mm;
+    border-color: #ddd4d0;
+  }
+
+  .owner-attendance-sheet td svg {
+    display: none;
+  }
+
+  .owner-attendance-sheet thead {
+    display: table-header-group;
+  }
+
+  .owner-attendance-sheet tr {
+    break-inside: avoid;
+  }
+}

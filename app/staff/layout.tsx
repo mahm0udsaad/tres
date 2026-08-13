@@ -11,15 +11,32 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function StaffLayout({ children }: { children: React.ReactNode }) {
+export default async function StaffLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   // The staff app renders in each member's preferred language and flips
   // direction to match. Unauthenticated pages (login) default to Arabic.
   // Admin roles (owner/manager/supervisor/shift_manager) always see Arabic.
   const context = await getStaffContext().catch(() => null);
   const lang: Lang = context?.profile ? dashboardLang(context.profile) : "ar";
+  const isOwner = context?.profile?.role === "owner";
 
   return (
-    <div className="staff-app" lang={lang} dir={dirFor(lang)}>
+    <div
+      className={`staff-app${isOwner ? " staff-app--owner" : ""}`}
+      lang={lang}
+      dir={dirFor(lang)}
+    >
+      <script
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{
+          __html: isOwner
+            ? `try{var t=localStorage.getItem("tres-owner-theme");document.documentElement.dataset.ownerTheme=t==="dark"||t==="light"?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){}`
+            : `document.documentElement.removeAttribute("data-owner-theme")`,
+        }}
+      />
       {children}
     </div>
   );

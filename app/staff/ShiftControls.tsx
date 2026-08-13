@@ -66,6 +66,15 @@ function hoursSince(iso: string, lang: Lang) {
   return hours.toLocaleString(localeFor(lang), { maximumFractionDigits: 1 });
 }
 
+function breakTimer(seconds: number) {
+  const hours = Math.floor(seconds / 3_600);
+  const minutes = Math.floor((seconds % 3_600) / 60);
+  const remainingSeconds = seconds % 60;
+  return [hours, minutes, remainingSeconds]
+    .map((part) => String(part).padStart(2, "0"))
+    .join(":");
+}
+
 export default function ShiftControls({
   attendance,
   tasks,
@@ -83,6 +92,7 @@ export default function ShiftControls({
   const [locationError, setLocationError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [elapsedHours, setElapsedHours] = useState<string | null>(null);
+  const [breakElapsedSeconds, setBreakElapsedSeconds] = useState(0);
   const [photoTaskId, setPhotoTaskId] = useState<string | null>(null);
   const [noteTaskId, setNoteTaskId] = useState<string | null>(null);
   const [taskNote, setTaskNote] = useState("");
@@ -118,6 +128,21 @@ export default function ShiftControls({
     const timer = window.setInterval(update, 60_000);
     return () => window.clearInterval(timer);
   }, [attendance, lang]);
+
+  useEffect(() => {
+    if (!attendance?.break_started_at || attendance.break_ended_at) {
+      setBreakElapsedSeconds(0);
+      return;
+    }
+
+    const startedAt = new Date(attendance.break_started_at).getTime();
+    const update = () => {
+      setBreakElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1_000)));
+    };
+    update();
+    const timer = window.setInterval(update, 1_000);
+    return () => window.clearInterval(timer);
+  }, [attendance?.break_ended_at, attendance?.break_started_at]);
 
   useEffect(() => {
     const updateOnlineState = () => {
@@ -163,7 +188,7 @@ export default function ShiftControls({
     // dashboard instead of making the employee retry or sign in again.
     const code = String(state?.result?.code ?? "");
     if (
-      (operation === "start_break" && code === "break_already_used") ||
+      (operation === "start_break" && code === "break_already_active") ||
       (operation === "end_break" && code === "break_already_ended")
     ) {
       savePendingBreak(null);
@@ -218,6 +243,13 @@ export default function ShiftControls({
   const busy = pending || locationPending;
   const taskBusy = pending || photoPending;
   const breakActive = Boolean(attendance?.break_started_at && !attendance.break_ended_at);
+  const breakMinutesUsed = attendance?.break_duration_minutes ?? 0;
+  const breakMinutesAllowed = attendance?.break_entitlement_minutes ?? 60;
+  const breakMinutesRemaining = Math.max(0, breakMinutesAllowed - breakMinutesUsed);
+  const liveBreakSecondsRemaining = Math.max(
+    0,
+    breakMinutesRemaining * 60 - breakElapsedSeconds,
+  );
   const done = tasks.filter((task) => task.completed).length;
   const remaining = tasks.filter((task) => task.is_required && !task.completed).length;
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
@@ -251,6 +283,43 @@ export default function ShiftControls({
         </section>
         <RewardStrip gamification={gamification} lang={lang} />
       </>
+    );
+  }
+
+  // An active break is deliberately a single-purpose screen. Employees only
+  // see the elapsed time and the action that returns them to their shift.
+  if (breakActive) {
+    return (
+      <section className="staff-break-screen" aria-live="polite">
+        <div className="staff-break-clock" aria-label={t("break_elapsed", lang)}>
+          <Coffee aria-hidden="true" />
+          <p>{t("break_in_progress", lang)}</p>
+          <time dir="ltr" dateTime={`PT${breakElapsedSeconds}S`}>
+            {breakTimer(breakElapsedSeconds)}
+          </time>
+          <span className="staff-break-remaining">
+            {t("break_remaining_live", lang, {
+              count: Math.ceil(liveBreakSecondsRemaining / 60),
+            })}
+          </span>
+        </div>
+
+        {(state?.operation === "start_break" || state?.operation === "end_break") && state?.error ? (
+          <p className="staff-inline-error" role="alert">{state.error}</p>
+        ) : null}
+        {!online ? <p className="staff-connection-message" role="status">{t("break_offline", lang)}</p> : null}
+        {pendingBreak && online ? <p className="staff-connection-message" role="status">{t("break_saving", lang)}</p> : null}
+
+        <button
+          type="button"
+          className="staff-break-end-button"
+          onClick={() => requestBreak("end_break")}
+          disabled={pending || Boolean(pendingBreak)}
+        >
+          {pending || pendingBreak ? <LoaderCircle className="spin" /> : null}
+          <span>{pending || pendingBreak ? t("break_saving", lang) : t("break_end", lang)}</span>
+        </button>
+      </section>
     );
   }
 
@@ -384,11 +453,11 @@ export default function ShiftControls({
       <section className="staff-block-card staff-break-row">
         <h2 className="staff-block-title">
           <Coffee /> {t("break", lang)}
-          <span className="staff-count">{attendance.break_duration_minutes}/60</span>
+          <span className="staff-count">{breakMinutesUsed}/{breakMinutesAllowed}</span>
         </h2>
-        {attendance.break_ended_at ? (
+        {breakMinutesRemaining === 0 ? (
           <button type="button" className="staff-choice" disabled>
-            {t("break_done", lang)}
+            {t("break_allowance_finished", lang)}
           </button>
         ) : (
           <button
@@ -399,9 +468,21 @@ export default function ShiftControls({
             disabled={pending || Boolean(pendingBreak)}
           >
             {pendingBreak ? <LoaderCircle className="spin" /> : null}
-            {pendingBreak ? t("break_saving", lang) : breakActive ? t("break_end", lang) : t("break_start", lang)}
+            {pendingBreak
+              ? t("break_saving", lang)
+              : t("break_start_with_remaining", lang, {
+                  count: breakMinutesRemaining,
+                })}
           </button>
         )}
+        {breakMinutesUsed > 0 && breakMinutesRemaining > 0 ? (
+          <p className="staff-break-summary">
+            {t("break_used_and_remaining", lang, {
+              used: breakMinutesUsed,
+              remaining: breakMinutesRemaining,
+            })}
+          </p>
+        ) : null}
         {!online ? <p className="staff-connection-message" role="status">{t("break_offline", lang)}</p> : null}
         {pendingBreak && online ? <p className="staff-connection-message" role="status">{t("break_saving", lang)}</p> : null}
         {(state?.operation === "start_break" || state?.operation === "end_break") && state?.error ? (

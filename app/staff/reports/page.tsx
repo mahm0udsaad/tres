@@ -16,6 +16,7 @@ import {
 import { ROLE_LABELS, requireStaff } from "../../lib/staff";
 import { logoutStaffReports } from "./actions";
 import ReviewDecisionForm from "./ReviewDecisionForm";
+import OwnerNavigation from "../owner/OwnerNavigation";
 import {
   loadBranchDailyOperations,
   loadBranchReports,
@@ -38,6 +39,12 @@ const STATUS_LABELS: Record<ReportStatus, string> = {
   pending: "بانتظار المراجعة",
   confirmed: "مؤكد",
   rejected: "مرفوض",
+};
+
+type OwnerEmployeeNoteRow = {
+  entity_type: string;
+  entity_id: string;
+  note: string;
 };
 
 function textValue(report: UnifiedReport, keys: string[]) {
@@ -165,8 +172,15 @@ function ReportCard({
 
       {notes ? (
         <section className="report-notes">
-          <h3>ملاحظات الموظف</h3>
+          <h3>نتائج النموذج</h3>
           <p>{notes}</p>
+        </section>
+      ) : null}
+
+      {report.employeeNote ? (
+        <section className="report-notes report-private-note">
+          <h3>ملاحظة الموظف · للمالك فقط</h3>
+          <p>{report.employeeNote}</p>
         </section>
       ) : null}
 
@@ -378,9 +392,27 @@ export default async function StaffReportsPage() {
 
   if (profile.role === "owner") {
     const { data: branches } = await supabase.from("branches").select("id").order("name");
-    const reportResults = await Promise.all((branches ?? []).map((branch) => loadBranchReports(supabase, branch.id)));
+    const [reportResults, notesResult] = await Promise.all([
+      Promise.all((branches ?? []).map((branch) => loadBranchReports(supabase, branch.id))),
+      supabase.rpc("get_owner_employee_notes"),
+    ]);
     reports = reportResults.flatMap((result) => result.reports);
     errors = reportResults.flatMap((result) => result.errors);
+    if (notesResult.error) {
+      errors.push(`ملاحظات الموظفين: ${notesResult.error.message}`);
+    } else {
+      const notes = new Map(
+        ((notesResult.data ?? []) as OwnerEmployeeNoteRow[]).map((row) => [
+          `${row.entity_type}:${row.entity_id}`,
+          row.note,
+        ]),
+      );
+      reports = reports.map((report) => ({
+        ...report,
+        employeeNote:
+          notes.get(`${report.type}_report:${report.id}`) ?? null,
+      }));
+    }
     branchName = "جميع الفروع";
   } else if (allowed && profile.branch_id) {
     const branchPromise = supabase
@@ -431,10 +463,12 @@ export default async function StaffReportsPage() {
       </header>
 
       <div className="staff-content">
-        <Link href="/staff" className="report-back-link">
-          <ArrowRight />
-          العودة إلى لوحة الموظفين
-        </Link>
+        {isOwner ? <OwnerNavigation variant="bar" /> : (
+          <Link href="/staff" className="report-back-link">
+            <ArrowRight />
+            العودة إلى لوحة الموظفين
+          </Link>
+        )}
 
         <section className="report-hero">
           <div>

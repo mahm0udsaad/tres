@@ -14,15 +14,20 @@ import { supabaseAdmin } from "./supabase";
  */
 
 export type CreatedAuthUser =
-  | { userId: string; error: null }
-  | { userId: null; error: string };
+  { userId: string; error: null } | { userId: null; error: string };
 
-export async function createStaffAuthUser(phone: string, password: string): Promise<CreatedAuthUser> {
+export async function createStaffAuthUser(
+  phone: string,
+  password: string,
+): Promise<CreatedAuthUser> {
   let admin;
   try {
     admin = supabaseAdmin();
   } catch {
-    return { userId: null, error: "لم يتم إعداد مفاتيح الخادم بعد. تواصل مع الإدارة." };
+    return {
+      userId: null,
+      error: "لم يتم إعداد مفاتيح الخادم بعد. تواصل مع الإدارة.",
+    };
   }
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -37,7 +42,10 @@ export async function createStaffAuthUser(phone: string, password: string): Prom
       return { userId: null, error: "رقم الجوال مستخدم مسبقًا لحساب آخر." };
     }
     if (code === "weak_password") {
-      return { userId: null, error: "كلمة المرور ضعيفة — استخدم 8 أحرف على الأقل." };
+      return {
+        userId: null,
+        error: "كلمة المرور ضعيفة — استخدم 8 أحرف على الأقل.",
+      };
     }
     return { userId: null, error: "تعذّر إنشاء الحساب. حاول مرة أخرى." };
   }
@@ -55,16 +63,58 @@ export async function deleteStaffAuthUser(userId: string): Promise<void> {
   }
 }
 
-/** Owner-authorized server actions use this helper after verifying the target
- * profile. The service-role client never crosses into a client component. */
-export async function updateStaffAuthPassword(userId: string, password: string): Promise<string | null> {
+/** Soft-delete a staff login after the owner archives its profile. The auth row
+ * stays present so database history can retain its foreign-key identity, but
+ * the credentials can no longer be used to sign in. */
+export async function softDeleteStaffAuthUser(
+  userId: string,
+): Promise<string | null> {
   try {
-    const { error } = await supabaseAdmin().auth.admin.updateUserById(userId, { password });
+    const { error } = await supabaseAdmin().auth.admin.deleteUser(userId, true);
     if (!error) return null;
     const code = (error as { code?: string }).code;
-    if (code === "weak_password") return "كلمة المرور ضعيفة — استخدم 8 أحرف على الأقل مع أرقام ورموز.";
+    if (code === "user_not_found") return null;
+    return "تم إيقاف الموظف، لكن تعذّر حذف بيانات دخوله من خدمة الحسابات.";
+  } catch {
+    return "تم إيقاف الموظف، لكن تعذّر الاتصال بخدمة الحسابات.";
+  }
+}
+
+/** Owner-authorized server actions use this helper after verifying the target
+ * profile. The service-role client never crosses into a client component. */
+export async function updateStaffAuthPassword(
+  userId: string,
+  password: string,
+): Promise<string | null> {
+  try {
+    const { error } = await supabaseAdmin().auth.admin.updateUserById(userId, {
+      password,
+    });
+    if (!error) return null;
+    const code = (error as { code?: string }).code;
+    if (code === "weak_password")
+      return "كلمة المرور ضعيفة — استخدم 8 أحرف على الأقل مع أرقام ورموز.";
     if (code === "user_not_found") return "حساب الموظف غير موجود.";
     return "تعذّر تغيير كلمة المرور. حاول مرة أخرى.";
+  } catch {
+    return "تعذّر الاتصال بخدمة الحسابات.";
+  }
+}
+
+export async function updateStaffAuthPhone(
+  userId: string,
+  phone: string,
+): Promise<string | null> {
+  try {
+    const { error } = await supabaseAdmin().auth.admin.updateUserById(userId, {
+      phone,
+      phone_confirm: true,
+    });
+    if (!error) return null;
+    const code = (error as { code?: string }).code;
+    if (code === "phone_exists") return "رقم الجوال مستخدم مسبقًا لحساب آخر.";
+    if (code === "user_not_found") return "حساب الموظف غير موجود.";
+    return "تعذّر تغيير رقم الجوال. حاول مرة أخرى.";
   } catch {
     return "تعذّر الاتصال بخدمة الحسابات.";
   }

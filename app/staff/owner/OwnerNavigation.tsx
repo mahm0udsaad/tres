@@ -1,78 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Activity,
-  Bell,
-  FileCheck2,
-  LayoutDashboard,
-  ListTodo,
-  KeyRound,
-  ShieldCheck,
-  Store,
-  Users,
-  UserPlus,
-} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { CalendarCheck2, FileCheck2, Home, KeyRound, ListTodo, Users } from "lucide-react";
+import OwnerThemeToggle from "./OwnerThemeToggle";
 
 const NAV_ITEMS = [
-  { id: "overview", label: "لوحة المدير", icon: LayoutDashboard },
-  { id: "operations", label: "التشغيل", icon: Activity },
-  { id: "branches", label: "الفروع", icon: Store },
-  { id: "team", label: "الموظفون", icon: Users },
-  { id: "quality", label: "الجودة", icon: ShieldCheck },
-  { id: "reports", label: "التقارير", icon: FileCheck2 },
-  { id: "alerts", label: "التنبيهات", icon: Bell },
+  { href: "/staff/owner", label: "الرئيسية", icon: Home, exact: true },
+  { href: "/staff/owner/team", label: "الموظفون", icon: Users, exact: false },
+  { href: "/staff/owner/attendance", label: "الحضور", icon: CalendarCheck2, exact: false },
+  { href: "/staff/checklist", label: "المهام", icon: ListTodo, exact: false },
+  { href: "/staff/reports", label: "التقارير", icon: FileCheck2, exact: false },
+  { href: "/staff/account", label: "حسابي", icon: KeyRound, exact: false },
 ] as const;
 
-type SectionId = (typeof NAV_ITEMS)[number]["id"];
-
-const SECTION_IDS = new Set<SectionId>(NAV_ITEMS.map((item) => item.id));
-
-function sectionFromHash(): SectionId {
-  const hash = window.location.hash.slice(1) as SectionId;
-  return SECTION_IDS.has(hash) ? hash : "overview";
-}
-
-export default function OwnerNavigation() {
-  const [activeSection, setActiveSection] = useState<SectionId>("overview");
-
-  useEffect(() => {
-    const syncWithHash = () => setActiveSection(sectionFromHash());
-    syncWithHash();
-    window.addEventListener("hashchange", syncWithHash);
-    return () => window.removeEventListener("hashchange", syncWithHash);
-  }, []);
+export default function OwnerNavigation({
+  variant = "sidebar",
+}: {
+  variant?: "sidebar" | "bar";
+}) {
+  const pathname = usePathname();
 
   return (
-    <nav className="owner-nav" aria-label="أقسام لوحة المالك">
-      {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-        <a
-          key={id}
-          className={activeSection === id ? "is-active" : undefined}
-          href={`#${id}`}
-          aria-current={activeSection === id ? "location" : undefined}
-          onClick={() => setActiveSection(id)}
-        >
-          <Icon />
-          {label}
-        </a>
-      ))}
-      <a className="owner-nav-accounts" href="/staff/owner/team">
-        <UserPlus />
-        إدارة حسابات الموظفين
-      </a>
-      <a className="owner-nav-accounts" href="/staff/checklist">
-        <ListTodo />
-        إدارة المهام والإسناد
-      </a>
-      <a className="owner-nav-accounts" href="/staff/reports">
-        <FileCheck2 />
-        التقارير المعتمدة
-      </a>
-      <a className="owner-nav-accounts" href="/staff/account">
-        <KeyRound />
-        تغيير كلمة المرور
-      </a>
+    <nav
+      className={variant === "bar" ? "owner-route-nav" : "owner-nav"}
+      aria-label="تنقل المالك"
+    >
+      {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
+        const active = exact ? pathname === href : pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            className={active ? "is-active" : undefined}
+            href={href}
+            aria-current={active ? "page" : undefined}
+          >
+            <Icon />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+      {variant === "bar" ? (
+        <span className="owner-route-theme">
+          <OwnerThemeToggle />
+        </span>
+      ) : null}
     </nav>
   );
 }

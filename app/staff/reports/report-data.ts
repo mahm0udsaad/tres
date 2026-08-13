@@ -42,6 +42,7 @@ export type UnifiedReport = RawReport & {
   title: string;
   submitterName: string;
   reviewerName: string | null;
+  employeeNote?: string | null;
   signedPhotos: Array<{ path: string; url: string }>;
 };
 

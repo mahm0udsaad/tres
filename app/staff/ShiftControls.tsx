@@ -253,6 +253,7 @@ export default function ShiftControls({
   const done = tasks.filter((task) => task.completed).length;
   const remaining = tasks.filter((task) => task.is_required && !task.completed).length;
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+  const hasAssignedDailyModule = tasks.some((task) => Object.hasOwn(TASK_ANCHOR, task.task_type));
   const Chevron = lang === "ar" ? ChevronLeft : ChevronRight;
 
   // ── Before the shift: one screen, one button ────────────────────────────
@@ -366,13 +367,15 @@ export default function ShiftControls({
         </p>
       </section>
 
-      <DailyReport
-        role={role}
-        lang={lang}
-        reports={reports}
-        latestWater={latestWater}
-        beverageConsumed={beverageConsumed}
-      />
+      {hasAssignedDailyModule ? (
+        <DailyReport
+          role={role}
+          lang={lang}
+          reports={reports}
+          latestWater={latestWater}
+          beverageConsumed={beverageConsumed}
+        />
+      ) : null}
 
       {tasks.length ? (
         <section className="staff-block-card">

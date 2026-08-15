@@ -2387,3 +2387,52 @@ html[data-owner-theme="dark"] .owner-console {
   color: var(--staff-text, #2b211f);
   white-space: pre-wrap;
 }
+
+/* Open shift notice on the employee card — the owner is the only account that
+   can clear a forgotten checkout. */
+/* Panel-coloured, not a fixed light tint: this card renders inside the owner's
+   dark theme too, where a hard-coded pale background swallows the body text. */
+.owner-open-shift {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid var(--owner-line, var(--staff-line));
+  border-inline-start: 3px solid var(--owner-accent, var(--staff-wine));
+  border-radius: 16px;
+  color: var(--owner-ink, var(--staff-ink));
+  background: var(--owner-panel, var(--staff-surface));
+}
+.owner-open-shift-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 11px;
+  color: var(--owner-accent, var(--staff-wine));
+  background: color-mix(in srgb, var(--owner-accent, var(--staff-wine)) 16%, transparent);
+}
+.owner-open-shift-icon svg {
+  width: 19px;
+}
+.owner-open-shift h3 {
+  margin: 0 0 3px;
+  font-size: 15px;
+}
+.owner-open-shift p {
+  margin: 0;
+  color: var(--owner-muted, var(--staff-muted));
+  font-size: 13px;
+}
+.owner-open-shift button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+}
+.owner-open-shift button svg {
+  width: 18px;
+}

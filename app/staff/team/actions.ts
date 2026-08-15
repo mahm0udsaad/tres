@@ -424,6 +424,37 @@ export async function deleteOwnerStaff(
   };
 }
 
+/**
+ * Closes an employee's open shift. A forgotten checkout blocks them from
+ * clocking in again (one active shift per employee), and nobody else can clear
+ * it: supervisor override is branch-scoped and the owner has no branch.
+ */
+export async function endOwnerEmployeeShift(
+  _previous: TeamActionState | undefined,
+  form: FormData,
+): Promise<TeamActionState> {
+  const { profile, supabase } = await requireStaff();
+  if (profile.role !== "owner")
+    return { error: "هذا الإجراء متاح للمالك فقط." };
+  const employeeId = text(form.get("employee_id"));
+  if (!employeeId) return { error: "حساب الموظف غير موجود." };
+
+  const { data, error } = await supabase.rpc("owner_end_employee_shift", {
+    p_employee_id: employeeId,
+    p_reason: text(form.get("reason")) || null,
+  });
+  const result = (data ?? {}) as Record<string, unknown>;
+  if (error || result.ok !== true) {
+    if (error?.code === "42501")
+      return { error: "هذا الإجراء متاح للمالك فقط." };
+    return { error: rpcError(result, "تعذّر إنهاء وردية الموظف.") };
+  }
+
+  revalidatePath("/staff/owner");
+  revalidatePath("/staff/owner/team");
+  return { message: "تم إنهاء وردية الموظف. يمكنه الآن تسجيل الحضور من جديد." };
+}
+
 export async function toggleBranchStaffActive(
   _previous: TeamActionState | undefined,
   form: FormData,

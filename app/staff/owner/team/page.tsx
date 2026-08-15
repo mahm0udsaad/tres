@@ -27,9 +27,12 @@ export default async function OwnerTeamPage() {
         <p className="staff-form-error">{error ?? "تعذّر تحميل الفريق."}</p>
       </main>
     );
-  const [metricsResult, schedules, tasks, cleaningReports, baristaReports, kitchenReports, waterChecks, privateNotes] =
+  const [metricsResult, openShifts, schedules, tasks, cleaningReports, baristaReports, kitchenReports, waterChecks, privateNotes] =
     await Promise.all([
       supabase.rpc("get_owner_employee_table"),
+      // Any date, not just today: a shift left open from a previous day is
+      // exactly the case that locks an employee out of clocking in.
+      supabase.from("attendance_records").select("user_id").eq("status", "active"),
       supabase
         .from("staff_profiles")
         .select(
@@ -104,6 +107,7 @@ export default async function OwnerTeamPage() {
         branches={overview.branches}
         staff={staff}
         metrics={(metricsResult.data ?? []) as OwnerEmployeeMetric[]}
+        openShiftEmployeeIds={(openShifts.data ?? []).map((row) => row.user_id)}
         tasks={(tasks.data ?? []).map((task) => ({
           ...task,
           employee_note:

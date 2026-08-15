@@ -11,6 +11,7 @@ import {
   FileText,
   KeyRound,
   Eye,
+  LogOut,
   Pencil,
   Trash2,
   UserPlus,
@@ -27,6 +28,7 @@ import {
 import {
   createOwnerStaff,
   deleteOwnerStaff,
+  endOwnerEmployeeShift,
   resetOwnerStaffPassword,
   updateOwnerStaff,
   updateOwnerStaffPhone,
@@ -133,12 +135,16 @@ export default function OwnerStaffManager({
   metrics,
   tasks,
   reports,
+  openShiftEmployeeIds,
 }: {
   branches: OwnerBranch[];
   staff: OwnerStaffRow[];
   metrics: OwnerEmployeeMetric[];
   tasks: EmployeeTask[];
   reports: EmployeeReport[];
+  /** Employees with an attendance row still open, of any date — a shift left
+   *  running from a previous day locks them out of clocking in again. */
+  openShiftEmployeeIds: string[];
 }) {
   const activeStaff = staff.filter(
     (member) =>
@@ -175,6 +181,11 @@ export default function OwnerStaffManager({
     undefined,
   );
   const [deleteTarget, setDeleteTarget] = useState<OwnerStaffRow | null>(null);
+  const [endShiftState, endShiftAction, endingShift] = useActionState(
+    endOwnerEmployeeShift,
+    undefined,
+  );
+  const openShifts = new Set(openShiftEmployeeIds);
   const credentials = state?.credentials;
   const selectedMember =
     activeStaff.find((member) => member.user_id === selectedMemberId) ?? null;
@@ -782,6 +793,37 @@ export default function OwnerStaffManager({
                 <p className="staff-empty">لا توجد تقارير لهذا الموظف بعد.</p>
               )}
             </section>
+            {openShifts.has(selectedMember.user_id) ? (
+              <section className="owner-open-shift" aria-labelledby="end-shift-title">
+                <div className="owner-danger-copy">
+                  <span className="owner-open-shift-icon" aria-hidden="true">
+                    <LogOut />
+                  </span>
+                  <div>
+                    <h3 id="end-shift-title">وردية مفتوحة</h3>
+                    <p>
+                      لم يسجّل الموظف نهاية ورديته. لن يستطيع تسجيل حضور جديد قبل
+                      إغلاقها.
+                    </p>
+                  </div>
+                </div>
+                {endShiftState?.error ? (
+                  <p className="staff-form-error">{endShiftState.error}</p>
+                ) : null}
+                <form action={(form) => startTransition(() => endShiftAction(form))}>
+                  <input type="hidden" name="employee_id" value={selectedMember.user_id} />
+                  <input
+                    type="hidden"
+                    name="reason"
+                    value="أنهى المالك الوردية من لوحة الموظفين"
+                  />
+                  <button type="submit" className="staff-secondary" disabled={endingShift}>
+                    <LogOut /> {endingShift ? "جارٍ الإنهاء…" : "إنهاء وردية الموظف"}
+                  </button>
+                </form>
+              </section>
+            ) : null}
+
             <section
               className="owner-danger-zone"
               aria-labelledby="remove-employee-title"

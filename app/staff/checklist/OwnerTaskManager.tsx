@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState, useState } from "react";
 import Link from "next/link";
-import { Camera, MessageSquareText, Pencil, Save, Trash2, Users, X } from "lucide-react";
+import { Camera, History, MessageSquareText, Pencil, Repeat, Save, Trash2, Users, X } from "lucide-react";
 import { ROLE_LABELS, type StaffRole } from "../../lib/staff-shared";
 import {
   assignOwnerCustomTask,
@@ -17,7 +17,16 @@ type Task = {
   response_type: "completion" | "yes_no"; sort_order: number;
 };
 
-export default function OwnerTaskManager({ employees, tasks, branchNames, initialEmployeeId, today }: {
+export type SavedTask = {
+  title: string;
+  notes: string | null;
+  is_required: boolean;
+  requires_photo: boolean;
+  requires_note: boolean;
+  response_type: "completion" | "yes_no";
+};
+
+export default function OwnerTaskManager({ employees, tasks, branchNames, initialEmployeeId, today, savedTasks }: {
   employees: Employee[];
   tasks: Task[];
   branchNames: Record<string, string>;
@@ -25,12 +34,25 @@ export default function OwnerTaskManager({ employees, tasks, branchNames, initia
   /** Branch-local "today", computed on the server so an evening assignment
    *  never defaults to yesterday the way a UTC date would. */
   today: string;
+  /** Distinct tasks the owner has assigned before, for re-issuing without
+   *  retyping. */
+  savedTasks: SavedTask[];
 }) {
   const [createState, createAction, creating] = useActionState(assignOwnerCustomTask, undefined);
   const [updateState, updateAction, updating] = useActionState(updateOwnerAssignedTask, undefined);
   const [deleteState, deleteAction, deleting] = useActionState(deleteOwnerAssignedTask, undefined);
   const [editing, setEditing] = useState<Task | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(Boolean(initialEmployeeId) || tasks.length === 0);
+  // A previously used task loaded into the form. Keyed so the inputs remount
+  // with the new defaults instead of keeping whatever was typed before.
+  const [preset, setPreset] = useState<SavedTask | null>(null);
+  const [presetKey, setPresetKey] = useState(0);
+
+  function quickAssign(saved: SavedTask) {
+    setPreset(saved);
+    setPresetKey((key) => key + 1);
+    setShowCreateForm(true);
+  }
 
   return <>
     <div className="owner-manager-toolbar">
@@ -40,17 +62,39 @@ export default function OwnerTaskManager({ employees, tasks, branchNames, initia
         {showCreateForm ? "إغلاق النموذج" : "مهمة جديدة"}
       </button>
     </div>
+    {savedTasks.length ? <section className="staff-card staff-quick-assign">
+      <div className="staff-card-head">
+        <div><h2>إسناد سريع</h2><p>اضغط على مهمة سبق إنشاؤها لتعبئة النموذج، ثم اختر الموظف والتاريخ.</p></div>
+        <History className="staff-checklist-head-icon" />
+      </div>
+      <ul className="staff-quick-assign-list">
+        {savedTasks.map((saved) => <li key={saved.title}>
+          <button type="button" onClick={() => quickAssign(saved)}>
+            <Repeat />
+            <span>
+              <strong>{saved.title}</strong>
+              <small>
+                {saved.response_type === "yes_no" ? "نعم أو لا" : "إكمال المهمة"}
+                {saved.requires_photo ? " · صورة" : ""}
+                {saved.requires_note ? " · ملاحظة" : ""}
+              </small>
+            </span>
+          </button>
+        </li>)}
+      </ul>
+    </section> : null}
+
     {showCreateForm ? <section className="staff-card staff-checklist-form-card">
       <div className="staff-card-head"><div><h2>مهمة جديدة</h2><p>اكتب المطلوب واختر الموظف. الخيارات الإضافية اختيارية.</p></div><Users className="staff-checklist-head-icon" /></div>
-      {employees.length === 0 ? <div className="staff-empty staff-empty-action">أنشئ حسابات الموظفين أولاً.<Link href="/staff/owner/team">فتح الموظفين</Link></div> : <form className="staff-form staff-checklist-form" action={(form) => startTransition(() => createAction(form))}>
-        <label className="staff-field-wide"><span>عنوان المهمة</span><input name="task_title" required maxLength={200} placeholder="مثال: فحص مخزون الحليب" /></label>
+      {employees.length === 0 ? <div className="staff-empty staff-empty-action">أنشئ حسابات الموظفين أولاً.<Link href="/staff/owner/team">فتح الموظفين</Link></div> : <form key={presetKey} className="staff-form staff-checklist-form" action={(form) => startTransition(() => createAction(form))}>
+        <label className="staff-field-wide"><span>عنوان المهمة</span><input name="task_title" required maxLength={200} placeholder="مثال: فحص مخزون الحليب" defaultValue={preset?.title ?? ""} /></label>
         <label><span>تاريخ التنفيذ</span><input name="task_date" type="date" required min={today} defaultValue={today} /></label>
-        <label><span>نوع الإجابة</span><select name="task_response_type" defaultValue="completion"><option value="completion">إكمال المهمة</option><option value="yes_no">نعم أو لا</option></select></label>
-        <label className="staff-field-wide"><span>تعليمات للموظف (اختياري)</span><textarea name="task_notes" rows={3} maxLength={1000} /></label>
+        <label><span>نوع الإجابة</span><select name="task_response_type" defaultValue={preset?.response_type ?? "completion"}><option value="completion">إكمال المهمة</option><option value="yes_no">نعم أو لا</option></select></label>
+        <label className="staff-field-wide"><span>تعليمات للموظف (اختياري)</span><textarea name="task_notes" rows={3} maxLength={1000} defaultValue={preset?.notes ?? ""} /></label>
         <fieldset className="staff-task-assignees"><legend>من سينفذ المهمة؟</legend>{employees.map((employee) => <label key={employee.user_id}><input name="employee_ids" type="checkbox" value={employee.user_id} defaultChecked={employee.user_id === initialEmployeeId} /><span>{employee.full_name}<small>{ROLE_LABELS[employee.role]} · {employee.branch_id ? branchNames[employee.branch_id] ?? "فرع" : "بدون فرع"}</small></span></label>)}</fieldset>
-        <label className="staff-checklist-check"><input name="task_photo" type="checkbox" /><span><Camera /> تتطلب صورة إثبات</span></label>
-        <label className="staff-checklist-check"><input name="task_note_required" type="checkbox" /><span><MessageSquareText /> تتطلب ملاحظة من الموظف</span></label>
-        <label className="staff-checklist-check"><input name="task_required" type="checkbox" defaultChecked /><span>مهمة إلزامية</span></label>
+        <label className="staff-checklist-check"><input name="task_photo" type="checkbox" defaultChecked={preset?.requires_photo ?? false} /><span><Camera /> تتطلب صورة إثبات</span></label>
+        <label className="staff-checklist-check"><input name="task_note_required" type="checkbox" defaultChecked={preset?.requires_note ?? false} /><span><MessageSquareText /> تتطلب ملاحظة من الموظف</span></label>
+        <label className="staff-checklist-check"><input name="task_required" type="checkbox" defaultChecked={preset?.is_required ?? true} /><span>مهمة إلزامية</span></label>
         <div className="staff-field-wide">{createState?.error ? <p className="staff-form-error">{createState.error}</p> : null}{createState?.message ? <p className="staff-form-success">{createState.message}</p> : null}<button className="staff-primary" disabled={creating}><Save /> {creating ? "جارٍ التوزيع…" : "إنشاء وتوزيع المهمة"}</button></div>
       </form>}
     </section> : null}

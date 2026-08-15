@@ -57,9 +57,14 @@ export async function assignOwnerCustomTask(
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر توزيع المهمة.") };
+  const assigned = Number(result.assigned ?? 0);
+  const duplicates = Number(result.duplicates ?? 0);
+  if (assigned === 0 && duplicates > 0) {
+    return { error: "هذه المهمة مسندة بالفعل للموظف المختار في هذا التاريخ." };
+  }
   revalidatePath("/staff/checklist");
   revalidatePath("/staff/owner/team");
-  return { message: `تم توزيع المهمة على ${Number(result.assigned ?? 0)} موظف.` };
+  return { message: `تم إسناد المهمة بنجاح إلى ${assigned} موظف${duplicates ? `، وتخطي ${duplicates} مكرر` : ""}.` };
 }
 
 export async function deleteOwnerAssignedTask(

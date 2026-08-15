@@ -288,6 +288,19 @@ const DICT: Record<string, Entry> = {
   report_pending: { ar: "تم إرسال تقرير اليوم وهو بانتظار مراجعة المشرف.", en: "Today's report is submitted and awaiting supervisor review." },
   report_confirmed: { ar: "تم اعتماد تقرير اليوم بالفعل.", en: "Today's report is already approved." },
   report_check_failed: { ar: "تعذّر التحقق من تقرير اليوم.", en: "Couldn't check today's report." },
+
+  // notification bell — the owner's verdict on finished work
+  notifications: { ar: "الإشعارات", en: "Notifications" },
+  notifications_unread: {
+    ar: (p) => `${p.count} إشعار جديد`,
+    en: (p) => `${p.count} new notification${Number(p.count) === 1 ? "" : "s"}`,
+  },
+  notifications_empty: { ar: "لا توجد إشعارات جديدة.", en: "No new notifications." },
+  notifications_mark_read: { ar: "تعليم الكل كمقروء", en: "Mark all as read" },
+  notif_task_approved: { ar: "تم اعتماد مهمتك", en: "Your task was approved" },
+  notif_task_rejected: { ar: "تم رفض مهمتك", en: "Your task was rejected" },
+  notif_report_approved: { ar: "تم اعتماد تقريرك", en: "Your report was approved" },
+  notif_report_rejected: { ar: "تم رفض تقريرك", en: "Your report was rejected" },
 };
 
 /** Bengali employee pack. Arabic and English remain inline above because they
@@ -448,6 +461,14 @@ const BENGALI: Record<string, Translation> = {
   report_pending: "আজকের রিপোর্ট পাঠানো হয়েছে এবং সুপারভাইজারের পর্যালোচনার অপেক্ষায় আছে।",
   report_confirmed: "আজকের রিপোর্ট ইতিমধ্যে অনুমোদিত।",
   report_check_failed: "আজকের রিপোর্ট যাচাই করা যায়নি।",
+  notifications: "বিজ্ঞপ্তি",
+  notifications_unread: (p) => `${p.count}টি নতুন বিজ্ঞপ্তি`,
+  notifications_empty: "নতুন কোনো বিজ্ঞপ্তি নেই।",
+  notifications_mark_read: "সব পঠিত হিসেবে চিহ্নিত করুন",
+  notif_task_approved: "আপনার কাজ অনুমোদিত হয়েছে",
+  notif_task_rejected: "আপনার কাজ প্রত্যাখ্যাত হয়েছে",
+  notif_report_approved: "আপনার রিপোর্ট অনুমোদিত হয়েছে",
+  notif_report_rejected: "আপনার রিপোর্ট প্রত্যাখ্যাত হয়েছে",
 };
 
 // SQLSTATE fallbacks for thrown (non-soft) DB errors.

@@ -12,6 +12,7 @@ import {
 import { dashboardLang, isAdminRole } from "../lib/staff-shared";
 import { localeFor, t, type Lang } from "../lib/staff-i18n";
 import BranchSettings from "./BranchSettings";
+import NotificationBell, { type StaffNotification } from "./NotificationBell";
 import ShiftControls from "./ShiftControls";
 import type { ReportStatus } from "./DailyReport";
 import { logoutStaff } from "./actions";
@@ -50,7 +51,7 @@ export default async function StaffDashboard() {
   const locale = localeFor(lang);
   const attends = usesAttendance(profile.role);
 
-  const [branchResult, attendanceResult, gamificationResult] = await Promise.all([
+  const [branchResult, attendanceResult, gamificationResult, notificationsResult] = await Promise.all([
     profile.branch_id
       ? supabase
           .from("branches")
@@ -75,8 +76,17 @@ export default async function StaffDashboard() {
           .eq("user_id", profile.user_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    // The owner's verdicts on finished work, waiting in the bell. Not gated on
+    // attendance: the point is that they land before the next shift starts.
+    supabase
+      .from("staff_notifications")
+      .select("id,kind,entity_type,decision,title,note,created_at")
+      .is("read_at", null)
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
+  const notifications = (notificationsResult.data ?? []) as StaffNotification[];
   const branch = (branchResult.data ?? null) as Branch | null;
   const attendance = (attendanceResult.data ?? null) as AttendanceRecord | null;
   const reportDate = dateInTimeZone(String(branch?.timezone || "Asia/Riyadh"));
@@ -90,6 +100,9 @@ export default async function StaffDashboard() {
 
   if (attendance) {
     const reportTable = REPORT_TABLE[profile.role as keyof typeof REPORT_TABLE];
+    // A shift that ran past midnight keeps yesterday's shift_date, so the day
+    // that counts as "due now" is whichever of the two is later.
+    const taskCutoff = attendance.shift_date > reportDate ? attendance.shift_date : reportDate;
     const canCheckWater = ["supervisor", "kitchen_manager"].includes(profile.role);
     const [taskResult, reportResult, waterResult, beverageResult] = await Promise.all([
       supabase
@@ -98,7 +111,12 @@ export default async function StaffDashboard() {
           "id,title,notes,task_type,completed,completed_at,is_required,requires_photo,requires_note,response_type,yes_no_answer,photo_path,sort_order",
         )
         .eq("user_id", profile.user_id)
-        .eq("task_date", attendance.shift_date)
+        // Owner-assigned work is dated by the owner, not by the shift, so an
+        // exact match on shift_date hides any task whose date drifted by a day.
+        // Everything already due stays on the list until it is actually done.
+        .lte("task_date", taskCutoff)
+        .or(`completed.eq.false,task_date.eq.${attendance.shift_date}`)
+        .order("task_date")
         .order("sort_order")
         .order("created_at"),
       reportTable
@@ -153,6 +171,7 @@ export default async function StaffDashboard() {
               <MapPin /> {branch.name}
             </span>
           ) : null}
+          <NotificationBell notifications={notifications} lang={lang} />
           <Link className="staff-account-link" href="/staff/account" aria-label={lang === "bn" ? "পাসওয়ার্ড পরিবর্তন" : lang === "en" ? "Change password" : "تغيير كلمة المرور"} title={lang === "bn" ? "পাসওয়ার্ড পরিবর্তন" : lang === "en" ? "Change password" : "تغيير كلمة المرور"}><KeyRound /></Link>
           <form action={logoutStaff}>
             <button type="submit" aria-label={t("logout", lang)}>

@@ -20,11 +20,13 @@ import OwnerNavigation from "../owner/OwnerNavigation";
 import {
   loadBranchDailyOperations,
   loadBranchReports,
+  loadTasksAwaitingReview,
   type BeverageEmployeeSummary,
   type ReportStatus,
   type UnifiedReport,
   type WaterQualityCheck,
 } from "./report-data";
+import TaskReviewCard, { type ReviewableTask } from "./TaskReviewCard";
 
 export const dynamic = "force-dynamic";
 
@@ -158,15 +160,15 @@ function ReportCard({
             )}
           </time>
         </div>
-        <span className={`report-status report-status--${report.status}`}>
-          {report.status === "pending" ? (
+        <span className={`report-status report-status--${awaitsVerdict(report) ? "pending" : report.status}`}>
+          {awaitsVerdict(report) ? (
             <Clock3 />
           ) : report.status === "confirmed" ? (
             <CheckCircle2 />
           ) : (
             <XCircle />
           )}
-          {STATUS_LABELS[report.status]}
+          {awaitsVerdict(report) ? "بانتظار مراجعتك" : STATUS_LABELS[report.status]}
         </span>
       </header>
 
@@ -227,7 +229,7 @@ function ReportCard({
         <p className="report-no-evidence">لا توجد صور إثبات متاحة لهذا التقرير.</p>
       )}
 
-      {report.status !== "pending" ? (
+      {!awaitsVerdict(report) ? (
         <section className={`report-review-note report-review-note--${report.status}`}>
           <ShieldCheck />
           <div>
@@ -248,11 +250,17 @@ function ReportCard({
         </section>
       ) : null}
 
-      {canReview && report.status === "pending" ? (
+      {canReview && awaitsVerdict(report) ? (
         <ReviewDecisionForm reportId={report.id} reportType={report.type} />
       ) : null}
     </article>
   );
+}
+
+/** Reports are auto-confirmed the moment they are submitted, so "still needs a
+ *  human verdict" means pending OR carrying only the automatic approval. */
+function awaitsVerdict(report: Pick<UnifiedReport, "status" | "auto_approved">) {
+  return report.status === "pending" || (report.status === "confirmed" && report.auto_approved === true);
 }
 
 function dateInTimeZone(timeZone: string) {
@@ -436,8 +444,19 @@ export default async function StaffReportsPage() {
     errors = [...reportsResult.errors, ...operationsResult.errors];
   }
 
-  const pending = reports.filter((report) => report.status === "pending");
-  const reviewed = reports.filter((report) => report.status !== "pending");
+  const pending = reports.filter(awaitsVerdict);
+  const reviewed = reports.filter((report) => !awaitsVerdict(report));
+
+  // Finished task results waiting on the same reviewer as the reports above.
+  let taskQueue: ReviewableTask[] = [];
+  if (canReview && hasReportScope) {
+    const taskResult = await loadTasksAwaitingReview(
+      supabase,
+      profile.role === "owner" ? null : profile.branch_id,
+    );
+    taskQueue = taskResult.tasks;
+    errors = [...errors, ...taskResult.errors];
+  }
 
   return (
     <main className="staff-dashboard report-dashboard">
@@ -506,6 +525,29 @@ export default async function StaffReportsPage() {
 
         {hasReportScope ? (
           <>
+            {canReview ? (
+              <section className="report-section" aria-labelledby="tasks-heading">
+                <div className="report-section-heading">
+                  <div>
+                    <p className="staff-eyebrow">TASK RESULTS</p>
+                    <h2 id="tasks-heading">نتائج المهام</h2>
+                  </div>
+                  <span>{taskQueue.length}</span>
+                </div>
+                <div className="task-review-list">
+                  {taskQueue.length ? (
+                    taskQueue.map((task) => <TaskReviewCard key={task.id} task={task} />)
+                  ) : (
+                    <div className="report-empty">
+                      <CheckCircle2 />
+                      <strong>لا توجد مهام بانتظار المراجعة</strong>
+                      <p>ستظهر هنا كل مهمة ينهيها الموظف لتعتمدها أو ترفضها.</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            ) : null}
+
             <section className="report-section" aria-labelledby="pending-heading">
               <div className="report-section-heading">
                 <div>

@@ -525,3 +525,224 @@ html[data-owner-theme="dark"] .staff-app--owner .report-status--pending {
     transition: none;
   }
 }
+
+/* ── Task results awaiting the reviewer's verdict ────────────────────────── */
+.task-review-list {
+  display: grid;
+  gap: 14px;
+}
+.task-review-card {
+  display: grid;
+  gap: 13px;
+  padding: 18px;
+  border: 1px solid var(--staff-line);
+  border-radius: 20px;
+  background: var(--staff-surface);
+}
+.task-review-card--done {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  color: var(--staff-ink);
+  background: var(--staff-good-soft, var(--staff-surface));
+}
+.task-review-card--done svg {
+  width: 24px;
+  color: var(--staff-good, #2f7d5b);
+}
+.task-review-card--done p {
+  margin: 2px 0 0;
+  color: var(--staff-muted);
+  font-size: 13px;
+}
+.task-review-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.task-review-card h3 {
+  margin: 4px 0;
+  font-size: 17px;
+}
+.task-review-kind,
+.task-review-card time {
+  display: block;
+  color: var(--staff-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.task-review-answer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.task-review-answer svg {
+  width: 16px;
+}
+.task-review-answer.is-yes {
+  color: var(--staff-good, #2f7d5b);
+  background: var(--staff-good-soft, #e6f4ec);
+}
+.task-review-answer.is-no {
+  color: var(--staff-danger);
+  background: var(--staff-danger-soft);
+}
+.task-review-notes {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px;
+  padding: 11px 13px;
+  border-radius: 14px;
+  color: var(--staff-muted);
+  background: color-mix(in srgb, var(--staff-surface) 60%, transparent);
+  font-size: 13px;
+}
+.task-review-notes svg {
+  width: 17px;
+}
+.task-review-notes p {
+  margin: 0;
+  white-space: pre-line;
+}
+.task-review-photo {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+}
+.task-review-photo img {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+.task-review-photo span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--staff-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.task-review-photo svg {
+  width: 15px;
+}
+.task-review-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.task-review-actions button {
+  min-height: 48px;
+}
+
+/* Rejection modal: the reviewer must say what happens next. Styled here rather
+ * than reused from owner.css — this page is also served to supervisors, which
+ * never loads that stylesheet. */
+.task-reject-backdrop {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgb(32 21 22 / 0.58);
+}
+.task-reject-modal {
+  display: grid;
+  gap: 14px;
+  width: min(520px, 100%);
+  max-height: min(88dvh, 850px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--staff-line);
+  border-radius: 18px;
+  color: var(--staff-ink);
+  background: var(--staff-surface);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.28);
+}
+.task-reject-modal > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.task-reject-modal h2 {
+  margin: 2px 0 0;
+  font-size: 19px;
+}
+.task-reject-modal label {
+  display: grid;
+  gap: 6px;
+}
+.task-reject-modal label > span {
+  font-size: 12px;
+  font-weight: 800;
+}
+.task-reject-modal > header .staff-icon-button {
+  flex: none;
+}
+.task-reject-modal textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 11px 13px;
+  border: 1px solid var(--staff-line);
+  border-radius: 13px;
+  color: var(--staff-ink);
+  background: var(--staff-surface);
+  font: inherit;
+}
+.task-reject-modal textarea:focus {
+  outline: 3px solid var(--staff-blush-soft);
+  border-color: var(--staff-wine);
+}
+.task-reject-hint {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+.task-reject-options {
+  display: grid;
+  gap: 10px;
+}
+.task-reject-options button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 62px;
+  padding: 12px 15px;
+  border-radius: 15px;
+  text-align: start;
+}
+.task-reject-options button svg {
+  width: 21px;
+  flex: none;
+}
+.task-reject-options strong {
+  display: block;
+  font-size: 14px;
+}
+.task-reject-options small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.task-reject-flag {
+  border: 1px solid #ecc4c0;
+  color: var(--staff-danger);
+  background: var(--staff-danger-soft);
+  font-weight: 800;
+}
+
+@media (max-width: 480px) {
+  .task-review-actions {
+    grid-template-columns: 1fr;
+  }
+}

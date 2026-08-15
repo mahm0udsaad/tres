@@ -17,11 +17,14 @@ type Task = {
   response_type: "completion" | "yes_no"; sort_order: number;
 };
 
-export default function OwnerTaskManager({ employees, tasks, branchNames, initialEmployeeId }: {
+export default function OwnerTaskManager({ employees, tasks, branchNames, initialEmployeeId, today }: {
   employees: Employee[];
   tasks: Task[];
   branchNames: Record<string, string>;
   initialEmployeeId?: string | null;
+  /** Branch-local "today", computed on the server so an evening assignment
+   *  never defaults to yesterday the way a UTC date would. */
+  today: string;
 }) {
   const [createState, createAction, creating] = useActionState(assignOwnerCustomTask, undefined);
   const [updateState, updateAction, updating] = useActionState(updateOwnerAssignedTask, undefined);
@@ -41,7 +44,7 @@ export default function OwnerTaskManager({ employees, tasks, branchNames, initia
       <div className="staff-card-head"><div><h2>مهمة جديدة</h2><p>اكتب المطلوب واختر الموظف. الخيارات الإضافية اختيارية.</p></div><Users className="staff-checklist-head-icon" /></div>
       {employees.length === 0 ? <div className="staff-empty staff-empty-action">أنشئ حسابات الموظفين أولاً.<Link href="/staff/owner/team">فتح الموظفين</Link></div> : <form className="staff-form staff-checklist-form" action={(form) => startTransition(() => createAction(form))}>
         <label className="staff-field-wide"><span>عنوان المهمة</span><input name="task_title" required maxLength={200} placeholder="مثال: فحص مخزون الحليب" /></label>
-        <label><span>تاريخ التنفيذ</span><input name="task_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></label>
+        <label><span>تاريخ التنفيذ</span><input name="task_date" type="date" required min={today} defaultValue={today} /></label>
         <label><span>نوع الإجابة</span><select name="task_response_type" defaultValue="completion"><option value="completion">إكمال المهمة</option><option value="yes_no">نعم أو لا</option></select></label>
         <label className="staff-field-wide"><span>تعليمات للموظف (اختياري)</span><textarea name="task_notes" rows={3} maxLength={1000} /></label>
         <fieldset className="staff-task-assignees"><legend>من سينفذ المهمة؟</legend>{employees.map((employee) => <label key={employee.user_id}><input name="employee_ids" type="checkbox" value={employee.user_id} defaultChecked={employee.user_id === initialEmployeeId} /><span>{employee.full_name}<small>{ROLE_LABELS[employee.role]} · {employee.branch_id ? branchNames[employee.branch_id] ?? "فرع" : "بدون فرع"}</small></span></label>)}</fieldset>
@@ -55,7 +58,7 @@ export default function OwnerTaskManager({ employees, tasks, branchNames, initia
     <section className="staff-card staff-checklist-list">
       <div className="staff-card-head"><div><h2>المهام الحالية</h2><p>اضغط تعديل أو حذف قبل أن يكملها الموظف.</p></div><span className="staff-team-count">{tasks.length}</span></div>
       {deleteState?.error ? <p className="staff-form-error">{deleteState.error}</p> : null}{deleteState?.message ? <p className="staff-form-success">{deleteState.message}</p> : null}
-      {tasks.length ? <ul className="staff-checklist-items">{tasks.map((task) => { const employee = employees.find((item) => item.user_id === task.user_id); return <li key={task.id}><div className="staff-checklist-item-info"><strong>{task.title}</strong><span>{employee?.full_name ?? "موظف"} · {task.task_date}</span></div><div className="staff-checklist-item-actions"><button type="button" className="staff-checklist-edit" onClick={() => setEditing(task)} aria-label="تعديل المهمة"><Pencil /></button><form action={(form) => startTransition(() => deleteAction(form))}><input type="hidden" name="task_id" value={task.id} /><button className="staff-checklist-edit staff-checklist-off" disabled={deleting} aria-label="حذف المهمة"><Trash2 /></button></form></div></li>; })}</ul> : <p className="staff-empty">لا توجد مهام. ابدأ بإنشاء أول مهمة أعلاه.</p>}
+      {tasks.length ? <ul className="staff-checklist-items">{tasks.map((task) => { const employee = employees.find((item) => item.user_id === task.user_id); return <li key={task.id}><div className="staff-checklist-item-info"><strong>{task.title}</strong><span>{employee?.full_name ?? "موظف"} · {task.task_date}{task.task_date < today ? " · متأخرة" : ""}</span></div><div className="staff-checklist-item-actions"><button type="button" className="staff-checklist-edit" onClick={() => setEditing(task)} aria-label="تعديل المهمة"><Pencil /></button><form action={(form) => startTransition(() => deleteAction(form))}><input type="hidden" name="task_id" value={task.id} /><button className="staff-checklist-edit staff-checklist-off" disabled={deleting} aria-label="حذف المهمة"><Trash2 /></button></form></div></li>; })}</ul> : <p className="staff-empty">لا توجد مهام. ابدأ بإنشاء أول مهمة أعلاه.</p>}
     </section>
 
     {editing ? <div className="owner-member-modal-backdrop" role="presentation" onMouseDown={() => setEditing(null)}><section className="owner-member-modal" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="staff-eyebrow">EDIT TASK</p><h2>تعديل المهمة</h2></div><button type="button" className="staff-icon-button" onClick={() => setEditing(null)}><X /></button></header><form className="staff-form staff-checklist-form" action={(form) => startTransition(() => updateAction(form))} onSubmit={() => setEditing(null)}>

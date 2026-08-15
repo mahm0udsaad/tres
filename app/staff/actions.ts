@@ -59,6 +59,13 @@ export async function loginStaff(
   redirect(next.startsWith("/staff") && next !== "/staff/login" ? next : "/staff");
 }
 
+/** Clears the employee's notification bell once they have actually opened it. */
+export async function markNotificationsRead(): Promise<void> {
+  const { supabase } = await requireStaff();
+  await supabase.rpc("mark_staff_notifications_read", { p_ids: null });
+  revalidatePath("/staff");
+}
+
 export async function logoutStaff() {
   const supabase = await supabaseServer();
   await supabase.auth.signOut();

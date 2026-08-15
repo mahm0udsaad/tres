@@ -168,6 +168,75 @@ export async function loadBranchReports(
   return { reports, errors };
 }
 
+/**
+ * Tasks the employee has finished but nobody has judged yet.
+ *
+ * `branchId` is null for the owner, who reviews every branch; a supervisor
+ * passes their own branch and RLS keeps the rest out of reach anyway.
+ */
+export async function loadTasksAwaitingReview(
+  supabase: SupabaseClient,
+  branchId: string | null,
+) {
+  const errors: string[] = [];
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("id,user_id,title,notes,task_date,response_type,yes_no_answer,completed_at,photo_path")
+    .eq("completed", true)
+    .is("review_status", null)
+    .order("task_date", { ascending: false })
+    .order("completed_at", { ascending: false })
+    .limit(100);
+  if (error) errors.push(`مهام بانتظار المراجعة: ${error.message}`);
+
+  const rows = data ?? [];
+  if (!rows.length) return { tasks: [], errors };
+
+  const userIds = [...new Set(rows.map((row) => row.user_id))];
+  const photoPathList = [
+    ...new Set(rows.map((row) => row.photo_path).filter((path): path is string => Boolean(path))),
+  ];
+
+  const [profilesResult, branchesResult, signedResult] = await Promise.all([
+    supabase.from("staff_profiles").select("user_id,full_name,branch_id").in("user_id", userIds),
+    supabase.from("branches").select("id,name"),
+    photoPathList.length
+      ? supabase.storage.from("staff-evidence").createSignedUrls(photoPathList, 10 * 60)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (profilesResult.error) errors.push(`أسماء الموظفين: ${profilesResult.error.message}`);
+
+  const profiles = new Map((profilesResult.data ?? []).map((row) => [row.user_id, row]));
+  const branchNames = new Map((branchesResult.data ?? []).map((row) => [row.id, row.name]));
+  const signedUrls = new Map(
+    (signedResult.data ?? []).flatMap((item) =>
+      item.path && item.signedUrl ? [[item.path, item.signedUrl] as const] : [],
+    ),
+  );
+
+  const tasks = rows
+    .filter((row) => !branchId || profiles.get(row.user_id)?.branch_id === branchId)
+    .map((row) => {
+      const profile = profiles.get(row.user_id);
+      return {
+        id: row.id,
+        title: row.title,
+        notes: row.notes,
+        task_date: row.task_date,
+        employeeName: profile?.full_name ?? "موظف",
+        branchName: profile?.branch_id ? branchNames.get(profile.branch_id) ?? null : null,
+        response_type: (row.response_type === "yes_no" ? "yes_no" : "completion") as
+          | "completion"
+          | "yes_no",
+        yes_no_answer: row.yes_no_answer,
+        completed_at: row.completed_at,
+        photoUrl: row.photo_path ? signedUrls.get(row.photo_path) ?? null : null,
+      };
+    });
+
+  return { tasks, errors };
+}
+
 export async function loadBranchDailyOperations(
   supabase: SupabaseClient,
   branchId: string,

@@ -92,18 +92,21 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // This project uses an asymmetric Supabase signing key, so getClaims()
+  // verifies the access token locally against the cached JWKS. getUser()
+  // always calls the Auth service and used to add a full network round-trip to
+  // every staff request before the page could even begin rendering.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const isAuthenticated = Boolean(claimsData?.claims?.sub);
   const isLogin = pathname === "/staff/login";
 
-  if (!user && !isLogin) {
+  if (!isAuthenticated && !isLogin) {
     const url = request.nextUrl.clone();
     url.pathname = "/staff/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
-  if (user && isLogin) {
+  if (isAuthenticated && isLogin) {
     const url = request.nextUrl.clone();
     url.pathname = "/staff";
     url.search = "";

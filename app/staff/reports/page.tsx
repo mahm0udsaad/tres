@@ -397,15 +397,23 @@ export default async function StaffReportsPage() {
   let waterChecks: WaterQualityCheck[] = [];
   let beverages: BeverageEmployeeSummary[] = [];
   let reportDate = dateInTimeZone("Africa/Cairo");
+  const taskQueuePromise = canReview && hasReportScope
+    ? loadTasksAwaitingReview(
+        supabase,
+        profile.role === "owner" ? null : profile.branch_id,
+      )
+    : Promise.resolve({ tasks: [] as ReviewableTask[], errors: [] as string[] });
 
   if (profile.role === "owner") {
-    const { data: branches } = await supabase.from("branches").select("id").order("name");
-    const [reportResults, notesResult] = await Promise.all([
-      Promise.all((branches ?? []).map((branch) => loadBranchReports(supabase, branch.id))),
+    // Owner visibility is already enforced by RLS. Query each report table
+    // once across the whole company instead of once per branch; this keeps the
+    // request count fixed as branches are added.
+    const [reportsResult, notesResult] = await Promise.all([
+      loadBranchReports(supabase, null),
       supabase.rpc("get_owner_employee_notes"),
     ]);
-    reports = reportResults.flatMap((result) => result.reports);
-    errors = reportResults.flatMap((result) => result.errors);
+    reports = reportsResult.reports;
+    errors = reportsResult.errors;
     if (notesResult.error) {
       errors.push(`ملاحظات الموظفين: ${notesResult.error.message}`);
     } else {
@@ -423,21 +431,26 @@ export default async function StaffReportsPage() {
     }
     branchName = "جميع الفروع";
   } else if (allowed && profile.branch_id) {
-    const branchPromise = supabase
-      .from("branches")
-      .select("name,timezone")
-      .eq("id", profile.branch_id)
-      .maybeSingle();
+    const branchPromise = Promise.resolve(
+      supabase
+        .from("branches")
+        .select("name,timezone")
+        .eq("id", profile.branch_id)
+        .maybeSingle(),
+    );
     const reportsPromise = loadBranchReports(supabase, profile.branch_id);
-    const branchResult = await branchPromise;
+    const [branchResult, reportsResult, operationsResult] = await Promise.all([
+      branchPromise,
+      reportsPromise,
+      branchPromise.then((result) => {
+        const date = dateInTimeZone(result.data?.timezone ?? "Africa/Cairo");
+        return loadBranchDailyOperations(supabase, profile.branch_id!, date);
+      }),
+    ]);
     branchName = branchResult.data?.name ?? branchName;
     reportDate = dateInTimeZone(
       branchResult.data?.timezone ?? "Africa/Cairo",
     );
-    const [reportsResult, operationsResult] = await Promise.all([
-      reportsPromise,
-      loadBranchDailyOperations(supabase, profile.branch_id, reportDate),
-    ]);
     reports = reportsResult.reports;
     waterChecks = operationsResult.waterChecks;
     beverages = operationsResult.beverages;
@@ -448,15 +461,9 @@ export default async function StaffReportsPage() {
   const reviewed = reports.filter((report) => !awaitsVerdict(report));
 
   // Finished task results waiting on the same reviewer as the reports above.
-  let taskQueue: ReviewableTask[] = [];
-  if (canReview && hasReportScope) {
-    const taskResult = await loadTasksAwaitingReview(
-      supabase,
-      profile.role === "owner" ? null : profile.branch_id,
-    );
-    taskQueue = taskResult.tasks;
-    errors = [...errors, ...taskResult.errors];
-  }
+  const taskResult = await taskQueuePromise;
+  const taskQueue = taskResult.tasks;
+  errors = [...errors, ...taskResult.errors];
 
   return (
     <main className="staff-dashboard report-dashboard">

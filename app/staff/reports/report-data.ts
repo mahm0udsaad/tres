@@ -85,7 +85,7 @@ function photoPaths(value: unknown): string[] {
 
 export async function loadBranchReports(
   supabase: SupabaseClient,
-  branchId: string,
+  branchId: string | null,
 ) {
   const entries = Object.entries(REPORT_CONFIG) as Array<
     [ReportType, (typeof REPORT_CONFIG)[ReportType]]
@@ -93,13 +93,14 @@ export async function loadBranchReports(
 
   const queryResults = await Promise.all(
     entries.map(async ([type, config]) => {
-      const { data, error } = await supabase
+      let query = supabase
         .from(config.table)
         .select("*")
-        .eq("branch_id", branchId)
         .order("report_date", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(100);
+      if (branchId) query = query.eq("branch_id", branchId);
+      const { data, error } = await query;
       return { type, config, data: (data ?? []) as RawReport[], error };
     }),
   );

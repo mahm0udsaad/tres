@@ -66,38 +66,40 @@ export default async function OwnerAttendancePage({
 
   const query = await searchParams;
   const month = validMonth(query.month) ? query.month! : currentMonth();
-  const { overview, error: overviewError } = await loadOwnerOverview(supabase, 31);
-  const employees = (overview?.staff ?? []).filter(
-    (employee) => employee.is_active && employee.uses_attendance,
-  );
-  const selectedEmployee = employees.some(
-    (employee) => employee.user_id === query.employee,
-  )
-    ? query.employee!
-    : "all";
-  const visibleEmployees = selectedEmployee === "all"
-    ? employees
-    : employees.filter((employee) => employee.user_id === selectedEmployee);
-
-  let attendanceQuery = supabase
+  const requestedEmployee =
+    typeof query.employee === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(query.employee)
+      ? query.employee
+      : null;
+  const overviewPromise = loadOwnerOverview(supabase, 31);
+  const attendanceQuery = supabase
     .from("attendance_records")
     .select("user_id,shift_date,start_time,end_time")
     .gte("shift_date", `${month}-01`)
     .lt("shift_date", `${nextMonth(month)}-01`)
     .order("shift_date", { ascending: true })
     .order("start_time", { ascending: true });
-  if (selectedEmployee !== "all") {
-    attendanceQuery = attendanceQuery.eq("user_id", selectedEmployee);
-  } else if (employees.length) {
-    attendanceQuery = attendanceQuery.in(
-      "user_id",
-      employees.map((employee) => employee.user_id),
-    );
-  }
-  const attendanceResult = employees.length
-    ? await attendanceQuery
-    : { data: [], error: null };
-  const attendance = (attendanceResult.data ?? []) as AttendanceRow[];
+  const [overviewResult, attendanceResult] = await Promise.all([
+    overviewPromise,
+    attendanceQuery,
+  ]);
+  const { overview, error: overviewError } = overviewResult;
+  const employees = (overview?.staff ?? []).filter(
+    (employee) => employee.is_active && employee.uses_attendance,
+  );
+  const selectedEmployee = employees.some(
+    (employee) => employee.user_id === requestedEmployee,
+  )
+    ? requestedEmployee!
+    : "all";
+  const visibleEmployees = selectedEmployee === "all"
+    ? employees
+    : employees.filter((employee) => employee.user_id === selectedEmployee);
+
+  const employeeIds = new Set(employees.map((employee) => employee.user_id));
+  const attendance = ((attendanceResult.data ?? []) as AttendanceRow[]).filter(
+    (row) => employeeIds.has(row.user_id),
+  );
   const rowsByEmployee = new Map<string, AttendanceRow[]>();
   for (const row of attendance) {
     const rows = rowsByEmployee.get(row.user_id) ?? [];

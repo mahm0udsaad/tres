@@ -48,7 +48,7 @@ const routes = [
   { path: "/staff/reports", marker: "مراجعة تقارير الفريق" },
   { path: "/staff/owner/attendance", marker: "سجل الحضور الشهري" },
   { path: "/staff/owner/team", marker: "أنشئ الحسابات" },
-  { path: "/staff/checklist", marker: "مهام المالك فقط" },
+  { path: "/staff/checklist", marker: "مهام ثابتة ومتكررة" },
   { path: "/staff/owner/notes", marker: "سجل ملاحظات الموظفين" },
 ];
 

@@ -18,7 +18,7 @@ export default async function StaffChecklistPage({
   if (profile.role !== "owner") redirect("/staff");
   const { employee: requestedEmployee } = await searchParams;
 
-  const [branches, employees, tasks] = await Promise.all([
+  const [branches, employees, assignments] = await Promise.all([
     supabase.from("branches").select("id,name,timezone").order("name"),
     supabase
       .from("staff_profiles")
@@ -29,11 +29,10 @@ export default async function StaffChecklistPage({
       .neq("role", "shift_manager")
       .order("full_name"),
     supabase
-      .from("tasks")
-      .select("id,user_id,task_date,title,notes,is_required,requires_photo,requires_note,response_type,sort_order,recurring_assignment_id")
-      .eq("task_type", "general_duty")
-      .eq("completed", false)
-      .order("task_date")
+      .from("owner_task_assignments")
+      .select("id,employee_id,starts_on,title,notes,is_required,requires_photo,requires_note,response_type,sort_order")
+      .eq("is_active", true)
+      .order("starts_on")
       .order("sort_order"),
   ]);
   const branchRows = branches.data ?? [];
@@ -49,7 +48,24 @@ export default async function StaffChecklistPage({
 
   return <main className="staff-content staff-checklist-page">
     <OwnerNavigation variant="bar" />
-    <section className="staff-welcome"><div><h1>المهام</h1><p>اكتب المهمة، اختر الموظف، ثم اضغط توزيع.</p></div><div className="staff-branch-pill"><ListTodo /> مهام المالك فقط</div></section>
-    <OwnerTaskManager employees={employeeRows} tasks={tasks.data ?? []} branchNames={branchNames} initialEmployeeId={initialEmployeeId} today={today} />
+    <section className="staff-welcome"><div><h1>المهام اليومية</h1><p>أنشئ المهمة مرة واحدة، ثم عدّلها أو غيّر الموظف في أي وقت.</p></div><div className="staff-branch-pill"><ListTodo /> مهام ثابتة ومتكررة</div></section>
+    <OwnerTaskManager
+      employees={employeeRows}
+      tasks={(assignments.data ?? []).map((assignment) => ({
+        id: assignment.id,
+        user_id: assignment.employee_id,
+        task_date: assignment.starts_on,
+        title: assignment.title,
+        notes: assignment.notes,
+        is_required: assignment.is_required,
+        requires_photo: assignment.requires_photo,
+        requires_note: assignment.requires_note,
+        response_type: assignment.response_type,
+        sort_order: assignment.sort_order,
+      }))}
+      branchNames={branchNames}
+      initialEmployeeId={initialEmployeeId}
+      today={today}
+    />
   </main>;
 }

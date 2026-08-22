@@ -54,7 +54,7 @@ export async function assignOwnerCustomTask(
     p_requires_photo: form.get("task_photo") === "on",
     p_requires_note: form.get("task_note_required") === "on",
     p_response_type: text(form.get("task_response_type")) || "completion",
-    p_repeat_daily: form.get("task_repeat_daily") === "on",
+    p_repeat_daily: true,
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر توزيع المهمة.") };
@@ -65,8 +65,7 @@ export async function assignOwnerCustomTask(
   }
   revalidatePath("/staff/checklist");
   revalidatePath("/staff/owner/team");
-  const recurrence = form.get("task_repeat_daily") === "on" ? " وستعود تلقائياً مع كل وردية يومية" : "";
-  return { message: `تم إسناد المهمة بنجاح إلى ${assigned} موظف${recurrence}${duplicates ? `، وتخطي ${duplicates} مكرر` : ""}.` };
+  return { message: `تم تثبيت المهمة يومياً لدى ${assigned} موظف، وستعود تلقائياً مع كل وردية${duplicates ? `، وتخطي ${duplicates} مكرر` : ""}.` };
 }
 
 export async function deleteOwnerAssignedTask(
@@ -75,17 +74,15 @@ export async function deleteOwnerAssignedTask(
 ): Promise<ChecklistActionState> {
   const { profile, supabase } = await requireStaff();
   if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
-  const taskId = text(form.get("task_id"));
-  if (!taskId) return { error: RPC_ERRORS.task_not_editable };
-  const { data, error } = await supabase.rpc("owner_delete_assigned_task", { p_task_id: taskId });
+  const assignmentId = text(form.get("assignment_id"));
+  if (!assignmentId) return { error: RPC_ERRORS.task_not_editable };
+  const { data, error } = await supabase.rpc("owner_delete_task_assignment", { p_assignment_id: assignmentId });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر حذف المهمة.") };
   revalidatePath("/staff/checklist");
   revalidatePath("/staff/owner/team");
   return {
-    message: result.stopped_daily === true
-      ? "تم إيقاف المهمة اليومية وحذف النسخ غير المكتملة. بقي السجل السابق محفوظاً."
-      : "تم حذف المهمة من الموظف.",
+    message: "تم إيقاف المهمة اليومية وحذف النسخة غير المكتملة. بقي سجل الإنجاز السابق محفوظاً.",
   };
 }
 
@@ -100,8 +97,8 @@ export async function assignOwnerTask(
   const title = text(form.get("task_title"));
   if (!employeeId) return { error: RPC_ERRORS.employee_invalid };
   if (!taskDate || !title) return { error: RPC_ERRORS.task_invalid };
-  const { data, error } = await supabase.rpc("owner_assign_task", {
-    p_employee_id: employeeId,
+  const { data, error } = await supabase.rpc("owner_create_scheduled_tasks", {
+    p_employee_ids: [employeeId],
     p_task_date: taskDate,
     p_title: title,
     p_is_required: form.get("task_required") === "on",
@@ -110,11 +107,12 @@ export async function assignOwnerTask(
     p_notes: text(form.get("task_notes")) || null,
     p_requires_note: form.get("task_note_required") === "on",
     p_response_type: text(form.get("task_response_type")) || "completion",
+    p_repeat_daily: true,
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر إسناد المهمة.") };
   revalidatePath("/staff/checklist");
-  return { message: "تم إسناد المهمة للموظف." };
+  return { message: "تم تثبيت المهمة يومياً للموظف." };
 }
 
 export async function clearOwnerBranchChecklists(
@@ -138,16 +136,16 @@ export async function updateOwnerAssignedTask(
 ): Promise<ChecklistActionState> {
   const { profile, supabase } = await requireStaff();
   if (profile.role !== "owner") return { error: "هذا الإجراء متاح للمالك فقط." };
-  const taskId = text(form.get("assigned_task_id"));
+  const assignmentId = text(form.get("assignment_id"));
   const employeeId = text(form.get("employee_id"));
   const taskDate = text(form.get("task_date"));
   const title = text(form.get("task_title"));
-  if (!taskId || !employeeId) return { error: RPC_ERRORS.employee_invalid };
+  if (!assignmentId || !employeeId) return { error: RPC_ERRORS.employee_invalid };
   if (!taskDate || !title) return { error: RPC_ERRORS.task_invalid };
-  const { data, error } = await supabase.rpc("owner_update_scheduled_task", {
-    p_task_id: taskId,
+  const { data, error } = await supabase.rpc("owner_update_task_assignment", {
+    p_assignment_id: assignmentId,
     p_employee_id: employeeId,
-    p_task_date: taskDate,
+    p_starts_on: taskDate,
     p_title: title,
     p_is_required: form.get("task_required") === "on",
     p_requires_photo: form.get("task_photo") === "on",
@@ -155,16 +153,11 @@ export async function updateOwnerAssignedTask(
     p_sort_order: Number(text(form.get("task_sort_order"))) || 0,
     p_notes: text(form.get("task_notes")) || null,
     p_response_type: text(form.get("task_response_type")) || "completion",
-    p_repeat_daily: form.get("task_repeat_daily") === "on",
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر تعديل المهمة.") };
   revalidatePath("/staff/checklist");
-  return {
-    message: form.get("task_repeat_daily") === "on"
-      ? "تم تحديث المهمة اليومية؛ سيظهر التعديل في الورديات القادمة."
-      : "تم تحديث المهمة وإسنادها للموظف المختار.",
-  };
+  return { message: "تم تحديث المهمة اليومية والموظف المسؤول عنها." };
 }
 
 function fail(error?: { code?: string } | null, result?: Record<string, unknown>, fallback = "تعذّر حفظ البند. حاول مرة أخرى.") {

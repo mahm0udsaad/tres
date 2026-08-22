@@ -10,7 +10,7 @@ export default function PrintAttendanceButton() {
       onClick={() => window.print()}
     >
       <Printer />
-      طباعة سجل الحضور
+      طباعة / حفظ PDF
     </button>
   );
 }

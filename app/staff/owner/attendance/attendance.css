@@ -10,7 +10,7 @@
 
 .owner-attendance-filters {
   display: grid;
-  grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.2fr) auto auto;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
   align-items: end;
   gap: 12px;
   margin: 20px 0 26px;
@@ -40,12 +40,11 @@
 }
 
 .owner-attendance-filters input,
-.owner-attendance-filters select,
 .owner-attendance-filters button {
   min-height: 48px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid var(--staff-line);
-  border-radius: 9px;
+  border-radius: 10px;
   color: var(--staff-ink);
   background: var(--staff-surface);
   font: inherit;
@@ -80,89 +79,397 @@
   display: none;
 }
 
-.owner-attendance-sheets {
-  display: grid;
-  gap: 20px;
-}
-
-.owner-attendance-sheet {
+.owner-attendance-table-card {
   overflow: hidden;
   border: 1px solid var(--staff-line);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--staff-surface);
+  box-shadow: 0 12px 32px rgb(55 26 29 / 0.06);
 }
 
-.owner-attendance-sheet > header {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
-  gap: 16px;
+.owner-attendance-table-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
   padding: 20px 22px;
   border-bottom: 1px solid var(--staff-line);
   background: var(--staff-blush-soft);
 }
 
-.owner-attendance-sheet header div {
-  display: grid;
-  gap: 3px;
-}
-
-.owner-attendance-sheet header span,
-.owner-attendance-sheet footer {
-  color: var(--staff-muted);
-  font-size: 12px;
-}
-
-.owner-attendance-sheet h2 {
+.owner-attendance-table-card header h2,
+.owner-attendance-table-card header p {
   margin: 0;
-  font-size: 21px;
 }
 
-.owner-attendance-sheet table {
+.owner-attendance-table-card header h2 {
+  margin-top: 3px;
+  font-size: 22px;
+}
+
+.owner-attendance-table-card header div > span {
+  display: block;
+  margin-top: 4px;
+  color: var(--staff-muted);
+  font-size: 13px;
+}
+
+.owner-attendance-table-card > header > strong {
+  flex: none;
+  padding: 8px 12px;
+  border: 1px solid var(--staff-line);
+  border-radius: 999px;
+  color: var(--staff-wine);
+  background: var(--staff-surface);
+  font-size: 13px;
+}
+
+.owner-attendance-table-scroll,
+.owner-attendance-history-scroll {
+  overflow-x: auto;
+}
+
+.owner-attendance-table-card table,
+.owner-attendance-history table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.owner-attendance-sheet th,
-.owner-attendance-sheet td {
-  padding: 14px 22px;
-  border-bottom: 1px solid var(--staff-line);
-  text-align: right;
-}
-
-.owner-attendance-sheet th {
-  color: var(--staff-muted);
-  background: var(--staff-surface-raised, var(--staff-surface));
-  font-size: 12px;
-}
-
-.owner-attendance-sheet td {
   font-variant-numeric: tabular-nums;
 }
 
-.owner-attendance-sheet td svg {
-  width: 15px;
-  height: 15px;
-  margin-inline-end: 5px;
-  vertical-align: -2px;
-  color: var(--staff-wine);
+.owner-attendance-table-card table {
+  min-width: 1080px;
 }
 
-.owner-attendance-sheet > footer {
-  padding: 11px 22px;
+.owner-attendance-table-card th,
+.owner-attendance-table-card td,
+.owner-attendance-history th,
+.owner-attendance-history td {
+  padding: 14px 15px;
+  border-bottom: 1px solid var(--staff-line);
+  text-align: right;
+  white-space: nowrap;
 }
 
-.owner-attendance-empty,
-.owner-attendance-no-employees {
-  padding: 42px !important;
+.owner-attendance-table-card th,
+.owner-attendance-history th {
   color: var(--staff-muted);
+  background: var(--staff-surface-raised, var(--staff-surface));
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.owner-attendance-table-card td {
+  color: var(--staff-ink);
+  font-size: 13px;
+}
+
+.owner-attendance-table-card tbody tr:last-child td,
+.owner-attendance-history tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.owner-attendance-table-card tbody tr:hover td {
+  background: color-mix(in srgb, var(--staff-blush-soft) 62%, transparent);
+}
+
+.owner-attendance-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: right;
+  cursor: pointer;
+}
+
+.owner-attendance-name > span:first-child {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 11px;
+  color: var(--staff-wine);
+  background: var(--staff-blush-soft);
+  font-weight: 900;
+}
+
+.owner-attendance-name > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.owner-attendance-name b {
+  color: var(--staff-wine);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--staff-wine) 35%, transparent);
+  text-underline-offset: 3px;
+}
+
+.owner-attendance-name small,
+.owner-attendance-live,
+.owner-attendance-missing {
+  color: var(--staff-muted);
+  font-size: 11px;
+}
+
+.owner-attendance-duration-issue {
+  color: var(--staff-danger);
+  font-weight: 800;
+}
+
+.owner-attendance-name:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--staff-wine) 20%, transparent);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.owner-attendance-live {
+  display: block;
+  margin-top: 2px;
+  color: var(--staff-green);
+}
+
+.owner-attendance-missing {
+  display: block;
+  margin-top: 2px;
+  color: var(--staff-danger);
+}
+
+.owner-attendance-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 27px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--staff-muted);
+  background: var(--staff-surface-raised, var(--staff-bg));
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.owner-attendance-status[data-tone="good"] {
+  color: var(--staff-green);
+  background: var(--staff-green-soft);
+}
+
+.owner-attendance-status[data-tone="late"] {
+  color: var(--staff-danger);
+  background: color-mix(in srgb, var(--staff-danger) 10%, transparent);
+}
+
+.owner-attendance-empty {
+  padding: 48px !important;
+  color: var(--staff-muted) !important;
   text-align: center !important;
 }
 
-.owner-attendance-no-employees {
-  border: 1px dashed var(--staff-line);
-  border-radius: 14px;
+.owner-attendance-modal-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgb(30 20 22 / 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.owner-attendance-modal {
+  width: min(920px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  border: 1px solid var(--staff-line);
+  border-radius: 18px;
+  color: var(--staff-ink);
   background: var(--staff-surface);
+  box-shadow: 0 28px 80px rgb(0 0 0 / 0.32);
+}
+
+.owner-attendance-modal > header {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--staff-line);
+  background: color-mix(in srgb, var(--staff-surface) 94%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.owner-attendance-modal-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.owner-attendance-modal-person > span {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--staff-wine);
+  background: var(--staff-blush-soft);
+}
+
+.owner-attendance-modal-person svg {
+  width: 22px;
+}
+
+.owner-attendance-modal-person p,
+.owner-attendance-modal-person h2 {
+  margin: 0;
+}
+
+.owner-attendance-modal-person p {
+  color: var(--staff-muted);
+  font-size: 12px;
+}
+
+.owner-attendance-modal-person h2 {
+  margin-top: 2px;
+  font-size: 22px;
+}
+
+.owner-attendance-modal > header > button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--staff-line);
+  border-radius: 11px;
+  color: var(--staff-wine);
+  background: var(--staff-surface);
+  cursor: pointer;
+}
+
+.owner-attendance-modal > header > button svg {
+  width: 18px;
+}
+
+.owner-attendance-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 20px 0;
+}
+
+.owner-attendance-modal-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid var(--staff-line);
+  border-radius: 999px;
+  color: var(--staff-muted);
+  font-size: 12px;
+}
+
+.owner-attendance-modal-meta svg {
+  width: 15px;
+  color: var(--staff-wine);
+}
+
+.owner-attendance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.owner-attendance-summary-grid article {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 15px;
+  overflow: hidden;
+  border: 1px solid var(--staff-line);
+  border-radius: 14px;
+  background: var(--staff-surface-raised, var(--staff-bg));
+}
+
+.owner-attendance-summary-grid article::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--staff-wine);
+}
+
+.owner-attendance-summary-grid article[data-tone="good"]::before {
+  background: var(--staff-green);
+}
+
+.owner-attendance-summary-grid article[data-tone="late"]::before {
+  background: var(--staff-danger);
+}
+
+.owner-attendance-summary-grid svg {
+  width: 18px;
+  color: var(--staff-wine);
+}
+
+.owner-attendance-summary-grid article[data-tone="good"] svg {
+  color: var(--staff-green);
+}
+
+.owner-attendance-summary-grid article[data-tone="late"] svg {
+  color: var(--staff-danger);
+}
+
+.owner-attendance-summary-grid span {
+  color: var(--staff-muted);
+  font-size: 11px;
+}
+
+.owner-attendance-summary-grid strong {
+  font-size: 22px;
+}
+
+.owner-attendance-history {
+  margin: 0 20px 20px;
+  overflow: hidden;
+  border: 1px solid var(--staff-line);
+  border-radius: 14px;
+}
+
+.owner-attendance-history > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--staff-line);
+  background: var(--staff-blush-soft);
+}
+
+.owner-attendance-history h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.owner-attendance-history > div:first-child span {
+  color: var(--staff-muted);
+  font-size: 12px;
+}
+
+.owner-attendance-history table {
+  min-width: 660px;
+}
+
+.owner-attendance-history th,
+.owner-attendance-history td {
+  padding-block: 11px;
+  font-size: 12px;
 }
 
 @media (max-width: 780px) {
@@ -170,53 +477,90 @@
     grid-template-columns: 1fr;
   }
 
-  .owner-attendance-sheet > header {
-    grid-template-columns: 1fr;
+  .owner-attendance-table-card > header {
+    align-items: flex-start;
   }
 
-  .owner-attendance-sheet th,
-  .owner-attendance-sheet td {
-    padding: 12px 10px;
-    font-size: 12px;
+  .owner-attendance-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .owner-attendance-table-card > header {
+    flex-direction: column;
+  }
+
+  .owner-attendance-modal-backdrop {
+    padding: 0;
+  }
+
+  .owner-attendance-modal {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .owner-attendance-summary-grid,
+  .owner-attendance-modal-meta {
+    padding-inline: 14px;
+  }
+
+  .owner-attendance-history {
+    margin-inline: 14px;
   }
 }
 
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 14mm;
+    size: A4 landscape;
+    margin: 11mm;
   }
 
   html,
   body,
   .staff-app,
   .owner-attendance-page {
-    color: #1e1715 !important;
+    color: #211919 !important;
     background: #fff !important;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .owner-attendance-page {
     width: auto;
     max-width: none;
-    padding: 0;
+    min-height: 0;
+    padding: 0 !important;
+    direction: rtl;
   }
 
-  .owner-attendance-screen-only {
+  .owner-attendance-screen-only,
+  .owner-attendance-modal-backdrop {
     display: none !important;
   }
 
   .owner-attendance-print-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding-bottom: 10mm;
-    border-bottom: 2px solid #700d28;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 12mm;
+    padding-bottom: 6mm;
+    border-bottom: 2px solid #760d2b;
+    color: #211919 !important;
   }
 
   .owner-attendance-print-header > strong {
-    color: #700d28;
-    font: 700 11px/1 sans-serif;
-    letter-spacing: 0.16em;
+    color: #760d2b !important;
+    font: 700 10px/1 sans-serif;
+    letter-spacing: 0.15em;
+  }
+
+  .owner-attendance-print-header > div {
+    text-align: center;
   }
 
   .owner-attendance-print-header h1,
@@ -225,53 +569,103 @@
   }
 
   .owner-attendance-print-header h1 {
-    font-size: 22px;
+    font-size: 20px;
   }
 
-  .owner-attendance-print-header p {
-    margin-top: 3px;
-    color: #625552;
+  .owner-attendance-print-header p,
+  .owner-attendance-print-header small {
+    color: #625552 !important;
+    font-size: 10px;
   }
 
-  .owner-attendance-sheets {
-    display: block;
+  .owner-attendance-print-header > small {
+    text-align: left;
   }
 
-  .owner-attendance-sheet {
-    break-after: page;
-    margin-top: 10mm;
+  .owner-attendance-table-card {
+    margin-top: 6mm;
     overflow: visible;
     border: 1px solid #cfc4bf;
     border-radius: 0;
+    color: #211919 !important;
+    background: #fff !important;
     box-shadow: none;
   }
 
-  .owner-attendance-sheet:last-child {
-    break-after: auto;
-  }
-
-  .owner-attendance-sheet > header {
-    padding: 5mm;
+  .owner-attendance-table-card > header {
+    padding: 4mm 5mm;
     border-color: #cfc4bf;
-    background: #f8eeea !important;
-    print-color-adjust: exact;
+    color: #211919 !important;
+    background: #f7ece8 !important;
   }
 
-  .owner-attendance-sheet th,
-  .owner-attendance-sheet td {
-    padding: 3.5mm 5mm;
-    border-color: #ddd4d0;
-  }
-
-  .owner-attendance-sheet td svg {
+  .owner-attendance-table-card > header p,
+  .owner-attendance-table-card > header span {
     display: none;
   }
 
-  .owner-attendance-sheet thead {
+  .owner-attendance-table-card > header h2 {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .owner-attendance-table-card > header > strong {
+    padding: 2mm 3mm;
+    border-color: #cfc4bf;
+    color: #760d2b !important;
+    background: #fff !important;
+    font-size: 10px;
+  }
+
+  .owner-attendance-table-scroll {
+    overflow: visible;
+  }
+
+  .owner-attendance-table-card table {
+    min-width: 0;
+    table-layout: auto;
+  }
+
+  .owner-attendance-table-card thead {
     display: table-header-group;
   }
 
-  .owner-attendance-sheet tr {
+  .owner-attendance-table-card tr {
     break-inside: avoid;
+  }
+
+  .owner-attendance-table-card th,
+  .owner-attendance-table-card td {
+    padding: 3.2mm 2.4mm;
+    border-color: #ded5d1;
+    color: #211919 !important;
+    background: #fff !important;
+    font-size: 8.5px;
+  }
+
+  .owner-attendance-table-card th {
+    background: #f7f3f1 !important;
+    font-size: 8px;
+  }
+
+  .owner-attendance-name > span:first-child,
+  .owner-attendance-name small,
+  .owner-attendance-live,
+  .owner-attendance-missing {
+    display: none;
+  }
+
+  .owner-attendance-name b {
+    color: #211919 !important;
+    text-decoration: none;
+  }
+
+  .owner-attendance-status,
+  .owner-attendance-status[data-tone] {
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    color: #211919 !important;
+    background: transparent !important;
   }
 }

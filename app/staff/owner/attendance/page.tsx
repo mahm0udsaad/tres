@@ -1,18 +1,25 @@
-import { CalendarDays, Clock3, MapPin, Users } from "lucide-react";
+import { CalendarDays, MapPin } from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireStaff } from "../../../lib/staff";
 import OwnerNavigation from "../OwnerNavigation";
 import { loadOwnerOverview } from "../overview";
+import AttendanceTable, { type AttendanceEmployee } from "./AttendanceTable";
 import PrintAttendanceButton from "./PrintAttendanceButton";
 import "./attendance.css";
 
 export const dynamic = "force-dynamic";
 
 type AttendanceRow = {
+  id: string;
   user_id: string;
   shift_date: string;
   start_time: string;
   end_time: string | null;
+  status: "active" | "completed";
+  on_time: boolean;
+  break_started_at: string | null;
+  break_ended_at: string | null;
+  break_duration_minutes: number;
 };
 
 function validMonth(value: string | undefined) {
@@ -37,65 +44,48 @@ function nextMonth(month: string) {
     : `${year}-${String(monthNumber + 1).padStart(2, "0")}`;
 }
 
-function dateLabel(value: string) {
-  return new Intl.DateTimeFormat("ar-SA", {
-    calendar: "gregory",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(`${value}T12:00:00Z`));
-}
+function minutesWorked(row: AttendanceRow) {
+  if (!row.end_time) return null;
+  const start = new Date(row.start_time).getTime();
+  const end = new Date(row.end_time).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+  const grossMinutes = Math.round((end - start) / 60_000);
+  // A single cafe shift cannot credibly span multiple days. Keep the raw
+  // timestamps in the detail modal, but exclude corrupted/stale durations from
+  // payroll-like totals rather than presenting fabricated hours to the owner.
+  if (grossMinutes > 18 * 60) return null;
 
-function timeLabel(value: string | null, timeZone: string) {
-  if (!value) return "لم تنتهِ الوردية";
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }).format(new Date(value));
+  let breakMinutes = Math.max(0, row.break_duration_minutes || 0);
+  if (row.break_started_at && !row.break_ended_at) {
+    breakMinutes += Math.max(0, Math.floor((end - new Date(row.break_started_at).getTime()) / 60_000));
+  }
+  return Math.max(0, grossMinutes - breakMinutes);
 }
 
 export default async function OwnerAttendancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; employee?: string }>;
+  searchParams: Promise<{ month?: string }>;
 }) {
   const { profile, supabase } = await requireStaff();
   if (profile.role !== "owner") redirect("/staff");
 
   const query = await searchParams;
   const month = validMonth(query.month) ? query.month! : currentMonth();
-  const requestedEmployee =
-    typeof query.employee === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(query.employee)
-      ? query.employee
-      : null;
-  const overviewPromise = loadOwnerOverview(supabase, 31);
-  const attendanceQuery = supabase
-    .from("attendance_records")
-    .select("user_id,shift_date,start_time,end_time")
-    .gte("shift_date", `${month}-01`)
-    .lt("shift_date", `${nextMonth(month)}-01`)
-    .order("shift_date", { ascending: true })
-    .order("start_time", { ascending: true });
   const [overviewResult, attendanceResult] = await Promise.all([
-    overviewPromise,
-    attendanceQuery,
+    loadOwnerOverview(supabase, 31),
+    supabase
+      .from("attendance_records")
+      .select("id,user_id,shift_date,start_time,end_time,status,on_time,break_started_at,break_ended_at,break_duration_minutes")
+      .gte("shift_date", `${month}-01`)
+      .lt("shift_date", `${nextMonth(month)}-01`)
+      .order("shift_date", { ascending: false })
+      .order("start_time", { ascending: false }),
   ]);
   const { overview, error: overviewError } = overviewResult;
   const employees = (overview?.staff ?? []).filter(
     (employee) => employee.is_active && employee.uses_attendance,
   );
-  const selectedEmployee = employees.some(
-    (employee) => employee.user_id === requestedEmployee,
-  )
-    ? requestedEmployee!
-    : "all";
-  const visibleEmployees = selectedEmployee === "all"
-    ? employees
-    : employees.filter((employee) => employee.user_id === selectedEmployee);
-
   const employeeIds = new Set(employees.map((employee) => employee.user_id));
   const attendance = ((attendanceResult.data ?? []) as AttendanceRow[]).filter(
     (row) => employeeIds.has(row.user_id),
@@ -109,11 +99,62 @@ export default async function OwnerAttendancePage({
   const timeZoneByBranch = new Map(
     (overview?.branches ?? []).map((branch) => [branch.id, branch.timezone]),
   );
+  const now = Date.now();
+  const tableEmployees: AttendanceEmployee[] = employees.map((employee) => {
+    const rows = rowsByEmployee.get(employee.user_id) ?? [];
+    const timeZone = employee.branch_id
+      ? timeZoneByBranch.get(employee.branch_id) ?? "Asia/Riyadh"
+      : "Asia/Riyadh";
+    const branchToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(now));
+    const shifts = rows.map((row) => {
+      const workedMinutes = minutesWorked(row);
+      return {
+        ...row,
+        worked_minutes: workedMinutes,
+        is_current: row.status === "active" && row.shift_date === branchToday,
+        duration_issue: Boolean(row.end_time && workedMinutes === null),
+      };
+    });
+    const onTime = rows.filter((row) => row.on_time).length;
+    const active = shifts.filter((row) => row.is_current).length;
+    const completed = shifts.filter((row) => row.worked_minutes !== null);
+    const totalMinutes = completed.reduce((total, row) => total + (row.worked_minutes ?? 0), 0);
+    return {
+      user_id: employee.user_id,
+      name: employee.name,
+      role: employee.role,
+      branch_name: employee.branch_name ?? "Tres Primary",
+      time_zone: timeZone,
+      scheduled_start: employee.scheduled_start,
+      scheduled_end: employee.scheduled_end,
+      shifts_count: rows.length,
+      on_time_count: onTime,
+      late_count: rows.length - onTime,
+      active_count: active,
+      incomplete_count: shifts.filter((row) => row.worked_minutes === null).length,
+      issue_count: shifts.filter((row) => row.duration_issue).length,
+      total_minutes: totalMinutes,
+      average_minutes: completed.length ? Math.round(totalMinutes / completed.length) : 0,
+      last_shift_date: rows[0]?.shift_date ?? null,
+      shifts,
+    };
+  });
   const monthLabel = new Intl.DateTimeFormat("ar-SA", {
     calendar: "gregory",
     month: "long",
     year: "numeric",
   }).format(new Date(`${month}-01T12:00:00Z`));
+  const generatedLabel = new Intl.DateTimeFormat("ar-SA", {
+    calendar: "gregory",
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Riyadh",
+  }).format(new Date(now));
   const loadError = overviewError ?? attendanceResult.error?.message ?? null;
 
   return (
@@ -122,8 +163,8 @@ export default async function OwnerAttendancePage({
         <OwnerNavigation variant="bar" />
         <section className="staff-welcome owner-attendance-heading">
           <div>
-            <h1>سجل الحضور الشهري</h1>
-            <p>اختر الشهر والموظف، ثم اطبع السجل مباشرة.</p>
+            <h1>سجل حضور الموظفين</h1>
+            <p>جدول واحد لكل الموظفين. اضغط على الاسم لعرض الملخص والتفاصيل.</p>
           </div>
           <div className="staff-branch-pill">
             <MapPin /> {overview?.branches.length ?? 0} فروع
@@ -135,18 +176,7 @@ export default async function OwnerAttendancePage({
             <span><CalendarDays /> الشهر</span>
             <input name="month" type="month" defaultValue={month} />
           </label>
-          <label>
-            <span><Users /> الموظف</span>
-            <select name="employee" defaultValue={selectedEmployee}>
-              <option value="all">كل الموظفين</option>
-              {employees.map((employee) => (
-                <option key={employee.user_id} value={employee.user_id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit">عرض السجل</button>
+          <button type="submit">عرض الشهر</button>
           <PrintAttendanceButton />
         </form>
       </div>
@@ -160,69 +190,13 @@ export default async function OwnerAttendancePage({
       <section className="owner-attendance-print-header">
         <strong>TRES COFFEE ROASTERS</strong>
         <div>
-          <h1>سجل الحضور الشهري</h1>
+          <h1>جدول حضور الموظفين</h1>
           <p>{monthLabel}</p>
         </div>
+        <small>تم التصدير: {generatedLabel}</small>
       </section>
 
-      <div className="owner-attendance-sheets">
-        {visibleEmployees.map((employee) => {
-          const rows = rowsByEmployee.get(employee.user_id) ?? [];
-          const timeZone = employee.branch_id
-            ? timeZoneByBranch.get(employee.branch_id) ?? "Asia/Riyadh"
-            : "Asia/Riyadh";
-          return (
-            <article className="owner-attendance-sheet" key={employee.user_id}>
-              <header>
-                <div>
-                  <span>الموظف</span>
-                  <h2>{employee.name}</h2>
-                </div>
-                <div>
-                  <span>الشهر</span>
-                  <strong>{monthLabel}</strong>
-                </div>
-                <div>
-                  <span>الفرع</span>
-                  <strong>{employee.branch_name ?? "Tres Primary"}</strong>
-                </div>
-              </header>
-              <table>
-                <thead>
-                  <tr>
-                    <th>التاريخ</th>
-                    <th>وقت البداية</th>
-                    <th>وقت النهاية</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={`${row.shift_date}-${row.start_time}`}>
-                      <td>{dateLabel(row.shift_date)}</td>
-                      <td><Clock3 /> {timeLabel(row.start_time, timeZone)}</td>
-                      <td><Clock3 /> {timeLabel(row.end_time, timeZone)}</td>
-                    </tr>
-                  ))}
-                  {!rows.length ? (
-                    <tr>
-                      <td colSpan={3} className="owner-attendance-empty">
-                        لا توجد سجلات حضور لهذا الموظف في الشهر المحدد.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-              <footer>{rows.length} ورديات مسجلة</footer>
-            </article>
-          );
-        })}
-
-        {!visibleEmployees.length ? (
-          <div className="owner-attendance-no-employees">
-            لا يوجد موظفون مسجلون في نظام الحضور بعد.
-          </div>
-        ) : null}
-      </div>
+      <AttendanceTable employees={tableEmployees} monthLabel={monthLabel} />
     </main>
   );
 }

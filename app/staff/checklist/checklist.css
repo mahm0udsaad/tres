@@ -175,6 +175,14 @@
   max-height: min(42dvh, 360px);
   overflow-y: auto;
 }
+.owner-task-edit-modal .staff-checklist-form > .staff-field-wide:last-child {
+  position: sticky;
+  z-index: 2;
+  bottom: -20px;
+  margin: 0 -4px -20px;
+  padding: 12px 4px 20px;
+  background: var(--owner-panel, var(--staff-surface));
+}
 
 .staff-task-toast {
   position: fixed;

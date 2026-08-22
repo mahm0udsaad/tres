@@ -30,7 +30,7 @@ export default async function StaffChecklistPage({
       .order("full_name"),
     supabase
       .from("tasks")
-      .select("id,user_id,task_date,title,notes,is_required,requires_photo,requires_note,response_type,sort_order")
+      .select("id,user_id,task_date,title,notes,is_required,requires_photo,requires_note,response_type,sort_order,recurring_assignment_id")
       .eq("task_type", "general_duty")
       .eq("completed", false)
       .order("task_date")

@@ -21,7 +21,7 @@ export default async function StaffLayout({
   // Admin roles (owner/manager/supervisor/shift_manager) always see Arabic.
   const context = await getStaffContext().catch(() => null);
   const lang: Lang = context?.profile ? dashboardLang(context.profile) : "ar";
-  const isOwner = context?.profile?.role === "owner";
+  const isOwner = context?.profile?.role === "owner" || context?.profile?.role === "manager";
 
   return (
     <div

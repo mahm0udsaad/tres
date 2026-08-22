@@ -82,7 +82,9 @@ function SimpleMetric({
 
 export default async function OwnerPanel() {
   const { profile, supabase } = await requireStaff();
-  if (profile.role !== "owner") redirect("/staff");
+  if (profile.role !== "owner" && profile.role !== "manager") redirect("/staff");
+  const dashboardOnly = profile.role === "manager";
+  const safeHref = (href: string) => dashboardOnly ? "/staff/owner" : href;
 
   const { overview, error } = await loadOwnerOverview(supabase, 14);
   if (!overview) {
@@ -183,10 +185,10 @@ export default async function OwnerPanel() {
           <strong>TRES</strong>
           <span>COFFEE ROASTERS</span>
         </div>
-        <OwnerNavigation />
+        <OwnerNavigation dashboardOnly={dashboardOnly} />
         <div className="owner-account">
           <span className="owner-avatar">{profile.full_name.trim().slice(0, 1)}</span>
-          <div><strong>{profile.full_name}</strong><small>المالك</small></div>
+          <div><strong>{profile.full_name}</strong><small>{dashboardOnly ? "عرض الداشبورد" : "المالك"}</small></div>
           <form action={logoutStaff}>
             <button type="submit" aria-label="تسجيل الخروج" title="تسجيل الخروج"><LogOut /></button>
           </form>
@@ -209,7 +211,17 @@ export default async function OwnerPanel() {
           </div>
         </header>
 
-        <section className="owner-start-here" aria-labelledby="start-here-title">
+        {dashboardOnly ? (
+          <section className="owner-start-here" aria-labelledby="viewer-title">
+            <div className="owner-simple-section-heading">
+              <div>
+                <span>حساب عرض مستقل</span>
+                <h2 id="viewer-title">متابعة التشغيل بدون استخدام حساب المالك</h2>
+              </div>
+              <p>هذا الحساب للمتابعة فقط ولا يملك صلاحية تعديل الموظفين أو المهام.</p>
+            </div>
+          </section>
+        ) : <section className="owner-start-here" aria-labelledby="start-here-title">
           <div className="owner-simple-section-heading">
             <div>
               <span>ابدأ من هنا</span>
@@ -234,7 +246,7 @@ export default async function OwnerPanel() {
               <ChevronLeft />
             </Link>
           </div>
-        </section>
+        </section>}
 
         <section className="owner-simple-metrics" aria-label="حالة اليوم">
           <SimpleMetric
@@ -242,7 +254,7 @@ export default async function OwnerPanel() {
             label="يعملون الآن"
             value={today.working_now}
             note={hasFieldStaff ? `من ${totals.field_staff} موظف` : "لا يوجد موظفون"}
-            href="/staff/owner/team"
+            href={safeHref("/staff/owner/team")}
             tone={today.working_now ? "good" : "neutral"}
           />
           <SimpleMetric
@@ -250,7 +262,7 @@ export default async function OwnerPanel() {
             label="مهام متبقية"
             value={tasksRemaining}
             note={hasTasks ? `${today.tasks_done} مكتملة` : "لم تُسند مهام"}
-            href="/staff/checklist"
+            href={safeHref("/staff/checklist")}
             tone={tasksRemaining ? "warn" : hasTasks ? "good" : "neutral"}
           />
           <SimpleMetric
@@ -258,7 +270,7 @@ export default async function OwnerPanel() {
             label="تقارير للمراجعة"
             value={today.reports_pending}
             note={today.reports_today ? `${today.reports_today} مرفوعة اليوم` : "لا توجد تقارير"}
-            href="/staff/reports"
+            href={safeHref("/staff/reports")}
             tone={today.reports_pending ? "danger" : "good"}
           />
           <SimpleMetric
@@ -279,7 +291,7 @@ export default async function OwnerPanel() {
             </header>
             <div className="owner-simple-alerts">
               {alerts.length ? alerts.map((alert) => (
-                <Link key={alert.title} href={alert.href} data-tone={alert.tone}>
+                <Link key={alert.title} href={safeHref(alert.href)} data-tone={alert.tone}>
                   <i />
                   <div><strong>{alert.title}</strong><small>{alert.detail}</small></div>
                   <b>{alert.action}</b><ChevronLeft />
@@ -296,11 +308,11 @@ export default async function OwnerPanel() {
           <section className="owner-panel owner-simple-team-panel">
             <header className="owner-simple-panel-head">
               <div><Activity /><h2>الفريق اليوم</h2></div>
-              <Link href="/staff/owner/team">إدارة الموظفين</Link>
+              {dashboardOnly ? <span>عرض فقط</span> : <Link href="/staff/owner/team">إدارة الموظفين</Link>}
             </header>
             <div className="owner-simple-people">
               {visibleStaff.map((row) => (
-                <Link href="/staff/owner/team" key={row.user_id}>
+                <Link href={safeHref("/staff/owner/team")} key={row.user_id}>
                   <span>{row.name.slice(0, 1)}</span>
                   <div><strong>{row.name}</strong><small>{ROLE_LABELS[row.role]} · {row.branch_name ?? "Tres Primary"}</small></div>
                   <b data-status={row.status_today}>{STATUS_LABELS[row.status_today]}</b>
@@ -310,7 +322,7 @@ export default async function OwnerPanel() {
               {!visibleStaff.length ? (
                 <div className="owner-simple-empty">
                   <Users /><strong>لا يوجد موظفون بعد</strong>
-                  <Link href="/staff/owner/team">إضافة أول موظف</Link>
+                  {dashboardOnly ? null : <Link href="/staff/owner/team">إضافة أول موظف</Link>}
                 </div>
               ) : null}
             </div>

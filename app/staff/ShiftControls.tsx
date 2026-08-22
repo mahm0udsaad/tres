@@ -6,8 +6,6 @@ import {
   Award,
   Camera,
   Check,
-  ChevronLeft,
-  ChevronRight,
   CircleAlert,
   Coffee,
   LoaderCircle,
@@ -16,27 +14,14 @@ import {
   MapPin,
   MessageSquareText,
 } from "lucide-react";
-import type { AttendanceRecord, Gamification, StaffRole, StaffTask } from "../lib/staff-shared";
+import type { AttendanceRecord, Gamification, StaffTask } from "../lib/staff-shared";
 import { localeFor, t, type Lang } from "../lib/staff-i18n";
-import DailyReport, { type ReportStatus } from "./DailyReport";
 import PhotoCapture from "./PhotoCapture";
 import { completeChecklistTask, staffOperation } from "./actions";
 
 /** Task types the employee ticks off by hand; everything else is completed by
  *  submitting its daily form. */
 const MANUAL_TASK_TYPES = new Set(["general_duty", "checklist"]);
-
-/** Which inline form finishes a given seeded task, so an incomplete row can
- *  jump straight to it instead of the employee discovering it by failing. */
-const TASK_ANCHOR: Record<string, string> = {
-  cleaning_report: "report-cleaning",
-  cleaning_photos: "report-cleaning",
-  barista_report: "report-barista",
-  bar_clean_confirmation: "report-barista",
-  kitchen_report: "report-kitchen",
-  kitchen_photos: "report-kitchen",
-  inventory_count: "report-kitchen",
-};
 
 const PENDING_BREAK_STORAGE_KEY = "tres:pending-break:v1";
 type BreakOperation = "start_break" | "end_break";
@@ -55,10 +40,6 @@ type Props = {
   tasks: StaffTask[];
   gamification: Gamification;
   lang: Lang;
-  role: StaffRole;
-  reports: { cleaning: ReportStatus; barista: ReportStatus; kitchen: ReportStatus };
-  latestWater: { salt_ratio: number } | null;
-  beverageConsumed: boolean | null;
 };
 
 function hoursSince(iso: string, lang: Lang) {
@@ -80,10 +61,6 @@ export default function ShiftControls({
   tasks,
   gamification,
   lang,
-  role,
-  reports,
-  latestWater,
-  beverageConsumed,
 }: Props) {
   const router = useRouter();
   const [state, action, pending] = useActionState(staffOperation, undefined);
@@ -253,9 +230,6 @@ export default function ShiftControls({
   const done = tasks.filter((task) => task.completed).length;
   const remaining = tasks.filter((task) => task.is_required && !task.completed).length;
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
-  const hasAssignedDailyModule = tasks.some((task) => Object.hasOwn(TASK_ANCHOR, task.task_type));
-  const Chevron = lang === "ar" ? ChevronLeft : ChevronRight;
-
   // ── Before the shift: one screen, one button ────────────────────────────
   if (!attendance) {
     return (
@@ -367,16 +341,6 @@ export default function ShiftControls({
         </p>
       </section>
 
-      {hasAssignedDailyModule ? (
-        <DailyReport
-          role={role}
-          lang={lang}
-          reports={reports}
-          latestWater={latestWater}
-          beverageConsumed={beverageConsumed}
-        />
-      ) : null}
-
       {tasks.length ? (
         <section className="staff-block-card">
           <h2 className="staff-block-title">
@@ -393,7 +357,6 @@ export default function ShiftControls({
           <ul className="staff-todo">
             {tasks.map((task) => {
               const manual = MANUAL_TASK_TYPES.has(task.task_type);
-              const anchor = TASK_ANCHOR[task.task_type];
               const needsPhoto = task.requires_photo && !task.completed;
               const open = photoTaskId === task.id;
               return (
@@ -406,7 +369,7 @@ export default function ShiftControls({
                     {task.notes ? <span className="staff-todo-notes">{task.notes}</span> : null}
 
                     {task.completed ? null : manual && task.response_type === "yes_no" ? (
-                      <div className="staff-todo-yes-no"><button type="button" className="staff-secondary" disabled={taskBusy} onClick={() => submit("complete_task", { task_id: task.id, task_yes_no_answer: "true" })}>نعم</button><button type="button" className="staff-secondary" disabled={taskBusy} onClick={() => submit("complete_task", { task_id: task.id, task_yes_no_answer: "false" })}>لا</button></div>
+                      <div className="staff-todo-yes-no"><button type="button" className="staff-secondary" disabled={taskBusy} onClick={() => submit("complete_task", { task_id: task.id, task_yes_no_answer: "true" })}>{t("answer_yes", lang)}</button><button type="button" className="staff-secondary" disabled={taskBusy} onClick={() => submit("complete_task", { task_id: task.id, task_yes_no_answer: "false" })}>{t("answer_no", lang)}</button></div>
                     ) : manual && needsPhoto ? (
                       <button
                         type="button"
@@ -419,7 +382,7 @@ export default function ShiftControls({
                         {taskBusy ? <LoaderCircle className="spin" /> : <Camera />}
                       </button>
                     ) : manual && task.requires_note ? (
-                      <button type="button" className="staff-todo-action staff-todo-action--go" onClick={() => { setNoteTaskId(noteTaskId === task.id ? null : task.id); setTaskNote(""); }} disabled={taskBusy} aria-label="إضافة ملاحظة لإكمال المهمة"><MessageSquareText /></button>
+                      <button type="button" className="staff-todo-action staff-todo-action--go" onClick={() => { setNoteTaskId(noteTaskId === task.id ? null : task.id); setTaskNote(""); }} disabled={taskBusy} aria-label={t("add_task_note_label", lang, { title: task.title })}><MessageSquareText /></button>
                     ) : manual ? (
                       <button
                         type="button"
@@ -430,10 +393,6 @@ export default function ShiftControls({
                       >
                         <Check />
                       </button>
-                    ) : anchor ? (
-                      <a className="staff-todo-action" href={`#${anchor}`} aria-label={task.title}>
-                        <Chevron />
-                      </a>
                     ) : null}
                   </div>
                   {open ? (
@@ -445,7 +404,7 @@ export default function ShiftControls({
                       />
                     </div>
                   ) : null}
-                  {noteTaskId === task.id ? <div className="staff-todo-note-entry"><textarea value={taskNote} onChange={(event) => setTaskNote(event.target.value)} maxLength={1000} rows={3} placeholder="اكتب ملاحظتك قبل إكمال المهمة" /><button type="button" className="staff-primary" disabled={taskBusy || !taskNote.trim()} onClick={() => { setNoteTaskId(null); submit("complete_task", { task_id: task.id, task_note: taskNote.trim() }); }}>إرسال الملاحظة وإكمال المهمة</button></div> : null}
+                  {noteTaskId === task.id ? <div className="staff-todo-note-entry"><textarea value={taskNote} onChange={(event) => setTaskNote(event.target.value)} maxLength={1000} rows={3} placeholder={t("task_note_placeholder", lang)} /><button type="button" className="staff-primary" disabled={taskBusy || !taskNote.trim()} onClick={() => { setNoteTaskId(null); submit("complete_task", { task_id: task.id, task_note: taskNote.trim() }); }}>{t("task_note_submit", lang)}</button></div> : null}
                 </li>
               );
             })}

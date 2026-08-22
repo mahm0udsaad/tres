@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StaffRole } from "../../lib/staff-shared";
 
 /**
- * Everything the owner panel shows comes from one RPC (`get_owner_overview`),
+ * Everything the owner panel shows comes from one RPC (`get_dashboard_overview`),
  * so the page stays a dumb renderer and the numbers are computed once, inside
  * Postgres, under the owner's own session.
  */
@@ -117,7 +117,7 @@ export async function loadOwnerOverview(
   supabase: SupabaseClient,
   days = 14,
 ): Promise<{ overview: OwnerOverview | null; error: string | null }> {
-  const { data, error } = await supabase.rpc("get_owner_overview", {
+  const { data, error } = await supabase.rpc("get_dashboard_overview", {
     p_days: days,
   });
 

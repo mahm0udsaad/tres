@@ -115,6 +115,20 @@ const DICT: Record<string, Entry> = {
     ar: (p) => `إكمال ${p.title}`,
     en: (p) => `Complete ${p.title}`,
   },
+  answer_yes: { ar: "نعم", en: "Yes" },
+  answer_no: { ar: "لا", en: "No" },
+  add_task_note_label: {
+    ar: (p) => `إضافة ملاحظة لإكمال ${p.title}`,
+    en: (p) => `Add a note to complete ${p.title}`,
+  },
+  task_note_placeholder: {
+    ar: "اكتب ملاحظتك قبل إكمال المهمة",
+    en: "Write your note before completing the task",
+  },
+  task_note_submit: {
+    ar: "إرسال الملاحظة وإكمال المهمة",
+    en: "Send note and complete task",
+  },
 
   // missing-requirements card
   missing_title: { ar: "متطلبات ناقصة", en: "Missing requirements" },
@@ -359,6 +373,11 @@ const BENGALI: Record<string, Translation> = {
   no_tasks: "আজ আপনার জন্য কোনো কাজ নির্ধারিত নেই।",
   attach_photo_label: (p) => `${p.title} সম্পন্ন করতে ছবি সংযুক্ত করুন`,
   complete_label: (p) => `${p.title} সম্পন্ন করুন`,
+  answer_yes: "হ্যাঁ",
+  answer_no: "না",
+  add_task_note_label: (p) => `${p.title} সম্পন্ন করতে নোট যোগ করুন`,
+  task_note_placeholder: "কাজটি সম্পন্ন করার আগে আপনার নোট লিখুন",
+  task_note_submit: "নোট পাঠিয়ে কাজ সম্পন্ন করুন",
   missing_title: "অসম্পূর্ণ প্রয়োজনীয়তা",
   missing_intro: "শিফট শেষ করার আগে এগুলো সম্পন্ন করুন:",
   open_daily_forms: "দৈনিক ফর্ম খুলুন",

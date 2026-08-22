@@ -141,6 +141,7 @@ export default async function RootLayout({
     <html
       lang="ar"
       dir="rtl"
+      suppressHydrationWarning
       data-theme={theme}
       data-scroll-behavior="smooth"
       className={`${ibmPlexArabic.variable} ${spaceGrotesk.variable} ${hnArabic.variable}`}

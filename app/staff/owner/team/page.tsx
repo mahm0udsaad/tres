@@ -9,75 +9,27 @@ import "../owner.css";
 
 export const dynamic = "force-dynamic";
 
-type OwnerEmployeeNoteRow = {
-  entity_type: string;
-  entity_id: string;
-  author_id: string;
-  note: string;
-  created_at: string;
-};
-
 export default async function OwnerTeamPage() {
   const { profile, supabase } = await requireStaff();
   if (profile.role !== "owner") redirect("/staff");
-  const { overview, error } = await loadOwnerOverview(supabase, 1);
+  const overviewPromise = loadOwnerOverview(supabase, 1);
+  const [overviewResult, metricsResult, openShifts, schedules] = await Promise.all([
+    overviewPromise,
+    supabase.rpc("get_owner_employee_table"),
+    // Any date, not just today: a shift left open from a previous day is
+    // exactly the case that locks an employee out of clocking in.
+    supabase.from("attendance_records").select("user_id").eq("status", "active"),
+    supabase
+      .from("staff_profiles")
+      .select("user_id,branch_id,scheduled_start,scheduled_end,nationality,preferred_language"),
+  ]);
+  const { overview, error } = overviewResult;
   if (!overview)
     return (
       <main className="staff-content">
         <p className="staff-form-error">{error ?? "تعذّر تحميل الفريق."}</p>
       </main>
     );
-  const [metricsResult, openShifts, schedules, tasks, cleaningReports, baristaReports, kitchenReports, waterChecks, privateNotes] =
-    await Promise.all([
-      supabase.rpc("get_owner_employee_table"),
-      // Any date, not just today: a shift left open from a previous day is
-      // exactly the case that locks an employee out of clocking in.
-      supabase.from("attendance_records").select("user_id").eq("status", "active"),
-      supabase
-        .from("staff_profiles")
-        .select(
-          "user_id,branch_id,scheduled_start,scheduled_end,nationality,preferred_language",
-        ),
-      supabase
-        .from("tasks")
-        .select(
-          "id,user_id,task_date,title,completed,is_required,response_type,yes_no_answer",
-        )
-        .eq("task_type", "general_duty")
-        .order("task_date", { ascending: false })
-        .limit(250),
-      supabase
-        .from("cleaning_reports")
-        .select(
-          "id,submitted_by,report_date,status,cleanliness_notes,created_at",
-        )
-        .order("created_at", { ascending: false })
-        .limit(250),
-      supabase
-        .from("barista_reports")
-        .select("id,submitted_by,report_date,status,handover_notes,created_at")
-        .order("created_at", { ascending: false })
-        .limit(250),
-      supabase
-        .from("kitchen_reports")
-        .select(
-          "id,submitted_by,report_date,status,cleanliness_notes,created_at",
-        )
-        .order("created_at", { ascending: false })
-        .limit(250),
-      supabase
-        .from("water_quality_checks")
-        .select("id,recorded_by,check_date,salt_ratio,created_at")
-        .order("created_at", { ascending: false })
-        .limit(250),
-      supabase.rpc("get_owner_employee_notes"),
-    ]);
-  const employeeNoteByEntity = new Map(
-    ((privateNotes.data ?? []) as OwnerEmployeeNoteRow[]).map((row) => [
-      `${row.entity_type}:${row.entity_id}`,
-      row.note,
-    ]),
-  );
   const scheduleByUser = new Map(
     (schedules.data ?? []).map((row) => [row.user_id, row]),
   );
@@ -108,45 +60,6 @@ export default async function OwnerTeamPage() {
         staff={staff}
         metrics={(metricsResult.data ?? []) as OwnerEmployeeMetric[]}
         openShiftEmployeeIds={(openShifts.data ?? []).map((row) => row.user_id)}
-        tasks={(tasks.data ?? []).map((task) => ({
-          ...task,
-          employee_note:
-            employeeNoteByEntity.get(`task:${task.id}`) ?? null,
-        }))}
-        reports={[
-          ...(cleaningReports.data ?? []).map((row) => ({
-            ...row,
-            type: "النظافة",
-            note: row.cleanliness_notes,
-            employee_note:
-              employeeNoteByEntity.get(`cleaning_report:${row.id}`) ?? null,
-          })),
-          ...(baristaReports.data ?? []).map((row) => ({
-            ...row,
-            type: "الباريستا",
-            note: row.handover_notes,
-            employee_note:
-              employeeNoteByEntity.get(`barista_report:${row.id}`) ?? null,
-          })),
-          ...(kitchenReports.data ?? []).map((row) => ({
-            ...row,
-            type: "المطبخ",
-            note: row.cleanliness_notes,
-            employee_note:
-              employeeNoteByEntity.get(`kitchen_report:${row.id}`) ?? null,
-          })),
-          ...(waterChecks.data ?? []).map((row) => ({
-            id: row.id,
-            submitted_by: row.recorded_by,
-            report_date: row.check_date,
-            status: "recorded",
-            created_at: row.created_at,
-            type: "فحص المياه",
-            note: `نسبة الأملاح: ${row.salt_ratio}`,
-            employee_note:
-              employeeNoteByEntity.get(`water_check:${row.id}`) ?? null,
-          })),
-        ]}
       />
     </main>
   );

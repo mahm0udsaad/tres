@@ -210,3 +210,20 @@
 .staff-task-toast button:hover,
 .staff-task-toast button:focus-visible { outline: 2px solid var(--staff-line); }
 .staff-task-toast button svg { width: 17px; }
+.staff-task-repeat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-inline-start: 0.55rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: var(--staff-wine);
+  background: color-mix(in srgb, var(--staff-wine) 10%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.staff-task-repeat-badge svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}

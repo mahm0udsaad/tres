@@ -39,36 +39,19 @@ import type {
   OwnerEmployeeMetric,
   OwnerStaffRow,
 } from "./overview";
+import {
+  loadOwnerEmployeeDetails,
+  type EmployeeDetailsResult,
+} from "./team/actions";
 
 const ROLES = [
+  "manager",
   "supervisor",
   "employee",
   "cleaning_staff",
   "barista",
   "kitchen_manager",
 ] as const;
-
-type EmployeeTask = {
-  id: string;
-  user_id: string;
-  task_date: string;
-  title: string;
-  completed: boolean;
-  is_required: boolean;
-  response_type: "completion" | "yes_no";
-  yes_no_answer: boolean | null;
-  employee_note: string | null;
-};
-type EmployeeReport = {
-  id: string;
-  submitted_by: string;
-  report_date: string;
-  status: string;
-  created_at: string;
-  type: string;
-  note: string;
-  employee_note: string | null;
-};
 
 function timeParts(
   value: string | null,
@@ -133,15 +116,11 @@ export default function OwnerStaffManager({
   branches,
   staff,
   metrics,
-  tasks,
-  reports,
   openShiftEmployeeIds,
 }: {
   branches: OwnerBranch[];
   staff: OwnerStaffRow[];
   metrics: OwnerEmployeeMetric[];
-  tasks: EmployeeTask[];
-  reports: EmployeeReport[];
   /** Employees with an attendance row still open, of any date — a shift left
    *  running from a previous day locks them out of clocking in again. */
   openShiftEmployeeIds: string[];
@@ -164,6 +143,9 @@ export default function OwnerStaffManager({
     activeStaff.length === 0,
   );
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [employeeDetails, setEmployeeDetails] = useState<EmployeeDetailsResult | null>(null);
+  const [detailsError, setDetailsError] = useState("");
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const [editState, editAction, editing] = useActionState(
     updateOwnerStaff,
     undefined,
@@ -193,14 +175,30 @@ export default function OwnerStaffManager({
   const selectedMetric = selectedMember
     ? metricByUser.get(selectedMember.user_id) ?? null
     : null;
-  const selectedTasks = selectedMember
-    ? tasks.filter((task) => task.user_id === selectedMember.user_id)
-    : [];
-  const selectedReports = selectedMember
-    ? reports
-        .filter((report) => report.submitted_by === selectedMember.user_id)
-        .slice(0, 8)
-    : [];
+  const selectedTasks = employeeDetails?.tasks ?? [];
+  const selectedReports = employeeDetails?.reports ?? [];
+
+  useEffect(() => {
+    if (!selectedMemberId) {
+      setEmployeeDetails(null);
+      setDetailsError("");
+      setDetailsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setEmployeeDetails(null);
+    setDetailsError("");
+    setDetailsLoading(true);
+    void loadOwnerEmployeeDetails(selectedMemberId).then((result) => {
+      if (cancelled) return;
+      setDetailsLoading(false);
+      if (result.error) setDetailsError(result.error);
+      else setEmployeeDetails(result.data ?? { tasks: [], reports: [] });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedMemberId]);
 
   useEffect(() => {
     if (!deleteState?.message) return;
@@ -231,17 +229,17 @@ export default function OwnerStaffManager({
           onClick={() => setShowCreateForm((visible) => !visible)}
         >
           {showCreateForm ? <X /> : <UserPlus />}
-          {showCreateForm ? "إغلاق النموذج" : "إضافة موظف"}
+          {showCreateForm ? "إغلاق النموذج" : "إضافة حساب"}
         </button>
       </div>
       {showCreateForm ? (
         <section className="staff-card staff-team-create">
           <div className="staff-card-head">
             <div>
-              <h2>إضافة موظف</h2>
+              <h2>إضافة موظف أو حساب داشبورد</h2>
               <p>
-                أدخل البيانات الأساسية، وسيستخدم الموظف الجوال وكلمة المرور
-                للدخول.
+                أدخل البيانات الأساسية. اختر «متابعة الداشبورد فقط» لإنشاء
+                دخول مستقل للمتابعة بدون استخدام حساب المالك.
               </p>
             </div>
             <UserPlus className="staff-team-head-icon" />
@@ -293,7 +291,7 @@ export default function OwnerStaffManager({
               <select name="role" defaultValue="employee">
                 {ROLES.map((role) => (
                   <option key={role} value={role}>
-                    {ROLE_LABELS[role]}
+                    {role === "manager" ? "متابعة الداشبورد فقط" : ROLE_LABELS[role]}
                   </option>
                 ))}
               </select>
@@ -559,7 +557,7 @@ export default function OwnerStaffManager({
                   <select name="role" defaultValue={selectedMember.role}>
                     {ROLES.map((role) => (
                       <option key={role} value={role}>
-                        {ROLE_LABELS[role]}
+                        {role === "manager" ? "متابعة الداشبورد فقط" : ROLE_LABELS[role]}
                       </option>
                     ))}
                   </select>
@@ -723,7 +721,11 @@ export default function OwnerStaffManager({
                   إسناد مهمة
                 </Link>
               </div>
-              {selectedTasks.length ? (
+              {detailsLoading ? (
+                <p className="staff-empty">جارٍ تحميل سجل المهام…</p>
+              ) : detailsError ? (
+                <p className="staff-form-error">{detailsError}</p>
+              ) : selectedTasks.length ? (
                 <ul className="owner-member-list">
                   {selectedTasks.map((task) => (
                     <li key={task.id}>
@@ -764,7 +766,11 @@ export default function OwnerStaffManager({
                 </h3>
                 <Link href="/staff/reports">فتح التقارير</Link>
               </div>
-              {selectedReports.length ? (
+              {detailsLoading ? (
+                <p className="staff-empty">جارٍ تحميل التقارير…</p>
+              ) : detailsError ? (
+                <p className="staff-form-error">{detailsError}</p>
+              ) : selectedReports.length ? (
                 <ul className="owner-member-list">
                   {selectedReports.map((report) => (
                     <li key={report.id}>

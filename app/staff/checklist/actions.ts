@@ -45,7 +45,7 @@ export async function assignOwnerCustomTask(
   const taskDate = text(form.get("task_date"));
   if (!title) return { error: "أدخل عنوان المهمة." };
   if (!taskDate || employeeIds.length === 0) return { error: RPC_ERRORS.assignment_invalid };
-  const { data, error } = await supabase.rpc("owner_assign_custom_task", {
+  const { data, error } = await supabase.rpc("owner_create_scheduled_tasks", {
     p_employee_ids: employeeIds,
     p_task_date: taskDate,
     p_title: title,
@@ -54,6 +54,7 @@ export async function assignOwnerCustomTask(
     p_requires_photo: form.get("task_photo") === "on",
     p_requires_note: form.get("task_note_required") === "on",
     p_response_type: text(form.get("task_response_type")) || "completion",
+    p_repeat_daily: form.get("task_repeat_daily") === "on",
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر توزيع المهمة.") };
@@ -64,7 +65,8 @@ export async function assignOwnerCustomTask(
   }
   revalidatePath("/staff/checklist");
   revalidatePath("/staff/owner/team");
-  return { message: `تم إسناد المهمة بنجاح إلى ${assigned} موظف${duplicates ? `، وتخطي ${duplicates} مكرر` : ""}.` };
+  const recurrence = form.get("task_repeat_daily") === "on" ? " وستعود تلقائياً مع كل وردية يومية" : "";
+  return { message: `تم إسناد المهمة بنجاح إلى ${assigned} موظف${recurrence}${duplicates ? `، وتخطي ${duplicates} مكرر` : ""}.` };
 }
 
 export async function deleteOwnerAssignedTask(
@@ -80,7 +82,11 @@ export async function deleteOwnerAssignedTask(
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر حذف المهمة.") };
   revalidatePath("/staff/checklist");
   revalidatePath("/staff/owner/team");
-  return { message: "تم حذف المهمة من الموظف." };
+  return {
+    message: result.stopped_daily === true
+      ? "تم إيقاف المهمة اليومية وحذف النسخ غير المكتملة. بقي السجل السابق محفوظاً."
+      : "تم حذف المهمة من الموظف.",
+  };
 }
 
 export async function assignOwnerTask(
@@ -138,7 +144,7 @@ export async function updateOwnerAssignedTask(
   const title = text(form.get("task_title"));
   if (!taskId || !employeeId) return { error: RPC_ERRORS.employee_invalid };
   if (!taskDate || !title) return { error: RPC_ERRORS.task_invalid };
-  const { data, error } = await supabase.rpc("owner_update_assigned_task", {
+  const { data, error } = await supabase.rpc("owner_update_scheduled_task", {
     p_task_id: taskId,
     p_employee_id: employeeId,
     p_task_date: taskDate,
@@ -149,11 +155,16 @@ export async function updateOwnerAssignedTask(
     p_sort_order: Number(text(form.get("task_sort_order"))) || 0,
     p_notes: text(form.get("task_notes")) || null,
     p_response_type: text(form.get("task_response_type")) || "completion",
+    p_repeat_daily: form.get("task_repeat_daily") === "on",
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) return { error: fail(error, result, "تعذّر تعديل المهمة.") };
   revalidatePath("/staff/checklist");
-  return { message: "تم تحديث المهمة وإسنادها للموظف المختار." };
+  return {
+    message: form.get("task_repeat_daily") === "on"
+      ? "تم تحديث المهمة اليومية؛ سيظهر التعديل في الورديات القادمة."
+      : "تم تحديث المهمة وإسنادها للموظف المختار.",
+  };
 }
 
 function fail(error?: { code?: string } | null, result?: Record<string, unknown>, fallback = "تعذّر حفظ البند. حاول مرة أخرى.") {

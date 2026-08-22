@@ -82,6 +82,7 @@ const RPC_ERRORS: Record<string, string> = {
 };
 
 const OWNER_PROVISIONABLE_ROLES = [
+  "manager",
   "supervisor",
   "employee",
   "cleaning_staff",
@@ -193,13 +194,13 @@ export async function createOwnerStaff(
 
   if (!fullName) return { error: "أدخل اسم الموظف." };
   if (!OWNER_PROVISIONABLE_ROLES.includes(role))
-    return { error: "يمكن للمالك إنشاء حسابات المشرفين والموظفين فقط." };
+    return { error: "يمكن للمالك إنشاء حسابات الداشبورد والمشرفين والموظفين فقط." };
   if (!branchId) return { error: RPC_ERRORS.branch_invalid };
   if (!isStaffPhone(phone))
     return { error: "أدخل رقم جوال دولياً صالحاً، مثل +9665XXXXXXXX." };
   if (!NATIONALITY_VALUES.includes(nationality))
     return { error: RPC_ERRORS.nationality_invalid };
-  if (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd)
+  if (role !== "manager" && (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd))
     return { error: "حدد بداية ونهاية الوردية بصورة صحيحة." };
   if (password && password.length < 8) {
     return {
@@ -217,7 +218,7 @@ export async function createOwnerStaff(
     p_full_name: fullName,
     p_role: role,
     p_branch_id: branchId,
-    p_scheduled_start: scheduledStart || null,
+    p_scheduled_start: role === "manager" ? null : scheduledStart || null,
     p_nationality: nationality,
   });
   const result = (data ?? {}) as Record<string, unknown>;
@@ -236,15 +237,17 @@ export async function createOwnerStaff(
     };
   }
 
-  const schedule = await supabase.rpc("owner_set_staff_schedule", {
-    p_employee_id: created.userId,
-    p_scheduled_start: scheduledStart,
-    p_scheduled_end: scheduledEnd,
-  });
-  const scheduleResult = (schedule.data ?? {}) as Record<string, unknown>;
-  if (schedule.error || scheduleResult.ok !== true) {
-    await deleteStaffAuthUser(created.userId);
-    return { error: "تعذّر حفظ توقيت الوردية؛ لم يتم إنشاء الحساب." };
+  if (role !== "manager") {
+    const schedule = await supabase.rpc("owner_set_staff_schedule", {
+      p_employee_id: created.userId,
+      p_scheduled_start: scheduledStart,
+      p_scheduled_end: scheduledEnd,
+    });
+    const scheduleResult = (schedule.data ?? {}) as Record<string, unknown>;
+    if (schedule.error || scheduleResult.ok !== true) {
+      await deleteStaffAuthUser(created.userId);
+      return { error: "تعذّر حفظ توقيت الوردية؛ لم يتم إنشاء الحساب." };
+    }
   }
 
   revalidatePath("/staff/owner");
@@ -309,7 +312,7 @@ export async function resetOwnerStaffPassword(
   if (
     !target ||
     !target.is_active ||
-    ["owner", "manager", "shift_manager"].includes(target.role)
+    ["owner", "shift_manager"].includes(target.role)
   ) {
     return { error: "لا يمكن تغيير كلمة مرور هذا الحساب من هنا." };
   }
@@ -371,7 +374,7 @@ export async function updateOwnerStaff(
   if (!branchId) return { error: RPC_ERRORS.branch_invalid };
   if (!NATIONALITY_VALUES.includes(nationality))
     return { error: RPC_ERRORS.nationality_invalid };
-  if (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd)
+  if (role !== "manager" && (!scheduledStart || !scheduledEnd || scheduledStart === scheduledEnd))
     return { error: RPC_ERRORS.schedule_invalid };
 
   const { data, error } = await supabase.rpc("owner_update_staff", {
@@ -380,8 +383,8 @@ export async function updateOwnerStaff(
     p_role: role,
     p_branch_id: branchId,
     p_nationality: nationality,
-    p_scheduled_start: scheduledStart,
-    p_scheduled_end: scheduledEnd,
+    p_scheduled_start: role === "manager" ? null : scheduledStart,
+    p_scheduled_end: role === "manager" ? null : scheduledEnd,
   });
   const result = (data ?? {}) as Record<string, unknown>;
   if (error || result.ok !== true) {

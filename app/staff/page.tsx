@@ -14,18 +14,11 @@ import { localeFor, t, type Lang } from "../lib/staff-i18n";
 import BranchSettings from "./BranchSettings";
 import NotificationBell, { type StaffNotification } from "./NotificationBell";
 import ShiftControls from "./ShiftControls";
-import type { ReportStatus } from "./DailyReport";
 import { logoutStaff } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 const EMPTY_GAMIFICATION: Gamification = { points: 0, badges: [], streak_count: 0 };
-
-const REPORT_TABLE = {
-  cleaning_staff: "cleaning_reports",
-  barista: "barista_reports",
-  kitchen_manager: "kitchen_reports",
-} as const;
 
 function dateInTimeZone(timeZone: string) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -46,7 +39,7 @@ export default async function StaffDashboard() {
   const { profile, supabase } = await requireStaff();
   // The owner runs the company, not a shift: send them straight to the panel
   // that shows every branch instead of this single-branch dashboard.
-  if (profile.role === "owner") redirect("/staff/owner");
+  if (profile.role === "owner" || profile.role === "manager") redirect("/staff/owner");
   const lang: Lang = dashboardLang(profile);
   const locale = localeFor(lang);
   const attends = usesAttendance(profile.role);
@@ -91,66 +84,28 @@ export default async function StaffDashboard() {
   const attendance = (attendanceResult.data ?? null) as AttendanceRecord | null;
   const reportDate = dateInTimeZone(String(branch?.timezone || "Asia/Riyadh"));
 
-  // The daily forms now live on this page, so their state is fetched here —
-  // an employee never has to navigate away to find out what is still missing.
   let tasks: StaffTask[] = [];
-  let ownReport: ReportStatus = null;
-  let latestWater: { salt_ratio: number } | null = null;
-  let beverageConsumed: boolean | null = null;
 
   if (attendance) {
-    const reportTable = REPORT_TABLE[profile.role as keyof typeof REPORT_TABLE];
     // A shift that ran past midnight keeps yesterday's shift_date, so the day
     // that counts as "due now" is whichever of the two is later.
     const taskCutoff = attendance.shift_date > reportDate ? attendance.shift_date : reportDate;
-    const canCheckWater = ["supervisor", "kitchen_manager"].includes(profile.role);
-    const [taskResult, reportResult, waterResult, beverageResult] = await Promise.all([
-      supabase
-        .from("tasks")
-        .select(
-          "id,title,notes,task_type,completed,completed_at,is_required,requires_photo,requires_note,response_type,yes_no_answer,photo_path,sort_order",
-        )
-        .eq("user_id", profile.user_id)
-        // Owner-assigned work is dated by the owner, not by the shift, so an
-        // exact match on shift_date hides any task whose date drifted by a day.
-        // Everything already due stays on the list until it is actually done.
-        .lte("task_date", taskCutoff)
-        .or(`completed.eq.false,task_date.eq.${attendance.shift_date}`)
-        .order("task_date")
-        .order("sort_order")
-        .order("created_at"),
-      reportTable
-        ? supabase
-            .from(reportTable)
-            .select("status,review_notes,revision")
-            .eq("submitted_by", profile.user_id)
-            .eq("report_date", reportDate)
-            .order("revision", { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      canCheckWater && branch
-        ? supabase
-            .from("water_quality_checks")
-            .select("salt_ratio")
-            .eq("branch_id", branch.id)
-            .eq("check_date", reportDate)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("daily_beverage_logs")
-        .select("consumed")
-        .eq("employee_id", profile.user_id)
-        .eq("log_date", reportDate)
-        .maybeSingle(),
-    ]);
+    const taskResult = await supabase
+      .from("tasks")
+      .select(
+        "id,title,notes,task_type,completed,completed_at,is_required,requires_photo,requires_note,response_type,yes_no_answer,photo_path,sort_order",
+      )
+      .eq("user_id", profile.user_id)
+      // Owner-assigned work is dated by the owner, not by the shift, so an
+      // exact match on shift_date hides any task whose date drifted by a day.
+      // Everything already due stays on the list until it is actually done.
+      .lte("task_date", taskCutoff)
+      .or(`completed.eq.false,task_date.eq.${attendance.shift_date}`)
+      .order("task_date")
+      .order("sort_order")
+      .order("created_at");
 
     tasks = (taskResult.data ?? []) as StaffTask[];
-    ownReport = (reportResult.data ?? null) as ReportStatus;
-    latestWater = waterResult.data ? { salt_ratio: Number(waterResult.data.salt_ratio) } : null;
-    beverageConsumed = beverageResult.data ? Boolean(beverageResult.data.consumed) : null;
   }
 
   const showNav = isAdminRole(profile.role);
@@ -209,14 +164,6 @@ export default async function StaffDashboard() {
             tasks={tasks}
             gamification={(gamificationResult.data ?? EMPTY_GAMIFICATION) as Gamification}
             lang={lang}
-            role={profile.role}
-            reports={{
-              cleaning: profile.role === "cleaning_staff" ? ownReport : null,
-              barista: profile.role === "barista" ? ownReport : null,
-              kitchen: profile.role === "kitchen_manager" ? ownReport : null,
-            }}
-            latestWater={latestWater}
-            beverageConsumed={beverageConsumed}
           />
         ) : null}
 

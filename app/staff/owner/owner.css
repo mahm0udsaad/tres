@@ -2436,3 +2436,73 @@ html[data-owner-theme="dark"] .owner-console {
 .owner-open-shift button svg {
   width: 18px;
 }
+.owner-notes-page {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.owner-note-history {
+  padding: 0;
+  overflow: hidden;
+}
+
+.owner-note-history ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.owner-note-history li {
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--owner-line-soft, var(--staff-line));
+}
+
+.owner-note-history li:last-child {
+  border-bottom: 0;
+}
+
+.owner-note-history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.owner-note-history-head strong,
+.owner-note-history-head span {
+  display: block;
+}
+
+.owner-note-history-head span,
+.owner-note-history-head time {
+  color: var(--owner-muted, var(--staff-muted));
+  font-size: 0.85rem;
+}
+
+.owner-note-history-head time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.owner-note-history-head svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.owner-note-history p {
+  margin: 0.75rem 0 0;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .owner-note-history-head {
+    display: block;
+  }
+
+  .owner-note-history-head time {
+    margin-top: 0.45rem;
+  }
+}

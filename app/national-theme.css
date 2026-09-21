@@ -100,9 +100,10 @@
   display: block;
   height: 7px;
   margin-top: 12px;
-  background: radial-gradient(var(--nd-green) 48%, transparent 52%) 0 0 / 22px 7px;
-  background-repeat: repeat-x;
-  opacity: 0.7;
+  /* an actual ◆, not a dot — a radial-gradient would round it off */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='7'%3E%3Cpath d='M11 0.5 L14 3.5 L11 6.5 L8 3.5 Z' fill='%2300894a'/%3E%3C/svg%3E")
+    0 0 / 22px 7px repeat-x;
+  opacity: 0.8;
 }
 /* the classic skin draws flanking rules on the kicker — the diamond rule
    replaces them, so retire the ::before rule here. */
@@ -168,6 +169,137 @@
   background: #00a05a;
 }
 
+/* ===================== supporting slogans (§4.1) ===================== */
+/* The markup ships on every skin; these two rules keep it out of the DOM's
+   rendering and the a11y tree everywhere except the national one. */
+.nd-hero-slogans,
+.nd-slogan-band {
+  display: none;
+}
+
+/* hero — the slogans fill the empty space around the circular composition. */
+[data-theme="national"] .nd-hero-slogans {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+[data-theme="national"] .nd-slogan {
+  position: absolute;
+  font-family: var(--font-display), var(--font-body);
+  font-weight: 700;
+  font-size: clamp(20px, 2.6vw, 38px);
+  line-height: 1.15;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(106 181 35 / 0.55);
+  opacity: 0.85;
+}
+/* Two per side, kept inside the vertical band the composition ring occupies so
+   they never reach the headline below it. */
+[data-theme="national"] .nd-slogan:nth-child(1) {
+  inset-inline-start: 4%;
+  top: 30%;
+}
+[data-theme="national"] .nd-slogan:nth-child(2) {
+  inset-inline-end: 5%;
+  top: 25%;
+}
+[data-theme="national"] .nd-slogan:nth-child(3) {
+  inset-inline-end: 6%;
+  top: 56%;
+}
+[data-theme="national"] .nd-slogan:nth-child(4) {
+  inset-inline-start: 6%;
+  top: 59%;
+}
+/* Below this the hero has no gutter to spare — the composition and headline
+   need the full width, so the slogans step aside entirely. */
+@media (max-width: 1100px) {
+  [data-theme="national"] .nd-hero-slogans {
+    display: none;
+  }
+}
+
+/* menu — a slow marquee band under the hero. */
+[data-theme="national"] .nd-slogan-band {
+  display: block;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+  margin-top: 26px;
+  padding: 12px 0;
+  border-block: 1px solid var(--nd-line);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+[data-theme="national"] .nd-slogan-rail {
+  display: flex;
+  gap: 40px;
+  width: max-content;
+  /* LTR so the overflow direction is unambiguous and a negative translate
+     always reveals content from the right (same trick as .lm-track). Each
+     chip still shapes its own Arabic correctly. */
+  direction: ltr;
+  animation: nd-marquee 38s linear infinite;
+}
+[data-theme="national"] .nd-slogan-chip {
+  font-family: var(--font-display), var(--font-body);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--nd-green-bright);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+/* The rail holds the list six times, so -1/6 advances exactly one copy and
+   lands on an identical frame. The other five keep the viewport covered
+   through the loop — see the comment on the markup in MenuExperience.tsx. */
+@keyframes nd-marquee {
+  to {
+    transform: translateX(-16.6667%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="national"] .nd-slogan-rail {
+    animation: none;
+  }
+}
+
+/* ===================== photography ===================== */
+/* The product shots are lit on the classic burgundy backdrop, which fights the
+   green canvas. Rather than hue-rotate (which would turn the coffee itself
+   green), lay the brand green over each photo in `color` blend mode: hue and
+   saturation come from the green, luminosity stays with the photograph. That
+   is the duotone grade the guideline's own photo templates use (§6.2). */
+[data-theme="national"] .tile-media-wrap::after,
+[data-theme="national"] .today-media::after,
+[data-theme="national"] .cat-hero-media-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--nd-green);
+  mix-blend-mode: color;
+  opacity: 0.62;
+}
+[data-theme="national"] .tile-img,
+[data-theme="national"] .cat-hero-media,
+[data-theme="national"] .today-media img {
+  filter: saturate(0.8) contrast(1.04);
+}
+/* deepen the scrim so the white tile copy still clears the graded photo */
+[data-theme="national"] .tile-scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(0 26 28 / 0.35) 0%,
+    rgb(0 26 28 / 0.68) 55%,
+    rgb(0 26 28 / 0.92) 100%
+  );
+}
+
 /* ===================== sections & cards ===================== */
 [data-theme="national"] .origin-card,
 [data-theme="national"] .product-card,
@@ -214,17 +346,30 @@
 }
 
 /* ===================== loyalty mascot ===================== */
-/* The mascot artwork is the classic TRES cup — it stays, but its chrome moves
-   to the national palette so it doesn't read as a leftover. */
-[data-theme="national"] .lm-bubble,
-[data-theme="national"] .lm-modal {
-  background: var(--burgundy);
-  border: 1px solid var(--nd-line);
-}
+/* The bubble and modal are *light* cards by design (see loyalty-mascot.css —
+   they gradient from #fffdf9 into --cream, with --ink body copy). Do not give
+   them a dark background here: that was the first cut's mistake, and it put
+   near-black text on a dark teal card. Only the accents move to green. */
+/* #00894a carries white 13.5px text at only 4.27:1, so these two buttons use a
+   slightly deeper green to clear AA. Everything else keeps the official green. */
 [data-theme="national"] .lm-bubble-cta,
 [data-theme="national"] .lm-modal-link {
-  background: var(--nd-green);
+  background: #007a42;
   color: #fff;
+  box-shadow: 0 8px 18px -10px rgb(0 137 74 / 0.75);
+}
+[data-theme="national"] .lm-bubble:hover .lm-bubble-cta,
+[data-theme="national"] .lm-modal-link:hover {
+  background: #00a05a;
+}
+/* --cream is pure white on this skin, so the track's tint needs its own
+   value to stay visible against the card. */
+[data-theme="national"] .lm-track {
+  background: rgb(0 137 74 / 0.07);
+  border-color: rgb(0 137 74 / 0.16);
+}
+[data-theme="national"] .lm-bubble-offer {
+  color: #234; /* the classic warm brown reads muddy beside green */
 }
 
 /* ===================== print (table card) ===================== */

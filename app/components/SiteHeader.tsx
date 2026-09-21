@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { ND_SLOGAN } from "../lib/national";
+import type { ThemeId } from "../lib/data";
 
 const NAV: { href: string; label: string; soon?: boolean }[] = [
   { href: "/", label: "الرئيسية" },
@@ -13,7 +15,16 @@ const NAV: { href: string; label: string; soon?: boolean }[] = [
 
 const DEFAULT_ANNOUNCE = "يا هلا في تريس";
 
-export default function SiteHeader({ announcement }: { announcement?: string }) {
+export default function SiteHeader({
+  announcement,
+  theme = "classic",
+}: {
+  announcement?: string;
+  theme?: ThemeId;
+}) {
+  // The National Day skin leads with the year's slogan (§1.1) unless the owner
+  // has written their own announcement in the control panel.
+  const fallback = theme === "national" ? ND_SLOGAN : DEFAULT_ANNOUNCE;
   const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -33,7 +44,7 @@ export default function SiteHeader({ announcement }: { announcement?: string }) 
   return (
     <>
       <div className="announce">
-        {announcement || DEFAULT_ANNOUNCE}
+        {announcement || fallback}
       </div>
       <div ref={navRef} className="nav">
         <div className="nav-inner">

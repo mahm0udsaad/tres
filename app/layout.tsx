@@ -161,7 +161,7 @@ export default async function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
         )}
-        {!isInternal && <SiteHeader announcement={announcement} />}
+        {!isInternal && <SiteHeader announcement={announcement} theme={theme} />}
         {children}
         {!isInternal && <Footer />}
         {!isInternal && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} qrUrl={LOYALTY_QR_URL} />}

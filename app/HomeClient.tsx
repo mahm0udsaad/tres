@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { useReveal } from "./lib/useReveal";
 import { toArabic, type Category, type Item } from "./lib/menu";
 import Link from "next/link";
+import { ND_SLOGANS } from "./lib/national";
 
 function withTransition(update: () => void) {
   const doc = document as Document & {
@@ -161,6 +162,14 @@ export default function HomeClient({
       {/* ===================== HERO ===================== */}
       <div className="hero">
         <div className="hero-noise" />
+        {/* National Day supporting slogans (§4.1), parked in the hero's empty
+            corners. Decorative, and CSS keeps them hidden off the national
+            skin — so they cost nothing on the other themes. */}
+        <div className="nd-hero-slogans" aria-hidden="true">
+          {ND_SLOGANS.slice(0, 4).map((s) => (
+            <span key={s.text} className="nd-slogan">{s.text}</span>
+          ))}
+        </div>
         <div className="hero-inner">
           <div className="eyebrow" data-reveal data-reveal-delay="0">
             <span className="eyebrow-dot" />

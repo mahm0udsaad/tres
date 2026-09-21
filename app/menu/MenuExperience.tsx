@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { toArabic, type Category, type Item } from "../lib/menu";
+import { ND_SLOGANS } from "../lib/national";
 
 function pathForId(id: string | null): string {
   return id ? `/menu/${id}` : "/menu";
@@ -336,6 +337,21 @@ export default function MenuExperience({
           </div>
           <h1>المنيو</h1>
           <p>وش ودك اليوم؟ اختر القسم، وكل الأسعار بالريال السعودي.</p>
+        </div>
+        {/* §4.1 supporting slogans — a marquee band, hidden off the national
+            skin by CSS. */}
+        {/* Six copies, not two: the rail scrolls by exactly one copy, so the
+            remaining copies have to keep the viewport covered at the moment it
+            loops. One copy is ~800px, which alone would leave a gap on a wide
+            screen. Keep this count in sync with the -16.6667% in nd-marquee. */}
+        <div className="nd-slogan-band" aria-hidden="true">
+          <div className="nd-slogan-rail">
+            {Array.from({ length: 6 }).flatMap((_, copy) =>
+              ND_SLOGANS.map((s) => (
+                <span key={`${copy}:${s.text}`} className="nd-slogan-chip">{s.text}</span>
+              )),
+            )}
+          </div>
         </div>
       </section>
 

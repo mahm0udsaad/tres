@@ -7,7 +7,8 @@
  * via `rgb(var(--burgundy-rgb) / <alpha>)`. A theme is therefore a single block
  * that redefines these tokens — the admin control panel writes the active theme
  * to the <html data-theme> attribute (see app/layout.tsx). The default below is
- * the original "classic" identity; `[data-theme="summer"]` is the summer skin.
+ * the original "classic" identity; `[data-theme="summer"]` is the summer skin
+ * and `[data-theme="national"]` the Saudi National Day skin.
  */
 :root,
 :root[data-theme="classic"] {
@@ -51,6 +52,41 @@
   --cream-rgb: 245 239 227;
   --rose-rgb: 220 201 180;
   --ink-rgb: 42 26 18;
+}
+
+/* ── Saudi National Day skin ───────────────────────────────────────────────
+   Straight off the GEA guideline (public/SND-GUIDELINE .pdf, §3.1): deep green
+   #002628 is the foundation of the visual system, Saudi green #00894a carries
+   the marks and fills, and #6ab523 is the bright green the guideline uses for
+   small type on the dark canvas (it clears AA at 6.1:1; #00894a itself is
+   3.7:1, so it is kept for fills and display sizes only).
+   The classic skin is already dark, so this is a straight token swap —
+   wine → green — with the motif work living in national-theme.css. */
+:root[data-theme="national"] {
+  --burgundy: #00343a; /* cards / raised surfaces */
+  --burgundy-deep: #002628; /* page canvas — the guideline's base */
+  --burgundy-darkest: #001a1c; /* footer + scrims */
+  --blush: #6ab523; /* bright accent — text, links, small marks */
+  --blush-deep: #00894a; /* Saudi green — fills, buttons, gradients */
+  --cream: #ffffff;
+  --rose: #a8c2b5; /* muted body copy on green */
+  --grey: #8fa39a;
+  --ink: #001a1c;
+
+  --burgundy-rgb: 0 52 58;
+  --burgundy-deep-rgb: 0 38 40;
+  --burgundy-darkest-rgb: 0 26 28;
+  --blush-rgb: 106 181 35;
+  --cream-rgb: 255 255 255;
+  --rose-rgb: 168 194 181;
+  --ink-rgb: 0 26 28;
+
+  /* National Day identity extras — consumed by national-theme.css */
+  --nd-green: #00894a;
+  --nd-green-bright: #6ab523;
+  --nd-generosity: #0050af; /* the dallah/finjan trait colour — TRES's tie-in */
+  --nd-grid: rgb(0 137 74 / 0.07);
+  --nd-line: rgb(0 137 74 / 0.22);
 }
 
 :root {

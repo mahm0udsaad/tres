@@ -4,6 +4,7 @@ import { IBM_Plex_Sans_Arabic, Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import "./summer-theme.css";
+import "./national-theme.css";
 import "./loyalty-mascot.css";
 import SiteHeader from "./components/SiteHeader";
 import Footer from "./components/Footer";
@@ -15,7 +16,7 @@ import { SITE, SITE_URL } from "./lib/site";
 // same URL the placeholder PNG uses (scripts/make-loyalty-qr.mjs). Change this
 // (or swap public/assets/loyalty-qr.png) once the loyalty link is finalised.
 const LOYALTY_QR_URL = "https://loyapro.com/c-r/NzEwMA==";
-import { getPublicSettings } from "./lib/data";
+import { getPublicSettings, THEME_COLORS } from "./lib/data";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
@@ -38,10 +39,17 @@ const hnArabic = localFont({
   display: "swap",
 });
 
-export const viewport: Viewport = {
-  themeColor: "#700d28",
-  colorScheme: "light",
-};
+// Browser chrome follows the active skin, so the National Day green doesn't sit
+// under a wine-coloured status bar on mobile.
+export async function generateViewport(): Promise<Viewport> {
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const isInternal = pathname.startsWith("/admin") || pathname.startsWith("/staff");
+  const theme = isInternal ? "classic" : (await getPublicSettings()).theme;
+  return {
+    themeColor: THEME_COLORS[theme],
+    colorScheme: "light",
+  };
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

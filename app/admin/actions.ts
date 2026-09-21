@@ -7,6 +7,7 @@ import { supabaseAdmin } from "../lib/supabase";
 import { uploadImage } from "../lib/admin-data";
 import { ADMIN_COOKIE, SESSION_MAX_AGE, checkPin, signSession, verifySession } from "../lib/auth";
 import { resolveShareLink } from "../lib/geo-link";
+import { normalizeTheme } from "../lib/data";
 import {
   NATIONALITY_VALUES,
   STAFF_ROLES,
@@ -213,7 +214,7 @@ export async function saveSettings(form: FormData) {
     closed: closedSet.has(String(i)),
   }));
 
-  const theme = str(form.get("theme")) === "summer" ? "summer" : "classic";
+  const theme = normalizeTheme(str(form.get("theme")));
   const base = {
     announcement: str(form.get("announcement")),
     announcement_active: bool(form.get("announcement_active")),

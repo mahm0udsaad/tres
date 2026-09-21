@@ -27,6 +27,10 @@ const THEME_OPTIONS: {
     id: "summer", name: "الصيفي", desc: "النبيذي مع الأزرق السماوي والرملي — هوية الصيف",
     swatches: ["#6e1d33", "#a7c5e0", "#dcc9b4", "#f5efe3"],
   },
+  {
+    id: "national", name: "اليوم الوطني", desc: "الأخضر السعودي الغامق — هوية «عزّنا بطبعنا»",
+    swatches: ["#002628", "#00894a", "#0050af", "#ffffff"],
+  },
 ];
 
 function ThemePicker({ value }: { value: ThemeId }) {

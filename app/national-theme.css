@@ -1,0 +1,238 @@
+/* =================================================================
+   TRES — SAUDI NATIONAL DAY skin ("عزّنا بطبعنا")
+   Activated from the control panel via <html data-theme="national">.
+
+   The colour swap lives in globals.css (:root[data-theme="national"]) —
+   the classic skin is already dark, so wine → deep green covers most of
+   the site on its own. This file adds the guideline's *motifs*:
+
+     · the square grid       (§5.1 — Al-Ahsa plaster / Najdi doors)
+     · the checkerboard band (§1.2 — the logo's frame)
+     · the diamond rule      (◆ — the guideline's section divider)
+
+   All three are drawn with gradients, so the skin costs no extra
+   network requests and needs no artwork to ship.
+
+   NOT included, by design: the official عزّنا بطبعنا logo, the Saudi
+   Font, and the six trait illustrations. Those are GEA-issued assets
+   that must be used as supplied — see docs/national-day-theme-plan.md
+   for the download links and the reserved `.nd-logo-slot` below.
+   ================================================================= */
+
+/* ===================== motifs ===================== */
+/* §5.1 square grid — 1px green rules on a 64px module, the same lattice the
+   guideline lays under every page. */
+[data-theme="national"] .nd-grid-bg,
+[data-theme="national"] .hero,
+[data-theme="national"] .cta,
+[data-theme="national"] .menu-hero,
+[data-theme="national"] .cat-hero {
+  --nd-module: 64px;
+  background-image: repeating-linear-gradient(
+      to right,
+      var(--nd-grid) 0 1px,
+      transparent 1px var(--nd-module)
+    ),
+    repeating-linear-gradient(to bottom, var(--nd-grid) 0 1px, transparent 1px var(--nd-module));
+  background-position: center;
+}
+@media (max-width: 640px) {
+  [data-theme="national"] .nd-grid-bg,
+  [data-theme="national"] .hero,
+  [data-theme="national"] .cta,
+  [data-theme="national"] .menu-hero,
+  [data-theme="national"] .cat-hero {
+    --nd-module: 40px;
+  }
+}
+
+/* the hero keeps its radial wash *over* the grid */
+[data-theme="national"] .hero {
+  background-color: var(--burgundy-deep);
+  background-blend-mode: normal;
+}
+[data-theme="national"] .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+      100% 70% at 50% 0%,
+      rgb(0 137 74 / 0.28) 0%,
+      rgb(0 137 74 / 0) 58%
+    ),
+    radial-gradient(70% 60% at 50% 105%, rgb(0 38 40 / 0.9) 0%, rgb(0 38 40 / 0) 62%);
+}
+
+/* §1.2 checkerboard band — the logo frame, reused as a 8px rule. */
+[data-theme="national"] .nd-checker,
+[data-theme="national"] .announce,
+[data-theme="national"] .footer {
+  position: relative;
+}
+[data-theme="national"] .nd-checker::before,
+[data-theme="national"] .announce::after,
+[data-theme="national"] .footer::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 8px;
+  z-index: 2;
+  background: repeating-conic-gradient(
+      var(--nd-green) 0% 25%,
+      transparent 0% 50%
+    )
+    0 0 / 16px 16px;
+  opacity: 0.85;
+}
+[data-theme="national"] .announce::after {
+  bottom: 0;
+}
+[data-theme="national"] .footer::before {
+  top: 0;
+}
+
+/* ◆ diamond rule — the guideline's divider under every section heading. */
+[data-theme="national"] .section-kicker::after,
+[data-theme="national"] .menu-kicker::after {
+  content: "";
+  display: block;
+  height: 7px;
+  margin-top: 12px;
+  background: radial-gradient(var(--nd-green) 48%, transparent 52%) 0 0 / 22px 7px;
+  background-repeat: repeat-x;
+  opacity: 0.7;
+}
+/* the classic skin draws flanking rules on the kicker — the diamond rule
+   replaces them, so retire the ::before rule here. */
+[data-theme="national"] .section-kicker::before,
+[data-theme="national"] .menu-kicker::before {
+  display: none;
+}
+
+/* ===================== chrome ===================== */
+[data-theme="national"] .announce {
+  background: var(--nd-green);
+  color: #fff;
+  font-weight: 600;
+}
+[data-theme="national"] .nav {
+  background: rgb(0 38 40 / 0.82);
+  border-bottom: 1px solid var(--nd-line);
+}
+[data-theme="national"] .nav[data-scrolled="true"] {
+  background: rgb(0 38 40 / 0.96);
+  box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.6);
+}
+[data-theme="national"] .logo-en {
+  color: var(--nd-green-bright);
+}
+
+/* §1.6 — in digital layouts the National Day logo sits in a *corner*, never
+   centred, at twice the horizontal size of the partner mark, with 2X of clear
+   space around it. This slot reserves that geometry in the nav; drop the
+   official SVG in as its background once the GEA kit is downloaded. */
+[data-theme="national"] .nd-logo-slot {
+  display: block;
+  width: 168px; /* 2× the TRES wordmark's ~84px */
+  aspect-ratio: 168 / 54;
+  margin-inline-start: auto;
+  padding: 16px; /* 2X clear space at the 8px module */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-origin: content-box;
+}
+
+/* ===================== hero ===================== */
+[data-theme="national"] .hero h1 .accent,
+[data-theme="national"] .eyebrow {
+  color: var(--nd-green-bright);
+}
+[data-theme="national"] .eyebrow-dot {
+  background: var(--nd-green-bright);
+}
+[data-theme="national"] .ring-dashed {
+  border-color: var(--nd-line);
+}
+[data-theme="national"] .ring-glow {
+  background: radial-gradient(circle, rgb(0 137 74 / 0.35) 0%, transparent 70%);
+}
+[data-theme="national"] .btn-hero-primary {
+  background: var(--nd-green);
+  color: #fff;
+  box-shadow: 0 18px 38px -18px rgb(0 137 74 / 0.8);
+}
+[data-theme="national"] .btn-hero-primary:hover {
+  background: #00a05a;
+}
+
+/* ===================== sections & cards ===================== */
+[data-theme="national"] .origin-card,
+[data-theme="national"] .product-card,
+[data-theme="national"] .spec-card--tres,
+[data-theme="national"] .menu-feature-card {
+  border-color: var(--nd-line);
+}
+/* §5.2 — الكرم / Generosity is the dallah-and-finjan trait; it is the one that
+   belongs to a coffee house, so its blue is the secondary accent on product
+   surfaces. One trait per layout, per the guideline. */
+[data-theme="national"] .product-badge,
+[data-theme="national"] .menu-badge,
+[data-theme="national"] .spec-badge {
+  background: var(--nd-generosity);
+  color: #fff;
+}
+[data-theme="national"] .cat-pill[data-active="true"] {
+  background: var(--nd-green);
+  color: #fff;
+  border-color: var(--nd-green);
+}
+
+/* ===================== CTA band ===================== */
+[data-theme="national"] .cta {
+  background-color: var(--nd-green);
+}
+[data-theme="national"] .cta h2,
+[data-theme="national"] .cta p {
+  color: #fff;
+}
+[data-theme="national"] .btn-cta-primary {
+  background: #fff;
+  color: var(--burgundy-deep);
+}
+[data-theme="national"] .btn-cta-primary:hover {
+  background: rgb(255 255 255 / 0.88);
+}
+[data-theme="national"] .btn-cta-ghost {
+  border-color: rgb(255 255 255 / 0.6);
+  color: #fff;
+}
+[data-theme="national"] .btn-cta-ghost:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+/* ===================== loyalty mascot ===================== */
+/* The mascot artwork is the classic TRES cup — it stays, but its chrome moves
+   to the national palette so it doesn't read as a leftover. */
+[data-theme="national"] .lm-bubble,
+[data-theme="national"] .lm-modal {
+  background: var(--burgundy);
+  border: 1px solid var(--nd-line);
+}
+[data-theme="national"] .lm-bubble-cta,
+[data-theme="national"] .lm-modal-link {
+  background: var(--nd-green);
+  color: #fff;
+}
+
+/* ===================== print (table card) ===================== */
+/* §1.4 — black & white marks are for black-and-white printing only. */
+@media print {
+  [data-theme="national"] .nd-grid-bg,
+  [data-theme="national"] .hero,
+  [data-theme="national"] .cta {
+    background-image: none;
+  }
+}

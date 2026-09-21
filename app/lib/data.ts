@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { supabasePublic, supabaseConfigured } from "./supabase";
 import { CATEGORIES, type Category, type Item } from "./menu";
 
@@ -135,11 +136,18 @@ export async function getMenuCategory(slug: string): Promise<Category | undefine
 }
 
 /** Visual identity the admin can switch from the control panel. */
-export type ThemeId = "classic" | "summer";
-export const THEMES: ThemeId[] = ["classic", "summer"];
+export type ThemeId = "classic" | "summer" | "national";
+export const THEMES: ThemeId[] = ["classic", "summer", "national"];
 export function normalizeTheme(v: unknown): ThemeId {
-  return v === "summer" ? "summer" : "classic";
+  return THEMES.includes(v as ThemeId) ? (v as ThemeId) : "classic";
 }
+
+/** Browser chrome colour per skin — drives <meta name="theme-color">. */
+export const THEME_COLORS: Record<ThemeId, string> = {
+  classic: "#700d28",
+  summer: "#6e1d33",
+  national: "#002628",
+};
 
 export type PublicSettings = {
   announcement: string | null;
@@ -153,8 +161,10 @@ export type PublicSettings = {
 };
 
 /** Public-facing store settings (anon read). Returns nulls when unconfigured
- *  so callers fall back to their built-in defaults. */
-export async function getPublicSettings(): Promise<PublicSettings> {
+ *  so callers fall back to their built-in defaults.
+ *  Memoised per request: the root layout reads it for <html data-theme> and
+ *  generateViewport reads it again for the theme colour. */
+export const getPublicSettings = cache(async function getPublicSettings(): Promise<PublicSettings> {
   const empty: PublicSettings = {
     announcement: null, announcementActive: false,
     instagram: null, tiktok: null, snapchat: null, phone: null, address: null,
@@ -177,7 +187,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
   } catch {
     return empty;
   }
-}
+});
 
 // ── homepage curated sections ────────────────────────────────────────────────
 export type HomeItemCard = Item & { categorySlug: string; categoryAr: string };

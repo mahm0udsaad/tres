@@ -7,6 +7,7 @@ import {
   CupSoda,
   Sparkles,
   MessageSquareText,
+  PartyPopper,
   Settings,
   LogOut,
   Users,
@@ -28,6 +29,7 @@ const MENU_TABS: Tab[] = [
   { href: "/admin", label: "الرئيسية", icon: LayoutDashboard, exact: true },
   { href: "/admin/menu", label: "المنيو", icon: CupSoda },
   { href: "/admin/home", label: "الواجهة", icon: Sparkles },
+  { href: "/admin/catering", label: "الكاترينغ", icon: PartyPopper },
   { href: "/admin/feedback", label: "الملاحظات", icon: MessageSquareText, badgeKey: true },
   { href: "/admin/settings", label: "الإعدادات", icon: Settings },
 ];
@@ -53,11 +55,13 @@ export default function AdminNav({
   const tabs: Tab[] = opsHost
     ? [{ href: "/admin/operations", label: "العمليات", icon: Users }]
     : [
-        ...MENU_TABS.slice(0, 4),
+        // Operations slots in before Settings, which always stays last — keyed
+        // by href, not by index, so adding a tab above can't drop one.
+        ...MENU_TABS.filter((t) => t.href !== "/admin/settings"),
         opsOperationsUrl
           ? { href: opsOperationsUrl, label: "العمليات", icon: Users, external: true }
           : { href: "/admin/operations", label: "العمليات", icon: Users },
-        MENU_TABS[4],
+        ...MENU_TABS.filter((t) => t.href === "/admin/settings"),
       ];
 
   const renderTab = (tab: Tab, className: string) => {

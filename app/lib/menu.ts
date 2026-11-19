@@ -19,6 +19,8 @@ export type Item = {
   variety?: string; // السلالة
   altitude?: string; // الارتفاع
   process?: string; // المعالجة
+  /** نفدت الكمية — still on the menu, but out of stock today. */
+  soldOut?: boolean;
 };
 
 export type Category = {

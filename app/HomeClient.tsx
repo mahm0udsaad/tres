@@ -7,6 +7,8 @@ import { useReveal } from "./lib/useReveal";
 import { toArabic, type Category, type Item } from "./lib/menu";
 import Link from "next/link";
 import { ND_SLOGANS } from "./lib/national";
+import { STORE_MAPS } from "./lib/contact";
+import { MapPin, UtensilsCrossed } from "lucide-react";
 
 function withTransition(update: () => void) {
   const doc = document as Document & {
@@ -106,10 +108,20 @@ export default function HomeClient({
   categories,
   today,
   best,
+  findUs,
+  hero,
 }: {
   categories: Category[];
   today: HomeSec;
   best: HomeSec;
+  /** فروعنا — built on the server (it reads the store settings). */
+  findUs?: React.ReactNode;
+  /**
+   * Replaces the default hero. The winter skin opens on its own tile screen
+   * (WinterHome) and keeps every section below it the same as the other
+   * skins — so only the top of the page is swapped, not the page.
+   */
+  hero?: React.ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useReveal(rootRef);
@@ -160,8 +172,19 @@ export default function HomeClient({
   return (
     <div ref={rootRef} className="page">
       {/* ===================== HERO ===================== */}
+      {hero ?? (
       <div className="hero">
         <div className="hero-noise" />
+        {/* Winter skin: the court poster — the wine-outlined wordmark cropped
+            by the frame, the ball bouncing on the baseline with the chalk it
+            kicks up. CSS keeps it out of the render on the other skins. */}
+        <div className="wn-stage" aria-hidden="true">
+          <span className="wn-stage-word">TRES</span>
+          <span className="wn-stage-rackets" />
+          <span className="wn-stage-baseline" />
+          <span className="wn-stage-dust" />
+          <span className="wn-stage-ball" />
+        </div>
         {/* National Day supporting slogans (§4.1), parked in the hero's empty
             corners. Decorative, and CSS keeps them hidden off the national
             skin — so they cost nothing on the other themes. */}
@@ -206,6 +229,42 @@ export default function HomeClient({
             <Link href="/menu" className="btn btn-hero-primary">
               تصفّح المنيو
             </Link>
+            {/* The two quick paths visitors ask for most: where we are, and
+                booking a catering corner. Maps opens the owner's listing in a
+                new tab; catering goes to the packages page. */}
+            <a
+              href={STORE_MAPS.place}
+              className="btn btn-hero-ghost"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MapPin strokeWidth={2} aria-hidden="true" />
+              موقعنا على جوجل ماب
+            </a>
+            <Link href="/catering" className="btn btn-hero-ghost">
+              <UtensilsCrossed strokeWidth={2} aria-hidden="true" />
+              حجز كاترينج
+            </Link>
+          </div>
+          {/* Winter skin: the stadium board. Ships on every skin, lights up on
+              the winter one only (see .wn-board in winter-theme.css). */}
+          <div className="wn-board" aria-hidden="true">
+            <span className="wn-cell wn-cell--live">
+              <b>مفتوح</b>
+              <span>الآن</span>
+            </span>
+            <span className="wn-cell">
+              <b>03</b>
+              <span>محاصيل</span>
+            </span>
+            <span className="wn-cell">
+              <b>2026</b>
+              <span>EST</span>
+            </span>
+            <span className="wn-cell">
+              <b>TAIF</b>
+              <span>الطائف</span>
+            </span>
           </div>
           <div className="hero-meta" data-reveal data-reveal-delay="240">
             <span>منذ 2026</span>
@@ -216,6 +275,7 @@ export default function HomeClient({
           </div>
         </div>
       </div>
+      )}
 
       {/* ===================== TODAY'S PICKS ===================== */}
       <CuratedSection section={today} />
@@ -386,6 +446,8 @@ export default function HomeClient({
       )}
 
       {/* ===================== CTA BAND ===================== */}
+      {findUs}
+
       <div className="cta">
         <div className="cta-inner" data-reveal>
           <div>

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import MenuExperience from "../MenuExperience";
+import MenuBoard from "../MenuBoard";
+import MenuClassic from "../MenuClassic";
 import { availableItemImages } from "../../lib/itemImages";
 import { getMenu, getMenuCategory } from "../../lib/data";
+import { getActiveTheme } from "../../lib/theme";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +38,9 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  const { categories } = await getMenu();
+  const [{ categories }, theme] = await Promise.all([getMenu(), getActiveTheme()]);
   const cat = categories.find((c) => c.id === category);
   if (!cat) notFound();
-  return <MenuExperience initialId={category} images={availableItemImages()} categories={categories} />;
+  const Menu = theme === "winter" ? MenuBoard : MenuClassic;
+  return <Menu initialId={category} images={availableItemImages()} categories={categories} />;
 }

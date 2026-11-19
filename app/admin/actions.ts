@@ -142,6 +142,7 @@ export async function saveItem(form: FormData) {
     altitude: str(form.get("altitude")),
     process: str(form.get("process")),
     is_available: bool(form.get("is_available")),
+    is_sold_out: bool(form.get("is_sold_out")),
     sort_order: num(form.get("sort_order")) ?? 0,
   };
   if (id) await sb.from("items").update(row).eq("id", id);
@@ -162,6 +163,15 @@ export async function toggleAvailable(form: FormData) {
   const id = str(form.get("id"));
   const next = bool(form.get("value"));
   if (id) await supabaseAdmin().from("items").update({ is_available: next }).eq("id", id);
+  refreshPublic();
+}
+
+/** نفدت الكمية — the item stays on the menu, marked out of stock. */
+export async function toggleSoldOut(form: FormData) {
+  await requireAdmin();
+  const id = str(form.get("id"));
+  const next = bool(form.get("value"));
+  if (id) await supabaseAdmin().from("items").update({ is_sold_out: next }).eq("id", id);
   refreshPublic();
 }
 
@@ -214,7 +224,6 @@ export async function saveSettings(form: FormData) {
     closed: closedSet.has(String(i)),
   }));
 
-  const theme = normalizeTheme(str(form.get("theme")));
   const base = {
     announcement: str(form.get("announcement")),
     announcement_active: bool(form.get("announcement_active")),
@@ -225,10 +234,85 @@ export async function saveSettings(form: FormData) {
     snapchat: str(form.get("snapchat")),
     hours,
   };
-  // `theme` may not exist yet if the 0006 migration hasn't been applied — fall
-  // back to saving the rest so the panel never hard-fails on an older schema.
-  const { error } = await sb.from("settings").update({ ...base, theme }).eq("id", 1);
+  // Columns added by later migrations: `theme` (0006) and the WhatsApp / Maps
+  // pair (20261118090000). Write everything first and fall back to the base
+  // row if the schema is older, so the panel never hard-fails on a store that
+  // hasn't run the migrations yet.
+  const extras = {
+    theme: normalizeTheme(str(form.get("theme"))),
+    whatsapp: str(form.get("whatsapp")),
+    maps_url: str(form.get("maps_url")),
+  };
+  const { error } = await sb.from("settings").update({ ...base, ...extras }).eq("id", 1);
   if (error) await sb.from("settings").update(base).eq("id", 1);
+  refreshPublic();
+}
+
+// ── catering packages ─────────────────────────────────────────────────────────
+export async function saveCateringPackage(form: FormData) {
+  await requireAdmin();
+  const sb = supabaseAdmin();
+  const id = str(form.get("id"));
+  const file = form.get("image") as File | null;
+  let image_url = imageField(form, "image_url");
+  if (file && file.size > 0) image_url = await uploadImage(file, "catering");
+
+  const includesRaw = str(form.get("includes"));
+  const includes = includesRaw
+    ? includesRaw.split(/[\n،,]/).map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  const row = {
+    name_ar: str(form.get("name_ar")) ?? "",
+    name_en: str(form.get("name_en")),
+    price: num(form.get("price")),
+    unit: str(form.get("unit")),
+    serves: str(form.get("serves")),
+    description: str(form.get("description")),
+    includes,
+    image_url,
+    badge: str(form.get("badge")),
+    sort_order: num(form.get("sort_order")) ?? 0,
+    is_active: bool(form.get("is_active")),
+  };
+  if (id) await sb.from("catering_packages").update(row).eq("id", id);
+  else await sb.from("catering_packages").insert(row);
+  refreshPublic();
+}
+
+export async function deleteCateringPackage(form: FormData) {
+  await requireAdmin();
+  const id = str(form.get("id"));
+  if (id) await supabaseAdmin().from("catering_packages").delete().eq("id", id);
+  refreshPublic();
+}
+
+export async function toggleCateringActive(form: FormData) {
+  await requireAdmin();
+  const id = str(form.get("id"));
+  const next = bool(form.get("value"));
+  if (id) await supabaseAdmin().from("catering_packages").update({ is_active: next }).eq("id", id);
+  refreshPublic();
+}
+
+// ── feedback replies ──────────────────────────────────────────────────────────
+/** The written answer the guest reads on /complaints/track with their code.
+ *  Saving one moves a still-new complaint to "read" — it has been handled —
+ *  and the owner marks it resolved separately when the issue is closed. */
+export async function replyFeedback(form: FormData) {
+  await requireAdmin();
+  const id = str(form.get("id"));
+  const reply = str(form.get("reply"));
+  if (!id) return;
+  const status = str(form.get("status"));
+  await supabaseAdmin()
+    .from("feedback")
+    .update({
+      reply,
+      replied_at: reply ? new Date().toISOString() : null,
+      ...(status === "new" ? { status: "read" } : {}),
+    })
+    .eq("id", id);
   refreshPublic();
 }
 

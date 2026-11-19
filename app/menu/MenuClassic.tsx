@@ -1,6 +1,11 @@
 "use client";
 
 /**
+ * THE ORIGINAL MENU — kept for the classic, summer and National Day skins.
+ * The winter skin renders MenuBoard instead (the owner's new menu-board
+ * design); the two are picked between in app/menu/page.tsx, so switching the
+ * theme in the control panel switches the menu with it.
+ *
  * Single-document menu experience: a category landing (image tiles) and a
  * per-category product view, switched client-side so the swap can run through
  * the View Transition API — the tapped tile's image morphs into the category
@@ -68,7 +73,11 @@ function ProductCard({
 }) {
   const src = it.image ?? (!it.imageCleared && hasPhoto && it.id ? `/assets/items/${it.id}.webp` : undefined);
   return (
-    <div className="product-card" style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}>
+    <div
+      className="product-card"
+      data-sold-out={it.soldOut || undefined}
+      style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
+    >
       <div className={"product-img" + (src ? "" : " is-empty")}>
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -89,6 +98,7 @@ function ProductCard({
           </span>
         )}
         {it.badge?.split(",").map((b, i) => <span key={i} className="product-badge">{b.trim()}</span>)}
+        {it.soldOut && <span className="sold-out-tag">نفدت الكمية</span>}
       </div>
       <div className="product-body">
         <div className="product-head">
@@ -118,6 +128,7 @@ function SpecialtyContent({ it }: { it: Item }) {
     <div className="spec-content">
       <div className="spec-head">
         <h3 className="spec-name">{it.ar}</h3>
+        {it.soldOut && <span className="sold-out-tag">نفدت الكمية</span>}
         {it.badge?.split(",").map((b, i) => <span key={i} className="spec-badge">{b.trim()}</span>)}
       </div>
       {it.en && (
@@ -196,7 +207,7 @@ function SpecialtyCard({ it, index }: { it: Item; index: number }) {
   );
 }
 
-export default function MenuExperience({
+export default function MenuClassic({
   initialId,
   images = [],
   categories,

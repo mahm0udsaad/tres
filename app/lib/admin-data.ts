@@ -13,6 +13,10 @@ export type Feedback = {
   message: string;
   status: "new" | "read" | "resolved";
   created_at: string;
+  /** Tracking code the guest quotes to follow their complaint. */
+  ticket: string | null;
+  reply: string | null;
+  replied_at: string | null;
 };
 
 export type Settings = {
@@ -21,11 +25,28 @@ export type Settings = {
   announcement: string | null;
   announcement_active: boolean;
   phone: string | null;
+  whatsapp: string | null;
   address: string | null;
+  maps_url: string | null;
   instagram: string | null;
   tiktok: string | null;
   snapchat: string | null;
   theme: ThemeId;
+};
+
+export type AdminCateringPackage = {
+  id: string;
+  name_ar: string;
+  name_en: string | null;
+  price: number | null;
+  unit: string | null;
+  serves: string | null;
+  description: string | null;
+  includes: string[] | null;
+  image_url: string | null;
+  badge: string | null;
+  sort_order: number;
+  is_active: boolean;
 };
 
 // ── reads ────────────────────────────────────────────────────────────────────
@@ -73,7 +94,8 @@ export async function getSettings(): Promise<Settings> {
   const { data } = await sb.from("settings").select("*").eq("id", 1).single();
   const base = (data ?? {
     id: 1, hours: [], announcement: null, announcement_active: false,
-    phone: null, address: null, instagram: null, tiktok: null, snapchat: null,
+    phone: null, whatsapp: null, address: null, maps_url: null,
+    instagram: null, tiktok: null, snapchat: null,
   }) as Omit<Settings, "theme"> & { theme?: unknown };
   return { ...base, theme: normalizeTheme(base.theme) } as Settings;
 }
@@ -90,4 +112,12 @@ export async function uploadImage(file: File, folder = "items"): Promise<string>
   });
   if (error) throw error;
   return sb.storage.from("menu").getPublicUrl(path).data.publicUrl;
+}
+
+/** Catering packages for the control panel — including the ones switched off,
+ *  which the public page never sees. */
+export async function listCateringPackages(): Promise<AdminCateringPackage[]> {
+  const sb = supabaseAdmin();
+  const { data } = await sb.from("catering_packages").select("*").order("sort_order");
+  return (data ?? []) as AdminCateringPackage[];
 }

@@ -37,6 +37,7 @@ export type DbItem = {
   altitude: string | null;
   process: string | null;
   is_available: boolean;
+  is_sold_out: boolean;
   is_featured: boolean;
   sort_order: number;
 };
@@ -65,6 +66,7 @@ export function mapItem(r: DbItem): Item & { dbId: string; available: boolean; f
     variety: r.variety ?? undefined,
     altitude: r.altitude ?? undefined,
     process: r.process ?? undefined,
+    soldOut: r.is_sold_out,
     dbId: r.id,
     available: r.is_available,
     featured: r.is_featured,
@@ -136,8 +138,8 @@ export async function getMenuCategory(slug: string): Promise<Category | undefine
 }
 
 /** Visual identity the admin can switch from the control panel. */
-export type ThemeId = "classic" | "summer" | "national";
-export const THEMES: ThemeId[] = ["classic", "summer", "national"];
+export type ThemeId = "classic" | "summer" | "national" | "winter";
+export const THEMES: ThemeId[] = ["classic", "summer", "national", "winter"];
 export function normalizeTheme(v: unknown): ThemeId {
   return THEMES.includes(v as ThemeId) ? (v as ThemeId) : "classic";
 }
@@ -147,16 +149,24 @@ export const THEME_COLORS: Record<ThemeId, string> = {
   classic: "#700d28",
   summer: "#6e1d33",
   national: "#002628",
+  winter: "#220a12",
 };
 
+export type HoursRow = { day: string; open?: string; close?: string; closed?: boolean };
+
 export type PublicSettings = {
+  hours: HoursRow[];
   announcement: string | null;
   announcementActive: boolean;
   instagram: string | null;
   tiktok: string | null;
   snapchat: string | null;
   phone: string | null;
+  /** WhatsApp number in international form, digits only (e.g. 9665xxxxxxx). */
+  whatsapp: string | null;
   address: string | null;
+  /** Google Maps share link for the store. */
+  mapsUrl: string | null;
   theme: ThemeId;
 };
 
@@ -166,8 +176,10 @@ export type PublicSettings = {
  *  generateViewport reads it again for the theme colour. */
 export const getPublicSettings = cache(async function getPublicSettings(): Promise<PublicSettings> {
   const empty: PublicSettings = {
+    hours: [],
     announcement: null, announcementActive: false,
-    instagram: null, tiktok: null, snapchat: null, phone: null, address: null,
+    instagram: null, tiktok: null, snapchat: null, phone: null, whatsapp: null,
+    address: null, mapsUrl: null,
     theme: "classic",
   };
   if (!supabaseConfigured) return empty;
@@ -175,17 +187,106 @@ export const getPublicSettings = cache(async function getPublicSettings(): Promi
     const { data } = await supabasePublic().from("settings").select("*").eq("id", 1).single();
     if (!data) return empty;
     return {
+      hours: Array.isArray(data.hours) ? (data.hours as HoursRow[]) : [],
       announcement: data.announcement ?? null,
       announcementActive: Boolean(data.announcement_active),
       instagram: data.instagram ?? null,
       tiktok: data.tiktok ?? null,
       snapchat: data.snapchat ?? null,
       phone: data.phone ?? null,
+      whatsapp: data.whatsapp ?? null,
       address: data.address ?? null,
+      mapsUrl: data.maps_url ?? null,
       theme: normalizeTheme(data.theme),
     };
   } catch {
     return empty;
+  }
+});
+
+// ── complaint tracking ───────────────────────────────────────────────────────
+export type FeedbackTrack = {
+  ticket: string;
+  status: "new" | "read" | "resolved";
+  type: string;
+  created_at: string;
+  reply: string | null;
+  replied_at: string | null;
+};
+
+/** Look a complaint up by its tracking code. Goes through the
+ *  `feedback_track` function (security definer), which is the only read anon
+ *  has on the feedback table and returns no personal details — see
+ *  supabase/migrations/20261118090000_catering_tickets_soldout.sql. */
+export async function trackFeedback(code: string): Promise<FeedbackTrack | null> {
+  const ticket = code.trim().toUpperCase();
+  if (!ticket || !supabaseConfigured) return null;
+  try {
+    const { data, error } = await supabasePublic().rpc("feedback_track", { p_ticket: ticket });
+    if (error) return null;
+    const row = (Array.isArray(data) ? data[0] : data) as FeedbackTrack | undefined;
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── catering ─────────────────────────────────────────────────────────────────
+export type CateringPackage = {
+  id: string;
+  ar: string;
+  en?: string;
+  price: string;
+  unit?: string;
+  serves?: string;
+  desc?: string;
+  includes: string[];
+  image?: string;
+  badge?: string;
+};
+
+type DbCatering = {
+  id: string;
+  name_ar: string;
+  name_en: string | null;
+  price: number | null;
+  unit: string | null;
+  serves: string | null;
+  description: string | null;
+  includes: string[] | null;
+  image_url: string | null;
+  badge: string | null;
+  is_active: boolean;
+  sort_order: number;
+};
+
+/** Catering packages for /catering. Empty when Supabase isn't configured or
+ *  the owner hasn't published any — the page then shows the enquiry CTA alone,
+ *  rather than invented prices. */
+export const getCateringPackages = cache(async function getCateringPackages(): Promise<
+  CateringPackage[]
+> {
+  if (!supabaseConfigured) return [];
+  try {
+    const { data } = await supabasePublic()
+      .from("catering_packages")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order");
+    return ((data ?? []) as DbCatering[]).map((r) => ({
+      id: r.id,
+      ar: r.name_ar,
+      en: r.name_en ?? undefined,
+      price: priceToStr(r.price),
+      unit: r.unit ?? undefined,
+      serves: r.serves ?? undefined,
+      desc: r.description ?? undefined,
+      includes: r.includes ?? [],
+      image: r.image_url || undefined,
+      badge: r.badge ?? undefined,
+    }));
+  } catch {
+    return [];
   }
 });
 

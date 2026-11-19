@@ -217,6 +217,8 @@
 .a-fb-top .when { color: var(--faint); font-size: 12.5px; margin-inline-start: auto; }
 .a-fb-msg { color: var(--ink); font-size: 14.5px; line-height: 1.6; }
 .a-fb-foot { display: flex; align-items: center; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
+.a-fb-reply { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.a-fb-reply .a-input { min-height: 0; }
 
 /* ===== forms ===== */
 .a-field { margin-bottom: 14px; }

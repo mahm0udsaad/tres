@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import MenuExperience from "./MenuExperience";
+import MenuBoard from "./MenuBoard";
+import MenuClassic from "./MenuClassic";
 import { availableItemImages } from "../lib/itemImages";
 import { getMenu } from "../lib/data";
+import { getActiveTheme } from "../lib/theme";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,9 @@ export const metadata: Metadata = {
 };
 
 export default async function MenuPage() {
-  const { categories } = await getMenu();
-  return <MenuExperience initialId={null} images={availableItemImages()} categories={categories} />;
+  const [{ categories }, theme] = await Promise.all([getMenu(), getActiveTheme()]);
+  // The menu-board redesign belongs to the winter skin; every other skin keeps
+  // the menu it already has.
+  const Menu = theme === "winter" ? MenuBoard : MenuClassic;
+  return <Menu initialId={null} images={availableItemImages()} categories={categories} />;
 }

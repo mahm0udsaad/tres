@@ -567,13 +567,27 @@
 
 /* ── small screens (375px-first) ───────────────────────────────────────────── */
 @media (max-width: 460px) {
+  /* On a phone the full-size character and door took a big bite out of the
+     screen. The whole stage is scaled down from its bottom-left corner, so
+     every part keeps its proportions and choreography. */
   .lm-stage {
-    left: 12px;
-    bottom: 12px;
+    left: 10px;
+    bottom: 10px;
     width: 150px;
+    transform: scale(0.68);
+    transform-origin: 0 100%;
   }
+  /* the door label would shrink to ~7px with the stage — set it larger so it
+     lands at a readable ~9.5px on screen */
+  .lm-door-knob {
+    font-size: 14px;
+  }
+  /* The menu's offer card is scaled back up part-way (0.68 × 1.25 ≈ 0.85):
+     smaller than on desktop, but its text stays readable. `scale` composes
+     with the card's own animated transform instead of replacing it. */
   .lm-card-shell {
-    width: min(272px, calc(100vw - 24px));
+    scale: 1.25;
+    width: min(272px, calc((100vw - 24px) / 0.85));
   }
 }
 

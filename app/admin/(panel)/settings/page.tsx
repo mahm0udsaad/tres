@@ -8,7 +8,7 @@ export default async function SettingsPage() {
   try {
     settings = await getSettings();
   } catch {
-    settings = { id: 1, hours: [], announcement: null, announcement_active: false, phone: null, address: null, instagram: null, tiktok: null, snapchat: null, theme: "classic" };
+    settings = { id: 1, hours: [], announcement: null, announcement_active: false, phone: null, whatsapp: null, address: null, maps_url: null, instagram: null, tiktok: null, snapchat: null, theme: "classic" };
   }
   return (
     <>

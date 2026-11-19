@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { MessageSquareText, Check, Eye, Phone, MessageCircle, Mail } from "lucide-react";
+import { MessageSquareText, Check, Eye, Phone, MessageCircle, Mail, Reply, Hash } from "lucide-react";
 import { listFeedback } from "../../../lib/admin-data";
-import { setFeedbackStatus } from "../../actions";
+import { setFeedbackStatus, replyFeedback } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -71,9 +71,43 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
                   <span className={`a-pill a-pill--${f.status}`}>{STATUS_LABEL[f.status]}</span>
                   {f.type && <span className="a-pill a-pill--read">{TYPE_LABEL[f.type] ?? f.type}</span>}
                   <span className="who">{f.name || "زائر"}</span>
+                  {f.ticket && (
+                    <span className="a-pill a-pill--read" dir="ltr" title="رقم التتبع الذي يستخدمه الزبون">
+                      <Hash strokeWidth={2} style={{ width: 12, height: 12, verticalAlign: "-2px" }} />
+                      {f.ticket}
+                    </span>
+                  )}
                   <span className="when">{fmt(f.created_at)}</span>
                 </div>
                 <p className="a-fb-msg">{f.message}</p>
+                {/* The written answer. The guest reads it on /complaints/track
+                    with their code — nothing else about the complaint is
+                    exposed there. */}
+                <form action={replyFeedback} className="a-fb-reply">
+                  <input type="hidden" name="id" value={f.id} />
+                  <input type="hidden" name="status" value={f.status} />
+                  <label className="a-field" style={{ margin: 0 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600 }}>
+                      <Reply strokeWidth={2} style={{ width: 14, height: 14, verticalAlign: "-3px", marginInlineEnd: 4 }} />
+                      الرد على الزبون
+                    </span>
+                    <textarea
+                      name="reply"
+                      className="a-input"
+                      rows={2}
+                      defaultValue={f.reply ?? ""}
+                      placeholder="يوصل للزبون عند متابعة شكواه برقم التتبع…"
+                    />
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                    <button className="a-btn a-btn--ghost a-btn--sm" type="submit">حفظ الرد</button>
+                    {f.replied_at && (
+                      <span style={{ fontSize: 12, color: "var(--muted, #8a8178)" }}>
+                        آخر رد: {fmt(f.replied_at)}
+                      </span>
+                    )}
+                  </div>
+                </form>
                 <div className="a-fb-foot">
                   {c && (
                     <>

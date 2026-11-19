@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
-import { Plus, Pencil, X, Trash2, ImagePlus, FolderPlus } from "lucide-react";
+import { Plus, Pencil, X, Trash2, ImagePlus, FolderPlus, PackageX } from "lucide-react";
 import {
-  saveItem, deleteItem, toggleAvailable, saveCategory, deleteCategory,
+  saveItem, deleteItem, toggleAvailable, toggleSoldOut, saveCategory, deleteCategory,
 } from "../actions";
 
 export type Template = "simple" | "coffee" | "dessert";
@@ -18,7 +18,7 @@ export type Itm = {
   price: number | null; badge: string | null; cal: string | null; description: string | null;
   image_url: string | null; emblem_url: string | null; emblem_fit: "cover" | "contain" | null;
   notes: string[] | null; variety: string | null; altitude: string | null; process: string | null;
-  is_available: boolean; is_featured: boolean; sort_order: number;
+  is_available: boolean; is_sold_out: boolean; is_featured: boolean; sort_order: number;
 };
 
 function callAction(fn: (fd: FormData) => Promise<unknown>, fields: Record<string, string>) {
@@ -39,6 +39,7 @@ function SaveBtn({ label = "حفظ" }: { label?: string }) {
 /* ── one item row: thumb, name, price, featured star, availability switch, edit ── */
 function ItemRow({ item, onEdit }: { item: Itm; onEdit: () => void }) {
   const [available, setAvailable] = useState(item.is_available);
+  const [soldOut, setSoldOut] = useState(item.is_sold_out);
   const [, start] = useTransition();
 
   return (
@@ -54,9 +55,27 @@ function ItemRow({ item, onEdit }: { item: Itm; onEdit: () => void }) {
         <div className="a-row-sub">
           {item.price != null && <span className="a-row-price">{item.price} ر.س</span>}
           {item.name_en && <span dir="ltr">{item.name_en}</span>}
+          {soldOut && available && <span className="a-pill a-pill--badge">نفدت الكمية</span>}
         </div>
       </div>
       <div className="a-row-actions">
+        {/* نفدت الكمية — one tap, straight from the list, because it changes
+            several times a day. The item stays on the menu, marked. */}
+        <button
+          type="button"
+          className="a-iconbtn"
+          aria-label="نفدت الكمية"
+          aria-pressed={soldOut}
+          title={soldOut ? "متوفر مرة ثانية" : "نفدت الكمية"}
+          style={soldOut ? { color: "var(--amber, #b4731f)", borderColor: "currentColor" } : undefined}
+          onClick={() => {
+            const v = !soldOut;
+            setSoldOut(v);
+            start(() => { callAction(toggleSoldOut, { id: item.id, value: v ? "1" : "" }); });
+          }}
+        >
+          <PackageX strokeWidth={2} />
+        </button>
         <label className="a-switch" aria-label="متوفر">
           <input
             type="checkbox" checked={available}
@@ -245,6 +264,10 @@ function ItemSheet({ cats, defaultCat, item, onClose }: { cats: Cat[]; defaultCa
           <div className="a-check">
             <span className="lbl">متوفر <small>يظهر للزبائن في المنيو</small></span>
             <label className="a-switch"><input type="checkbox" name="is_available" defaultChecked={item ? item.is_available : true} /><span className="track" /><span className="thumb" /></label>
+          </div>
+          <div className="a-check">
+            <span className="lbl">نفدت الكمية<small style={{ display: "block", fontWeight: 400, opacity: 0.7 }}>يبقى في المنيو مع علامة «نفدت الكمية»</small></span>
+            <label className="a-switch"><input type="checkbox" name="is_sold_out" defaultChecked={item ? item.is_sold_out : false} /><span className="track" /><span className="thumb" /></label>
           </div>
 
           <details style={{ marginTop: 14 }}>

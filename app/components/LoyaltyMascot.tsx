@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Loyalty-program announcement mascot — menu pages only.
+ * Loyalty-program announcement mascot — homepage and menu pages.
  *
  * Narrative (the part the owner liked): the TRES character notices the visitor
  * browsing the menu, peeks out from behind a premium "door" panel (head first),
@@ -78,10 +78,16 @@ export default function LoyaltyMascot({ qr, qrUrl }: { qr?: ReactNode; qrUrl?: s
   const closeRef = useRef<HTMLButtonElement>(null);
   const revealedRef = useRef(false);
 
-  // Show only on the menu and its sub-pages. usePathname updates on client
-  // navigation, so it works whether the visitor lands directly or navigates in.
+  // Shown on the homepage and across the menu — the two places a visitor is
+  // deciding what to order. usePathname updates on client navigation, so it
+  // works whether they land directly or navigate in.
   const pathname = usePathname();
-  const onMenu = !!pathname && (pathname === "/menu" || pathname.startsWith("/menu/"));
+  const onMenu =
+    !!pathname && (pathname === "/" || pathname === "/menu" || pathname.startsWith("/menu/"));
+  // The offer card (the white thought bubble) belongs on the menu only — on
+  // the home page the character alone is enough, and the card covered the
+  // home tiles. Tapping the character still opens the QR modal there.
+  const showCard = pathname !== "/";
 
   // Run the peek → wave → settled choreography (or a plain fade for reduced motion).
   const reveal = useCallback(() => {
@@ -166,6 +172,7 @@ export default function LoyaltyMascot({ qr, qrUrl }: { qr?: ReactNode; qrUrl?: s
           <img className="lm-mascot" src="/assets/mascot-standing.png" alt="" />
         </button>
 
+        {showCard && (
         <div className="lm-card-shell" aria-hidden={state !== "settled"}>
           <button
             type="button"
@@ -206,6 +213,7 @@ export default function LoyaltyMascot({ qr, qrUrl }: { qr?: ReactNode; qrUrl?: s
             </svg>
           </button>
         </div>
+        )}
       </div>
 
       {open &&

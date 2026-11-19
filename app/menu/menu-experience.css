@@ -1,0 +1,571 @@
+/* =================================================================
+   MENU — digital menu board
+   Rebuilt to the owner's reference: a tab rail across the top, the
+   list of the open category down the inline end, and one product
+   held large on the stage beside it. Specialty origins swap the
+   stage for a grid of spec cards.
+
+   Everything resolves through the design tokens in globals.css, so
+   the board re-skins with the active theme (classic / summer /
+   national / winter) without a second stylesheet.
+   ================================================================= */
+
+.mx {
+  --mx-rail: 340px;
+  --mx-line: rgb(var(--blush-rgb) / 0.22);
+  --mx-surface: rgb(var(--cream-rgb) / 0.04);
+  min-height: 100vh;
+  padding: 26px 0 70px;
+  background: var(--burgundy-deep);
+  color: var(--cream);
+}
+
+/* ── top bar ───────────────────────────────────────────────────── */
+.mx-top {
+  max-width: 1360px;
+  margin: 0 auto 18px;
+  padding: 0 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.mx-title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 40px);
+  line-height: 1;
+  margin: 0;
+  color: var(--cream);
+}
+.mx-top-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rose);
+  opacity: 0.85;
+}
+
+/* ── category tabs ─────────────────────────────────────────────── */
+.mx-tabs {
+  max-width: 1360px;
+  margin: 0 auto 22px;
+  padding: 0 28px 4px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mx-tabs::-webkit-scrollbar {
+  display: none;
+}
+.mx-tab {
+  flex: none;
+  padding: 11px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--mx-line);
+  background: transparent;
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.mx-tab:hover {
+  border-color: rgb(var(--blush-rgb) / 0.6);
+}
+.mx-tab[data-active="true"] {
+  background: var(--blush);
+  border-color: var(--blush);
+  color: var(--burgundy);
+}
+
+/* ── two-pane body ─────────────────────────────────────────────── */
+.mx-body {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: 1fr var(--mx-rail);
+  gap: 26px;
+  align-items: start;
+}
+
+/* ── the rail ──────────────────────────────────────────────────── */
+.mx-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+  padding-inline-end: 4px;
+  position: sticky;
+  top: 90px;
+  scrollbar-width: thin;
+}
+.mx-row {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+.mx-row:hover {
+  background: var(--mx-surface);
+}
+.mx-row[data-active="true"] {
+  background: var(--mx-surface);
+  border-color: rgb(var(--blush-rgb) / 0.5);
+}
+.mx-row[data-sold-out] {
+  opacity: 0.55;
+}
+.mx-row-media {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: rgb(var(--cream-rgb) / 0.05);
+  font-size: 22px;
+  overflow: hidden;
+}
+.mx-row-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mx-row-media .mx-row-emblem {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+.mx-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mx-row-ar {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cream);
+}
+.mx-row-en {
+  font-family: var(--font-latin);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  color: var(--rose);
+  opacity: 0.8;
+}
+.mx-row-out {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blush);
+}
+.mx-row-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--font-latin);
+  color: var(--blush);
+}
+.mx-row-price .num {
+  font-size: 18px;
+  font-weight: 700;
+}
+.mx-row-price .cur {
+  font-family: var(--font-body);
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* ── the stage ─────────────────────────────────────────────────── */
+.mx-stage {
+  position: sticky;
+  top: 90px;
+  border: 1px solid var(--mx-line);
+  border-radius: 28px;
+  background: var(--mx-surface);
+  overflow: hidden;
+}
+.mx-stage-inner {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: min(620px, calc(100vh - 210px));
+  animation: mx-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes mx-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.mx-stage-close {
+  display: none;
+}
+.mx-stage-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 34px;
+  background: radial-gradient(60% 60% at 50% 45%, rgb(var(--blush-rgb) / 0.14), transparent 70%);
+}
+/* The product shots are lit on a white sweep. The reference sits its cut-outs
+   on a light page; on this dark board the same photo needs a card under it, or
+   it reads as a white box floating in the dark. */
+.mx-stage-media img {
+  max-width: min(420px, 100%);
+  max-height: 48vh;
+  object-fit: contain;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 34px 54px -26px rgb(0 0 0 / 0.75);
+}
+.mx-stage-emblem.mx-fit-contain {
+  max-width: 220px;
+}
+.mx-stage-glyph {
+  font-size: 92px;
+  opacity: 0.6;
+}
+.mx-stage-out {
+  position: absolute;
+  top: 22px;
+  inset-inline-start: 22px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--burgundy-darkest);
+  color: var(--blush);
+  font-size: 12.5px;
+  font-weight: 700;
+  border: 1px solid rgb(var(--blush-rgb) / 0.4);
+}
+/* the scalloped badge the reference parks on the hero */
+.mx-rosette {
+  position: absolute;
+  top: 20px;
+  inset-inline-end: 20px;
+  display: grid;
+  place-items: center;
+  width: 86px;
+  height: 86px;
+  padding: 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--burgundy);
+  background: radial-gradient(circle at 50% 50%, var(--blush) 0 68%, transparent 69%),
+    repeating-conic-gradient(from 0deg at 50% 50%, var(--blush) 0 7deg, transparent 7deg 15deg);
+}
+.mx-rosette--sm {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 14px;
+  width: 64px;
+  height: 64px;
+  font-size: 10px;
+}
+.mx-stage-body {
+  padding: 24px 30px 30px;
+  border-top: 1px solid var(--mx-line);
+  background: rgb(var(--burgundy-rgb) / 0.4);
+}
+.mx-stage-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.mx-stage-price .num {
+  font-family: var(--font-latin);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--blush);
+}
+.mx-stage-price .cur {
+  font-size: 14px;
+  color: var(--rose);
+}
+.mx-stage-names {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.mx-stage-names h2 {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 38px);
+  margin: 0;
+  color: var(--cream);
+}
+.mx-stage-en {
+  font-family: var(--font-latin);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  color: var(--blush);
+  opacity: 0.9;
+}
+.mx-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--mx-line);
+  font-size: 11.5px;
+  color: var(--rose);
+}
+.mx-chip--badge {
+  background: rgb(var(--blush-rgb) / 0.14);
+  color: var(--blush);
+  border-color: transparent;
+}
+.mx-stage-desc {
+  margin: 14px 0 0;
+  max-width: 52em;
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--rose);
+}
+.mx-stage-notes {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--cream);
+}
+.mx-stage-notes span {
+  display: inline-block;
+  margin-inline-end: 8px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--blush);
+}
+.mx-stage-note {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  color: var(--rose);
+  opacity: 0.75;
+}
+
+/* ── spec sheet (shared by stage + origin cards) ───────────────── */
+.mx-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin: 16px 0 0;
+}
+.mx-specs dt {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--rose);
+  opacity: 0.75;
+  margin-bottom: 3px;
+}
+.mx-specs dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--cream);
+}
+
+/* ── origins grid ──────────────────────────────────────────────── */
+.mx-origins {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.mx-origin {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--mx-line);
+  border-radius: 26px;
+  min-height: 260px;
+}
+.mx-origin[data-sold-out] {
+  opacity: 0.7;
+}
+.mx-origin-flag {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.85);
+}
+.mx-origin-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgb(var(--burgundy-darkest-rgb) / 0.62) 0%,
+    rgb(var(--burgundy-darkest-rgb) / 0.88) 62%,
+    rgb(var(--burgundy-darkest-rgb) / 0.96) 100%
+  );
+}
+.mx-origin-body {
+  position: relative;
+  z-index: 2;
+  padding: 26px 24px 24px;
+}
+.mx-origin-en {
+  font-family: var(--font-latin);
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  color: var(--blush);
+}
+.mx-origin-head h3 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  margin: 4px 0 0;
+  color: var(--cream);
+}
+.mx-origin-price {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 10px;
+}
+.mx-origin-price .num {
+  font-family: var(--font-latin);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--blush);
+}
+.mx-origin-price .cur {
+  font-size: 12px;
+  color: var(--rose);
+}
+.mx-origin-notes {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--rose);
+}
+.mx-origin-out {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--blush-rgb) / 0.4);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--blush);
+}
+
+.mx-empty {
+  max-width: 1360px;
+  margin: 40px auto;
+  padding: 44px 28px;
+  text-align: center;
+  color: var(--rose);
+  border: 1px dashed var(--mx-line);
+  border-radius: 24px;
+}
+
+/* ── phone: the rail is the page, the stage is a sheet ─────────── */
+@media (max-width: 900px) {
+  .mx {
+    padding-top: 18px;
+  }
+  .mx-body {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .mx-rail {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    order: 1;
+  }
+  .mx-row {
+    border-color: var(--mx-line);
+  }
+  .mx-stage {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 80;
+    max-height: 92dvh;
+    overflow-y: auto;
+    border-radius: 26px 26px 0 0;
+    background: var(--burgundy);
+    border: none;
+    box-shadow: 0 -20px 50px -20px rgb(0 0 0 / 0.75);
+    transform: translateY(101%);
+    transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .mx-stage[data-open] {
+    transform: translateY(0);
+  }
+  .mx-stage-inner {
+    min-height: 0;
+    animation: none;
+  }
+  .mx-stage-close {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: 14px;
+    inset-inline-start: 14px;
+    z-index: 3;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--mx-line);
+    background: rgb(var(--burgundy-darkest-rgb) / 0.6);
+    color: var(--cream);
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .mx-stage-media {
+    padding: 28px 20px 10px;
+  }
+  .mx-stage-media img {
+    max-height: 34vh;
+  }
+  .mx-stage-body {
+    padding: 20px 22px 28px;
+  }
+  .mx-rosette {
+    width: 70px;
+    height: 70px;
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mx-stage-inner {
+    animation: none;
+  }
+  .mx-stage {
+    transition: none;
+  }
+}
+
+.mx-origin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+/* the floating loyalty mascot shares the phone's bottom-start corner with the
+   sheet — stand it down while the sheet is up */
+@media (max-width: 900px) {
+  body[data-mx-sheet] .lm-stage {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+}

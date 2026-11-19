@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ND_SLOGAN } from "../lib/national";
+import { WN_SLOGAN } from "../lib/winter";
 import type { ThemeId } from "../lib/data";
 
 const NAV: { href: string; label: string; soon?: boolean }[] = [
   { href: "/", label: "الرئيسية" },
   { href: "/menu", label: "المنيو" },
+  { href: "/catering", label: "كاترينغ" },
   { href: "/#story", label: "قصتنا" },
   { href: "/complaints", label: "الشكاوى" },
 ];
@@ -22,11 +24,18 @@ export default function SiteHeader({
   announcement?: string;
   theme?: ThemeId;
 }) {
-  // The National Day skin leads with the year's slogan (§1.1) unless the owner
-  // has written their own announcement in the control panel.
-  const fallback = theme === "national" ? ND_SLOGAN : DEFAULT_ANNOUNCE;
+  // The seasonal skins lead with their own line unless the owner has written
+  // an announcement in the control panel.
+  const fallback =
+    theme === "national" ? ND_SLOGAN : theme === "winter" ? WN_SLOGAN : DEFAULT_ANNOUNCE;
+  // The winter skin's home page is the tile screen (app/WinterHome.tsx); it has
+  // no #story section, so that link would go nowhere. Drop it on this skin.
+  const links = theme === "winter" ? NAV.filter((l) => l.href !== "/#story") : NAV;
   const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  // Under 560px the link row is hidden — without this sheet the only way off
+  // the page was the menu button, so every other link was unreachable.
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
@@ -41,6 +50,20 @@ export default function SiteHeader({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close on navigation, and on Escape while it is open.
+  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
   return (
     <>
       <div className="announce">
@@ -53,7 +76,7 @@ export default function SiteHeader({
             <span className="logo-en">TRES</span>
           </Link>
           <div className="nav-links">
-            {NAV.map((l) =>
+            {links.map((l) =>
               l.soon ? (
                 <span
                   key={l.href}
@@ -77,8 +100,52 @@ export default function SiteHeader({
               شوف المنيو
             </Link>
           </div>
+
+          <button
+            type="button"
+            className="nav-burger"
+            aria-label={open ? "إغلاق القائمة" : "القائمة"}
+            aria-expanded={open}
+            aria-controls="nav-sheet"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </button>
         </div>
       </div>
+
+      {/* mobile sheet */}
+      <div
+        className="nav-sheet-backdrop"
+        data-open={open || undefined}
+        onClick={() => setOpen(false)}
+        aria-hidden="true"
+      />
+      <nav id="nav-sheet" className="nav-sheet" data-open={open || undefined} aria-label="القائمة">
+        {links.map((l) =>
+          l.soon ? (
+            <span key={l.href} className="nav-sheet-link is-soon" aria-disabled="true">
+              {l.label}
+              <small>قريبًا</small>
+            </span>
+          ) : (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="nav-sheet-link"
+              data-active={pathname === l.href || undefined}
+              onClick={() => setOpen(false)}
+            >
+              {l.label}
+            </Link>
+          ),
+        )}
+        <Link href="/menu" className="btn btn-blush nav-sheet-cta" onClick={() => setOpen(false)}>
+          شوف المنيو
+        </Link>
+      </nav>
     </>
   );
 }

@@ -5,18 +5,21 @@ import localFont from "next/font/local";
 import "./globals.css";
 import "./summer-theme.css";
 import "./national-theme.css";
+import "./winter-theme.css";
 import "./loyalty-mascot.css";
 import SiteHeader from "./components/SiteHeader";
 import Footer from "./components/Footer";
 import LoyaltyMascot from "./components/LoyaltyMascot";
+import Snowfall from "./components/Snowfall";
 import { TresQr } from "./table-card/qr";
 import { SITE, SITE_URL } from "./lib/site";
 
 // Loyalty-program QR destination — single swappable constant. Defaults to the
 // same URL the placeholder PNG uses (scripts/make-loyalty-qr.mjs). Change this
 // (or swap public/assets/loyalty-qr.png) once the loyalty link is finalised.
-const LOYALTY_QR_URL = "https://loyapro.com/c-r/NzEwMA==";
+import { LOYALTY_URL as LOYALTY_QR_URL } from "./lib/contact";
 import { getPublicSettings, THEME_COLORS } from "./lib/data";
+import { getActiveTheme, previewTheme } from "./lib/theme";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
@@ -44,7 +47,7 @@ const hnArabic = localFont({
 export async function generateViewport(): Promise<Viewport> {
   const pathname = (await headers()).get("x-pathname") ?? "";
   const isInternal = pathname.startsWith("/admin") || pathname.startsWith("/staff");
-  const theme = isInternal ? "classic" : (await getPublicSettings()).theme;
+  const theme = isInternal ? "classic" : await getActiveTheme();
   return {
     themeColor: THEME_COLORS[theme],
     colorScheme: "light",
@@ -143,7 +146,7 @@ export default async function RootLayout({
   const isInternal = pathname.startsWith("/admin") || pathname.startsWith("/staff");
   const settings = isInternal ? null : await getPublicSettings();
   const announcement = settings?.announcementActive ? settings.announcement ?? undefined : undefined;
-  const theme = settings?.theme ?? "classic";
+  const theme = settings ? await getActiveTheme() : "classic";
 
   return (
     <html
@@ -162,6 +165,9 @@ export default async function RootLayout({
           />
         )}
         {!isInternal && <SiteHeader announcement={announcement} theme={theme} />}
+        {/* Falling snow — winter skin only, and it mounts nothing under
+            prefers-reduced-motion (see Snowfall.tsx). */}
+        {!isInternal && theme === "winter" && <Snowfall />}
         {children}
         {!isInternal && <Footer />}
         {!isInternal && <LoyaltyMascot qr={<TresQr url={LOYALTY_QR_URL} ariaLabel="باركود برنامج الولاء" />} qrUrl={LOYALTY_QR_URL} />}

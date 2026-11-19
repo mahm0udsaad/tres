@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Megaphone, Clock, Phone, AtSign, Music2, Ghost, Save, Palette, Check } from "lucide-react";
+import { Megaphone, Clock, Phone, AtSign, Music2, Ghost, Save, Palette, Check, MessageCircle, MapPin } from "lucide-react";
 import { saveSettings } from "../actions";
 import type { ThemeId } from "../../lib/data";
 
 type Hours = { day: string; open?: string; close?: string; closed?: boolean }[];
 type S = {
   hours: Hours; announcement: string | null; announcement_active: boolean;
-  phone: string | null; address: string | null;
+  phone: string | null; whatsapp: string | null;
+  address: string | null; maps_url: string | null;
   instagram: string | null; tiktok: string | null; snapchat: string | null;
   theme: ThemeId;
 };
@@ -30,6 +31,10 @@ const THEME_OPTIONS: {
   {
     id: "national", name: "اليوم الوطني", desc: "الأخضر السعودي الغامق — هوية «عزّنا بطبعنا»",
     swatches: ["#002628", "#00894a", "#0050af", "#ffffff"],
+  },
+  {
+    id: "winter", name: "الشتوي", desc: "ملعب الليل: نبيذي غامق، إضاءة باردة، وإطارات ذهبية — وثلج يتساقط على الصفحة",
+    swatches: ["#220a12", "#5c2026", "#d7a35c", "#eaf2f8"],
   },
 ];
 
@@ -141,7 +146,17 @@ export default function SettingsForm({ settings }: { settings: S }) {
       <div className="a-section-title"><h2>التواصل والروابط</h2></div>
       <div className="a-card a-card--pad">
         <div className="a-field"><label><Phone strokeWidth={2} style={{ width: 15, height: 15, verticalAlign: "-2px", marginInlineEnd: 5 }} />الجوال</label><input name="phone" className="a-input" dir="ltr" inputMode="tel" defaultValue={settings.phone ?? ""} /></div>
+        <div className="a-field">
+          <label><MessageCircle strokeWidth={2} style={{ width: 15, height: 15, verticalAlign: "-2px", marginInlineEnd: 5 }} />واتساب</label>
+          <input name="whatsapp" className="a-input" dir="ltr" inputMode="tel" placeholder="9665XXXXXXXX" defaultValue={settings.whatsapp ?? ""} />
+          <p className="a-hint">بالصيغة الدولية بدون + أو مسافات. يُستخدم في أزرار «تواصل معنا» وحجز الكاترينغ.</p>
+        </div>
         <div className="a-field"><label>العنوان</label><input name="address" className="a-input" defaultValue={settings.address ?? ""} /></div>
+        <div className="a-field">
+          <label><MapPin strokeWidth={2} style={{ width: 15, height: 15, verticalAlign: "-2px", marginInlineEnd: 5 }} />رابط قوقل ماب</label>
+          <input name="maps_url" className="a-input" dir="ltr" placeholder="https://maps.app.goo.gl/…" defaultValue={settings.maps_url ?? ""} />
+          <p className="a-hint">افتح موقع الفرع في خرائط قوقل ← مشاركة ← نسخ الرابط.</p>
+        </div>
         <div className="a-field"><label><AtSign strokeWidth={2} style={{ width: 15, height: 15, verticalAlign: "-2px", marginInlineEnd: 5 }} />إنستغرام</label><input name="instagram" className="a-input" dir="ltr" defaultValue={settings.instagram ?? ""} /></div>
         <div className="a-field"><label><Music2 strokeWidth={2} style={{ width: 15, height: 15, verticalAlign: "-2px", marginInlineEnd: 5 }} />تيك توك</label><input name="tiktok" className="a-input" dir="ltr" defaultValue={settings.tiktok ?? ""} /></div>
         <div className="a-field" style={{ margin: 0 }}><label><Ghost strokeWidth={2} style={{ width: 15, height: 15, verticalAlign: "-2px", marginInlineEnd: 5 }} />سناب شات</label><input name="snapchat" className="a-input" dir="ltr" defaultValue={settings.snapchat ?? ""} /></div>

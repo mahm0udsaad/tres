@@ -45,11 +45,18 @@ export async function POST(request: Request) {
   };
 
   // Primary: Supabase insert (anon key — RLS allows insert into feedback).
+  // The row comes back with the tracking code the trigger generated, which is
+  // what the guest quotes on /complaints/track; `select("ticket")` is allowed
+  // on the returned row of your own insert.
   if (supabaseConfigured) {
     try {
-      const { error } = await supabasePublic().from("feedback").insert(record);
+      const { data, error } = await supabasePublic()
+        .from("feedback")
+        .insert(record)
+        .select("ticket")
+        .single();
       if (error) throw error;
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, ticket: data?.ticket ?? null });
     } catch (err) {
       console.error("Supabase feedback insert failed, falling back to file:", err);
     }

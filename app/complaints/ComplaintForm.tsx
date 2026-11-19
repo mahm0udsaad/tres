@@ -15,6 +15,9 @@ type Status = "idle" | "submitting" | "success" | "error";
 export default function ComplaintForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  // The tracking code the guest keeps — it is the only way back into their
+  // complaint, so it is shown large and copyable on the thank-you card.
+  const [ticket, setTicket] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,6 +43,8 @@ export default function ComplaintForm() {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("bad response");
+      const body = (await res.json().catch(() => null)) as { ticket?: string | null } | null;
+      setTicket(body?.ticket ?? null);
       setStatus("success");
       form.reset();
     } catch {
@@ -57,13 +62,23 @@ export default function ComplaintForm() {
           شكرًا لأنك أخذت وقتك تكلّمنا. بنطّلع عليها ونتابعها، وبنرجع لك على رقم
           الجوال المسجل.
         </p>
+        {ticket && (
+          <div className="ticket-card">
+            <span className="ticket-label">رقم التتبع</span>
+            <strong className="ticket-code" dir="ltr">{ticket}</strong>
+            <p className="ticket-hint">
+              احتفظ بالرقم — تقدر تتابع حالة شكواك والرد عليها من{" "}
+              <Link href="/complaints/track">صفحة المتابعة</Link>.
+            </p>
+          </div>
+        )}
         <div className="complaint-done-actions">
-          <button type="button" className="btn btn-cta-primary" onClick={() => setStatus("idle")}>
+          <Link href={ticket ? `/complaints/track?code=${ticket}` : "/complaints/track"} className="btn btn-cta-primary">
+            متابعة الشكوى
+          </Link>
+          <button type="button" className="btn btn-cta-ghost" onClick={() => { setTicket(null); setStatus("idle"); }}>
             إرسال شكوى أخرى
           </button>
-          <Link href="/" className="btn-cta-ghost btn">
-            الرجوع للرئيسية
-          </Link>
         </div>
       </div>
     );
@@ -116,6 +131,10 @@ export default function ComplaintForm() {
       <button type="submit" className="btn btn-cta-primary complaint-submit" disabled={status === "submitting"}>
         {status === "submitting" ? "جاري الإرسال…" : "إرسال الشكوى"}
       </button>
+
+      <p className="complaint-track-link">
+        عندك شكوى سابقة؟ <Link href="/complaints/track">تابعها برقم التتبع</Link>
+      </p>
     </form>
   );
 }

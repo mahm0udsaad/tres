@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone, Check, Coffee, CupSoda, Flower2, Plus, Tag } from "lucide-react";
-import WhatsAppIcon from "../components/WhatsAppIcon";
-import { getCateringPackages, getPublicSettings } from "../lib/data";
-import { waLink } from "../lib/contact";
+import WhatsAppIcon from "../../components/WhatsAppIcon";
+import { getCateringPackages, getPublicSettings } from "../../lib/data";
+import { waLink } from "../../lib/contact";
 
 export const metadata: Metadata = {
   title: "حجز كاترينغ",

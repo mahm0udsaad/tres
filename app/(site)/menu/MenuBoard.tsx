@@ -31,7 +31,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toArabic, type Category, type Item } from "../lib/menu";
+import { toArabic, type Category, type Item } from "../../lib/menu";
 import "./menu-experience.css";
 
 function pathForId(id: string | null): string {

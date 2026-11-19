@@ -16,11 +16,11 @@ import {
 } from "../lib/staff-shared";
 
 function refreshPublic() {
-  // Public menu + homepage reflect owner edits.
-  revalidatePath("/");
-  revalidatePath("/menu");
-  revalidatePath("/menu/[category]", "page");
-  revalidatePath("/admin", "layout");
+  // The public pages are cached, and the skin, announcement, hours and menu
+  // show up on every one of them (header, footer, فروعنا, /catering…), so an
+  // owner edit drops the whole cache rather than a hand-kept list of paths
+  // that goes stale the next time a page starts reading the settings.
+  revalidatePath("/", "layout");
 }
 
 function str(v: FormDataEntryValue | null): string | null {

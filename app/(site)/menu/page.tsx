@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import MenuBoard from "./MenuBoard";
 import MenuClassic from "./MenuClassic";
-import { availableItemImages } from "../lib/itemImages";
-import { getMenu } from "../lib/data";
-import { getActiveTheme } from "../lib/theme";
-
-export const dynamic = "force-dynamic";
+import { availableItemImages } from "../../lib/itemImages";
+import { getMenu } from "../../lib/data";
+import { getActiveTheme } from "../../lib/theme";
 
 export const metadata: Metadata = {
   title: "المنيو",

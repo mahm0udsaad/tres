@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Coffee, MapPin, UtensilsCrossed, Star, MessageSquareWarning } from "lucide-react";
-import { STORE_MAPS, LOYALTY_URL, mapsLink } from "./lib/contact";
-import { getPublicSettings } from "./lib/data";
+import { STORE_MAPS, LOYALTY_URL, mapsLink } from "../lib/contact";
+import { getPublicSettings } from "../lib/data";
 
 /**
  * الصفحة الرئيسية — الواجهة الجديدة (winter skin).

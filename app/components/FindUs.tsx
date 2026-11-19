@@ -1,6 +1,7 @@
 import { Navigation, Clock, Coffee, ShoppingBag, Car } from "lucide-react";
 import { getPublicSettings, type HoursRow } from "../lib/data";
 import { STORE, STORE_MAPS, mapsLink } from "../lib/contact";
+import OpenState from "./OpenState";
 
 /**
  * فروعنا / FIND US — the branch block, built to the owner's reference: the map
@@ -13,44 +14,6 @@ import { STORE, STORE_MAPS, mapsLink } from "../lib/contact";
  */
 
 const DAYS = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
-
-/** JS getDay(): 0 = Sunday. The settings rows start at Saturday. */
-const DAY_INDEX = [1, 2, 3, 4, 5, 6, 0];
-
-function minutes(hhmm?: string): number | null {
-  if (!hhmm) return null;
-  const [h, m] = hhmm.split(":").map(Number);
-  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
-}
-
-/** Open right now, in the store's own timezone — not the visitor's. */
-function openNow(hours: HoursRow[]): { open: boolean; today?: HoursRow } | null {
-  if (!hours.length) return null;
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Riyadh",
-    hour: "2-digit",
-    minute: "2-digit",
-    weekday: "short",
-    hour12: false,
-  }).formatToParts(new Date());
-  const hh = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
-  const mm = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
-  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
-  const jsDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
-  if (jsDay < 0) return null;
-
-  const today = hours[DAY_INDEX[jsDay]];
-  if (!today || today.closed) return { open: false, today };
-
-  const from = minutes(today.open);
-  const to = minutes(today.close);
-  if (from == null || to == null) return { open: false, today };
-
-  const now = hh * 60 + mm;
-  // a closing time past midnight (e.g. 07:00 → 02:00) wraps around
-  const open = to > from ? now >= from && now < to : now >= from || now < to;
-  return { open, today };
-}
 
 function hoursLine(hours: HoursRow[]): string | null {
   const openDays = hours.filter((h) => !h.closed && h.open && h.close);
@@ -72,7 +35,6 @@ const SERVICES = [
 
 export default async function FindUs() {
   const settings = await getPublicSettings();
-  const status = openNow(settings.hours);
   const line = hoursLine(settings.hours);
   const place = mapsLink(settings.mapsUrl) || STORE_MAPS.place;
 
@@ -97,12 +59,7 @@ export default async function FindUs() {
             <strong>
               {STORE.nameEn} · {STORE.name}
             </strong>
-            {status && (
-              <span className="find-state find-state--plain" data-open={status.open}>
-                <i />
-                {status.open ? "نستقبلكم الآن" : "مغلق حالياً"}
-              </span>
-            )}
+            <OpenState hours={settings.hours} plain />
             <a href={place} target="_blank" rel="noreferrer">
               افتح في قوقل ماب ↗
             </a>
@@ -135,12 +92,7 @@ export default async function FindUs() {
             ))}
           </div>
 
-          {status && (
-            <span className="find-state" data-open={status.open}>
-              <i />
-              {status.open ? "نستقبلكم الآن" : "مغلق حالياً"}
-            </span>
-          )}
+          <OpenState hours={settings.hours} />
 
           <p className="find-hours">
             <Clock strokeWidth={2} aria-hidden="true" />

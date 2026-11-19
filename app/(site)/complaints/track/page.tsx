@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { trackFeedback } from "../../lib/data";
+import { trackFeedback } from "../../../lib/data";
 
 export const metadata: Metadata = {
   title: "متابعة شكوى",

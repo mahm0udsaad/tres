@@ -1,7 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Same lookup as proxy.ts: newer projects ship a publishable key, legacy ones
+// an anon key. Reading only the anon key made the public site silently fall
+// back to the static menu when just the publishable key was set.
+const ANON =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 /** True when Supabase env is configured. When false, the site falls back to the

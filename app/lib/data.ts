@@ -103,7 +103,7 @@ type MenuResult = {
  * returns them in the legacy `Category[]` shape. Falls back to the static menu
  * when Supabase isn't configured or returns nothing, so the site never breaks.
  */
-export async function getMenu(): Promise<MenuResult> {
+export const getMenu = cache(async function getMenu(): Promise<MenuResult> {
   if (!supabaseConfigured) return staticMenu();
   try {
     const sb = supabasePublic();
@@ -131,7 +131,7 @@ export async function getMenu(): Promise<MenuResult> {
   } catch {
     return staticMenu();
   }
-}
+});
 
 /** Resolve a single category by slug from the live (or fallback) menu. */
 export async function getMenuCategory(slug: string): Promise<Category | undefined> {
@@ -331,15 +331,19 @@ export async function getHome(): Promise<HomeSections> {
   const fallback = staticHome();
   if (!supabaseConfigured) return fallback;
   try {
-    const sb = supabasePublic();
-    const [{ data: s }, { data: cats }, { data: items }] = await Promise.all([
-      sb.from("settings").select("home").eq("id", 1).single(),
-      sb.from("categories").select("*").eq("is_active", true),
-      sb.from("items").select("*").eq("is_available", true),
+    // Categories and items come from getMenu (memoised per request) — the home
+    // page renders both, and fetching them twice doubled its database calls.
+    const [{ data: s }, menu] = await Promise.all([
+      supabasePublic().from("settings").select("home").eq("id", 1).single(),
+      getMenu(),
     ]);
-    if (!cats || !items) return fallback;
-    const catById = new Map((cats as DbCategory[]).map((c) => [c.id, c]));
-    const itemById = new Map((items as DbItem[]).map((i) => [i.id, i]));
+    if (!menu.live) return fallback;
+    const itemById = new Map<string, HomeItemCard>();
+    for (const c of menu.categories) {
+      for (const it of c.items as (Item & { dbId?: string })[]) {
+        if (it.dbId) itemById.set(it.dbId, { ...it, categorySlug: c.id, categoryAr: c.ar });
+      }
+    }
     const home = (s?.home ?? {}) as Record<string, { kicker?: string; title?: string; desc?: string; items?: string[] }>;
 
     const build = (k: "today" | "best"): HomeSection => {
@@ -348,10 +352,7 @@ export async function getHome(): Promise<HomeSections> {
       const resolved: HomeItemCard[] = [];
       for (const id of Array.isArray(cfg.items) ? cfg.items : []) {
         const it = itemById.get(id);
-        if (!it) continue;
-        const cat = catById.get(it.category_id);
-        if (!cat) continue;
-        resolved.push({ ...mapItem(it), categorySlug: cat.slug, categoryAr: cat.name_ar });
+        if (it) resolved.push(it);
       }
       return {
         kicker: cfg.kicker ?? def.kicker,

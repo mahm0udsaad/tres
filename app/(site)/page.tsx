@@ -1,10 +1,8 @@
-import { getMenu, getHome } from "./lib/data";
+import { getMenu, getHome } from "../lib/data";
 import HomeClient from "./HomeClient";
 import WinterHome from "./WinterHome";
-import FindUs from "./components/FindUs";
-import { getActiveTheme } from "./lib/theme";
-
-export const dynamic = "force-dynamic";
+import FindUs from "../components/FindUs";
+import { getActiveTheme } from "../lib/theme";
 
 export default async function Home() {
   const theme = await getActiveTheme();

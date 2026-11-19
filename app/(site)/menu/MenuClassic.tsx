@@ -21,8 +21,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
-import { toArabic, type Category, type Item } from "../lib/menu";
-import { ND_SLOGANS } from "../lib/national";
+import { toArabic, type Category, type Item } from "../../lib/menu";
+import { ND_SLOGANS } from "../../lib/national";
 
 function pathForId(id: string | null): string {
   return id ? `/menu/${id}` : "/menu";
@@ -228,7 +228,9 @@ export default function MenuClassic({
     (id: string | null, opts: { push?: boolean } = { push: true }) => {
       withTransition(() => {
         setActiveId(id);
-        window.scrollTo({ top: 0 });
+        // "instant": html has scroll-behavior: smooth, which would otherwise
+        // animate this scroll underneath the view transition.
+        window.scrollTo({ top: 0, behavior: "instant" });
       });
       if (opts.push !== false && pathForId(id) !== window.location.pathname) {
         window.history.pushState({ catId: id }, "", pathForId(id));
@@ -307,10 +309,10 @@ export default function MenuClassic({
                 <div className={"product-grid" + (active.id === "specialty" ? " spec-grid" : "")}>
                   {active.items.map((it, i) =>
                     active.id === "specialty" ? (
-                      <SpecialtyCard key={i} it={it} index={i} />
+                      <SpecialtyCard key={it.id ?? i} it={it} index={i} />
                     ) : (
                       <ProductCard
-                        key={i}
+                        key={it.id ?? i}
                         it={it}
                         glyph={active.glyph}
                         index={i}

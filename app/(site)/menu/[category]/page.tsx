@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import MenuBoard from "../MenuBoard";
 import MenuClassic from "../MenuClassic";
-import { availableItemImages } from "../../lib/itemImages";
-import { getMenu, getMenuCategory } from "../../lib/data";
-import { getActiveTheme } from "../../lib/theme";
+import { availableItemImages } from "../../../lib/itemImages";
+import { getMenu, getMenuCategory } from "../../../lib/data";
+import { getActiveTheme } from "../../../lib/theme";
 
-export const dynamic = "force-dynamic";
+// Prerender every live category at build time; one added later renders on its
+// first visit and is cached from then on.
+export async function generateStaticParams() {
+  const { categories } = await getMenu();
+  return categories.map((c) => ({ category: c.id }));
+}
 
 export async function generateMetadata({
   params,

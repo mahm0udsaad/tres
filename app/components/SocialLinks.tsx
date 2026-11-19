@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { SITE } from "../lib/site";
 
 const SocialQr = dynamic(
-  () => import("../table-card/qr").then((module) => module.TresQr),
+  () => import("./qr").then((module) => module.TresQr),
   {
     ssr: false,
     loading: () => <div className="social-qr-loading" aria-label="جارٍ إنشاء رمز QR" />,

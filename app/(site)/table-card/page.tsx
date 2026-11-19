@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TresQr } from "./qr";
+import { TresQr } from "../../components/qr";
 import PrintButton from "./PrintButton";
 
 const SITE_URL = "https://tres-three.vercel.app/";

@@ -29,19 +29,31 @@ export function useReveal(rootRef: RefObject<HTMLElement | null>) {
     );
     root.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
 
-    const onMove = (ev: MouseEvent) => {
-      const mx = ev.clientX / window.innerWidth - 0.5;
-      const my = ev.clientY / window.innerHeight - 0.5;
-      root.querySelectorAll<HTMLElement>("[data-parallax]").forEach((el) => {
-        const s = parseFloat(el.getAttribute("data-parallax") || "10") || 10;
+    // Parallax: look the layers up once, and write their transforms at most
+    // once per frame — mousemove fires far more often than the screen paints.
+    const layers = Array.from(root.querySelectorAll<HTMLElement>("[data-parallax]")).map(
+      (el) => ({ el, s: parseFloat(el.getAttribute("data-parallax") || "10") || 10 }),
+    );
+    let frame = 0;
+    let mx = 0;
+    let my = 0;
+    const paint = () => {
+      frame = 0;
+      for (const { el, s } of layers) {
         el.style.transform = `translate(${-mx * s}px,${-my * s}px)`;
-      });
+      }
     };
-    window.addEventListener("mousemove", onMove);
+    const onMove = (ev: MouseEvent) => {
+      mx = ev.clientX / window.innerWidth - 0.5;
+      my = ev.clientY / window.innerHeight - 0.5;
+      if (!frame && layers.length) frame = requestAnimationFrame(paint);
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
 
     return () => {
       io.disconnect();
       window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(frame);
     };
   }, [rootRef]);
 }

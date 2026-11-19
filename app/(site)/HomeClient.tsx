@@ -3,11 +3,11 @@
 import { useRef, useState, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { createPortal } from "react-dom";
-import { useReveal } from "./lib/useReveal";
-import { toArabic, type Category, type Item } from "./lib/menu";
+import { useReveal } from "../lib/useReveal";
+import { toArabic, type Category, type Item } from "../lib/menu";
 import Link from "next/link";
-import { ND_SLOGANS } from "./lib/national";
-import { STORE_MAPS } from "./lib/contact";
+import { ND_SLOGANS } from "../lib/national";
+import { STORE_MAPS } from "../lib/contact";
 import { MapPin, UtensilsCrossed } from "lucide-react";
 
 function withTransition(update: () => void) {
@@ -206,6 +206,10 @@ export default function HomeClient({
                 className="mascot"
                 src="/assets/mascot-standing.png"
                 alt="شخصية تريس"
+                width={1176}
+                height={1478}
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
           </div>
@@ -302,9 +306,9 @@ export default function HomeClient({
                   </p>
                 </div>
               </div>
-              <a href="/menu" className="btn btn-menu">
+              <Link href="/menu" className="btn btn-menu">
                 المنيو الكامل <span className="arrow">←</span>
-              </a>
+              </Link>
             </div>
 
             {/* list */}

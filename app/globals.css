@@ -3232,7 +3232,7 @@ img {
 }
 .catering-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr));
   gap: 20px;
 }
 .catering-card {
@@ -3762,4 +3762,115 @@ img {
   .nav-burger span {
     transition: none;
   }
+}
+
+/* catering — the owner's price list: coffee only, the drinks to choose from,
+   and the two extras that apply to every package */
+.catering-note {
+  display: inline-block;
+  margin: 4px 0 22px;
+  padding: 7px 16px;
+  border: 1px solid rgb(var(--blush-rgb) / 0.45);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blush);
+}
+.catering-card .catering-serves {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  opacity: 1;
+}
+.catering-extra {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+.catering-extra-block {
+  padding: 24px 24px 22px;
+  border: 1px solid rgb(var(--blush-rgb) / 0.22);
+  border-radius: 22px;
+  background: rgb(var(--cream-rgb) / 0.03);
+}
+.catering-extra-block h3 {
+  margin: 0 0 16px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  color: var(--cream);
+}
+.catering-drinks,
+.catering-addons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.catering-drinks li,
+.catering-addons li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 15px;
+  color: var(--cream);
+}
+.catering-drinks svg,
+.catering-addons svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--blush);
+}
+.catering-addon-label {
+  flex: 1;
+}
+.catering-addon-price {
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--rose);
+}
+.catering-addon-price .num {
+  font-family: var(--font-latin);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--blush);
+}
+.catering-addon-price small {
+  font-size: 12px;
+  opacity: 0.85;
+}
+.catering-extras-sec {
+  padding-top: 0;
+}
+.catering-extras-sec .catering-extra {
+  margin-top: 0;
+}
+.catering-card-extras {
+  margin: -6px 0 20px;
+  padding-top: 14px;
+  border-top: 1px dashed rgb(var(--blush-rgb) / 0.25);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--rose);
+}
+.catering-card-extras span {
+  color: var(--cream);
+  font-weight: 600;
+}
+.catering-card-extras b {
+  color: var(--blush);
+  white-space: nowrap;
+}
+.catering-addon-label small {
+  display: block;
+  font-size: 12px;
+  color: var(--rose);
+  opacity: 0.85;
+}
+.catering-addon-price small {
+  display: block;
+  text-align: end;
 }

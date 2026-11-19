@@ -44,8 +44,10 @@ export type DbItem = {
 
 function priceToStr(p: number | null): string {
   if (p == null) return "";
-  // drop trailing .00 so "16.00" reads as "16"
-  return Number.isInteger(p) ? String(p) : String(p).replace(/\.?0+$/, "");
+  // drop trailing .00 so "16.00" reads as "16"; group thousands so a catering
+  // package reads "1,450", not "1450"
+  const n = Number(p);
+  return Number.isInteger(n) ? n.toLocaleString("en-US") : String(n).replace(/\.?0+$/, "");
 }
 
 /** Map a DB item row onto the legacy `Item` shape the UI already renders. */

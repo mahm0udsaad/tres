@@ -11,11 +11,9 @@ import { getPublicSettings } from "./lib/data";
  * الكاترينج on the left, موقعنا and برنامج الولاء under them, and a long box
  * under those for الاستفسارات والشكاوى. No hero copy.
  *
- * That screen is the winter skin's *hero*: app/page.tsx passes it to
- * HomeClient as `hero`, in place of the default one. Everything under it —
- * today's picks, best sellers, the menu, the story, the branches and the
- * feedback band — is the same page every skin shows, dressed by
- * winter-theme.css (the net between sections, the score badges).
+ * On this skin the home page is this screen and فروعنا (the map) under it —
+ * nothing else (app/page.tsx). The owner asked for the menu to stay behind
+ * its tile rather than run down the home page.
  *
  * The snow is <Snowfall>, already mounted by the root layout on this skin.
  */

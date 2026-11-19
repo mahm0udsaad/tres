@@ -109,19 +109,12 @@ export default function HomeClient({
   today,
   best,
   findUs,
-  hero,
 }: {
   categories: Category[];
   today: HomeSec;
   best: HomeSec;
   /** فروعنا — built on the server (it reads the store settings). */
   findUs?: React.ReactNode;
-  /**
-   * Replaces the default hero. The winter skin opens on its own tile screen
-   * (WinterHome) and keeps every section below it the same as the other
-   * skins — so only the top of the page is swapped, not the page.
-   */
-  hero?: React.ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   useReveal(rootRef);
@@ -172,7 +165,6 @@ export default function HomeClient({
   return (
     <div ref={rootRef} className="page">
       {/* ===================== HERO ===================== */}
-      {hero ?? (
       <div className="hero">
         <div className="hero-noise" />
         {/* Winter skin: the court poster — the wine-outlined wordmark cropped
@@ -275,7 +267,6 @@ export default function HomeClient({
           </div>
         </div>
       </div>
-      )}
 
       {/* ===================== TODAY'S PICKS ===================== */}
       <CuratedSection section={today} />

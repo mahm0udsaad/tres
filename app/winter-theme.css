@@ -580,8 +580,12 @@
    ================================================================= */
 
 :root[data-theme="winter"] {
-  --wn-sport: #d9f02b; /* the one sport colour: an optic-yellow ball */
-  --wn-sport-deep: #b4c91f;
+  /* The one accent — prices, primary buttons, scores. It was an optic-yellow
+     ball (#d9f02b) until the owner asked for it to be "our identity" instead
+     (2026-11-19): it is now the gold of the backlit frame wall above the bar,
+     the same gold the home tiles already use. */
+  --wn-sport: var(--wn-gold);
+  --wn-sport-deep: var(--wn-gold-deep);
 }
 
 /* ── the net ───────────────────────────────────────────────────────────────
@@ -663,7 +667,7 @@
   border-radius: 12px;
   overflow: hidden;
   background: linear-gradient(180deg, #16060b, #0d0407);
-  box-shadow: 0 24px 50px -28px rgb(0 0 0 / 0.9), inset 0 0 30px rgb(217 240 43 / 0.07);
+  box-shadow: 0 24px 50px -28px rgb(0 0 0 / 0.9), inset 0 0 30px rgb(215 163 92 / 0.07);
   font-family: var(--font-latin);
 }
 [data-theme="winter"] .wn-cell {
@@ -682,7 +686,7 @@
   line-height: 1;
   letter-spacing: 0.04em;
   color: var(--wn-sport);
-  text-shadow: 0 0 16px rgb(217 240 43 / 0.45);
+  text-shadow: 0 0 16px rgb(215 163 92 / 0.45);
 }
 [data-theme="winter"] .wn-cell span {
   font-family: var(--font-body);
@@ -774,14 +778,14 @@
   padding: 9px 12px;
   border-radius: 9px;
   background: linear-gradient(180deg, #16060b, #0d0407);
-  border: 1px solid rgb(217 240 43 / 0.5);
-  box-shadow: inset 0 0 18px rgb(217 240 43 / 0.18);
+  border: 1px solid rgb(215 163 92 / 0.5);
+  box-shadow: inset 0 0 18px rgb(215 163 92 / 0.18);
   font-family: var(--font-latin);
   font-size: 27px;
   font-weight: 700;
   line-height: 1;
   color: var(--wn-sport);
-  text-shadow: 0 0 14px rgb(217 240 43 / 0.5);
+  text-shadow: 0 0 14px rgb(215 163 92 / 0.5);
 }
 
 /* ── the rally ─────────────────────────────────────────────────────────────
@@ -890,11 +894,11 @@
   color: var(--wn-sport);
 }
 [data-theme="winter"] .eyebrow {
-  border-color: rgb(217 240 43 / 0.45);
+  border-color: rgb(215 163 92 / 0.45);
 }
 [data-theme="winter"] .eyebrow-dot {
   background: var(--wn-sport);
-  box-shadow: 0 0 12px rgb(217 240 43 / 0.75);
+  box-shadow: 0 0 12px rgb(215 163 92 / 0.75);
 }
 [data-theme="winter"] .btn-hero-primary,
 [data-theme="winter"] .catering-hero-cta,
@@ -903,8 +907,8 @@
 [data-theme="winter"] .nav-inner a.btn-blush,
 [data-theme="winter"] .btn-cta-primary {
   background: var(--wn-sport);
-  color: #1b2104;
-  box-shadow: 0 18px 38px -20px rgb(217 240 43 / 0.6);
+  color: #241008;
+  box-shadow: 0 18px 38px -20px rgb(215 163 92 / 0.6);
 }
 [data-theme="winter"] .btn-hero-primary:hover,
 [data-theme="winter"] .catering-hero-cta:hover,
@@ -912,11 +916,11 @@
 [data-theme="winter"] .complaint-submit:hover,
 [data-theme="winter"] .nav-inner a.btn-blush:hover,
 [data-theme="winter"] .btn-cta-primary:hover {
-  background: #e6ff3e;
+  background: #e6b874;
 }
 [data-theme="winter"] .track-state {
   background: var(--wn-sport);
-  color: #1b2104;
+  color: #241008;
 }
 [data-theme="winter"] .product-badge,
 [data-theme="winter"] .menu-badge,
@@ -988,7 +992,7 @@
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--wn-sport);
-  box-shadow: 0 0 0 7px rgb(217 240 43 / 0.08), 0 0 24px rgb(217 240 43 / 0.45);
+  box-shadow: 0 0 0 7px rgb(215 163 92 / 0.08), 0 0 24px rgb(215 163 92 / 0.45);
 }
 [data-theme="winter"] .wn-home-inner {
   position: relative;
@@ -1552,5 +1556,33 @@
   [data-theme="winter"] .wn-symbol-ball--one {
     animation: none;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+/* ── home: tiles, then the map — one section per stop ───────────────────────
+   The owner wants the home page to move section to section as it scrolls.
+   `mandatory` gives the page that step-by-step feel; فروعنا and the footer
+   are taller than a phone screen, and browsers let a visitor scroll freely
+   inside a snap area that is taller than the screen, so neither gets stuck.
+   The footer snaps by its end, so the page can always reach the bottom. */
+html:has(.wn-page) {
+  scroll-snap-type: y mandatory;
+}
+[data-theme="winter"] .wn-page > .wn-home,
+[data-theme="winter"] .wn-page > .find-us {
+  scroll-snap-align: start;
+  scroll-margin-top: var(--wn-nav-h, 76px);
+}
+html:has(.wn-page) .footer {
+  scroll-snap-align: end;
+}
+/* the home page has a single section heading, so a score badge has nothing to
+   count — keep the kicker plain there */
+[data-theme="winter"] .wn-page .section-kicker::before {
+  content: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:has(.wn-page) {
+    scroll-snap-type: none;
   }
 }

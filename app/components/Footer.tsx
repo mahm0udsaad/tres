@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import WhatsAppIcon from "./WhatsAppIcon";
@@ -17,22 +16,6 @@ export default async function Footer() {
     <div className="footer">
       <div className="footer-inner">
         <div className="footer-cols">
-          <div>
-            <div className="footer-brand">
-              <Image
-                src="/assets/logo/tres-mark-white.png"
-                alt="TRES Logo"
-                width={160}
-                height={160}
-                loading="eager"
-                style={{ width: "160px", height: "auto" }}
-              />
-            </div>
-            <p className="footer-about">
-              ثلاثة محاصيل، حكاية واحدة. قهوة مختصة من الطائف، نحمّصها بدفعات
-              صغيرة ونقدّمها بطعم واضح ومتوازن.
-            </p>
-          </div>
           <div className="footer-col">
             <div className="title">زورنا</div>
             <div className="lines">
@@ -69,7 +52,6 @@ export default async function Footer() {
         </div>
         <div className="footer-base">
           <span>© 2026 تريس — جميع الحقوق محفوظة.</span>
-          <span className="en">THREE ORIGINS · ONE STORY</span>
         </div>
       </div>
     </div>

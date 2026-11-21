@@ -17,8 +17,9 @@
  *
  * The rail sits at the inline start (the right, in RTL) — the owner asked for
  * it there — and the stage holds one product at a time. On desktop the page
- * scrolls through the category: each scroll step advances the stage to the
- * next item in the rail, and picking a row scrolls to that item's step.
+ * The rail is one continuous list of every category, each under its own
+ * heading; scrolling it moves the active tab from category to category (the
+ * owner's note), and a tab click scrolls the list to that section.
  *
  * Every category, specialty origins included, uses this same rail + stage —
  * the owner wants one design across the menu. Origin specs (variety, altitude,
@@ -38,13 +39,6 @@ import "./menu-experience.css";
 
 function pathForId(id: string | null): string {
   return id ? `/menu/${id}` : "/menu";
-}
-
-/** Where the rail and stage pin (matches `top` on both in the CSS). */
-const STICKY_TOP = 90;
-/** One scroll step per item — matches the 40vh in .mx-body's min-height. */
-function scrollStep(): number {
-  return window.innerHeight * 0.4;
 }
 
 function itemPhoto(it: Item, photoSet: Set<string>): string | undefined {
@@ -228,34 +222,71 @@ export default function MenuBoard({
   const known = (id: string | null) => (id && categories.some((c) => c.id === id) ? id : null);
 
   const [catId, setCatId] = useState<string | null>(known(initialId) ?? firstId);
-  const [pickedItem, setPickedItem] = useState<string | null>(null);
+  // The picked row, as "<category>/<item>". The stage shows it while its
+  // category is the active one, and the category's first item otherwise — so
+  // scrolling into a new section brings that section's lead product on stage.
+  const [picked, setPicked] = useState<string | null>(null);
   // Mobile only: the stage is a sheet, and it opens on tap. CSS ignores this
   // flag from the two-pane breakpoint up.
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const cat = categories.find((c) => c.id === catId) ?? categories[0];
   const items = cat?.items ?? [];
-  const current = items.find((i) => (i.id ?? i.ar) === pickedItem) ?? items[0];
-  const currentIdx = current ? items.indexOf(current) : -1;
+  const rowKey = (c: Category, it: Item) => `${c.id}/${it.id ?? it.ar}`;
+  const current = (cat && items.find((i) => rowKey(cat, i) === picked)) ?? items[0];
 
-  const bodyRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLElement>(null);
+  const tabsRef = useRef<HTMLElement>(null);
+  const sectionRefs = useRef(new Map<string, HTMLElement>());
+  // While a tab click scrolls to its section, the scroll spy stands down so the
+  // tabs in between don't flicker on the way.
+  const jumping = useRef<number | null>(null);
 
-  const goto = useCallback(
-    (id: string, opts: { push?: boolean } = {}) => {
-      setCatId(id);
-      setPickedItem(null);
-      setSheetOpen(false);
-      const body = bodyRef.current;
-      if (body && window.scrollY > body.offsetTop) {
-        window.scrollTo({ top: 0 });
-      }
-      if (opts.push !== false && pathForId(id) !== window.location.pathname) {
-        window.history.pushState({ catId: id }, "", pathForId(id));
+  const isDesktop = () => window.matchMedia("(min-width: 901px)").matches;
+
+  /** The line a section has to cross to become the active one. */
+  const spyLine = useCallback(() => {
+    if (isDesktop()) return (railRef.current?.getBoundingClientRect().top ?? 0) + 24;
+    return (tabsRef.current?.getBoundingClientRect().bottom ?? 0) + 24;
+  }, []);
+
+  /** Scroll the list (the rail on desktop, the page on a phone) to a section. */
+  const scrollToSection = useCallback(
+    (id: string, behavior: ScrollBehavior = "smooth") => {
+      const sec = sectionRefs.current.get(id);
+      const rail = railRef.current;
+      if (!sec || !rail) return;
+      if (jumping.current) window.clearTimeout(jumping.current);
+      jumping.current = window.setTimeout(() => (jumping.current = null), 800);
+      if (isDesktop()) {
+        const top = sec.getBoundingClientRect().top - rail.getBoundingClientRect().top + rail.scrollTop;
+        rail.scrollTo({ top: top - 4, behavior });
+      } else {
+        const offset = (tabsRef.current?.getBoundingClientRect().bottom ?? 0) + 8;
+        window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - offset, behavior });
       }
     },
     [],
   );
+
+  const goto = useCallback(
+    (id: string, opts: { push?: boolean; scroll?: boolean } = {}) => {
+      setCatId(id);
+      setSheetOpen(false);
+      if (opts.scroll !== false) scrollToSection(id);
+      if (opts.push !== false && pathForId(id) !== window.location.pathname) {
+        window.history.pushState({ catId: id }, "", pathForId(id));
+      }
+    },
+    [scrollToSection],
+  );
+
+  // A deep link (/menu/<category>) opens with the list already at that section.
+  useEffect(() => {
+    const id = known(initialId);
+    if (id && id !== firstId) scrollToSection(id, "auto");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Browser back/forward → follow the URL.
   useEffect(() => {
@@ -267,6 +298,58 @@ export default function MenuBoard({
     return () => window.removeEventListener("popstate", onPop);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goto, firstId]);
+
+  // Scroll spy: scrolling the product list moves the active tab from one
+  // category to the next. The URL follows with replaceState, so a scroll
+  // doesn't pile up history entries.
+  useEffect(() => {
+    let raf = 0;
+    const spy = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (jumping.current) return;
+        const rail = railRef.current;
+        if (!rail) return;
+        const line = spyLine();
+        let active = categories[0]?.id;
+        for (const c of categories) {
+          const sec = sectionRefs.current.get(c.id);
+          if (sec && sec.getBoundingClientRect().top <= line) active = c.id;
+        }
+        // At the very end of the list the last section may be too short to
+        // reach the line — the bottom of the list still means the last tab.
+        const atEnd = isDesktop()
+          ? rail.scrollTop + rail.clientHeight >= rail.scrollHeight - 2
+          : window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+        const scrolled = isDesktop() ? rail.scrollTop > 0 : window.scrollY > 0;
+        if (atEnd && scrolled) active = categories[categories.length - 1]?.id;
+        if (!active) return;
+        setCatId((prev) => {
+          if (prev !== active && pathForId(active) !== window.location.pathname) {
+            window.history.replaceState({ catId: active }, "", pathForId(active));
+          }
+          return active;
+        });
+      });
+    };
+    const rail = railRef.current;
+    rail?.addEventListener("scroll", spy, { passive: true });
+    window.addEventListener("scroll", spy, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      rail?.removeEventListener("scroll", spy);
+      window.removeEventListener("scroll", spy);
+    };
+  }, [categories, spyLine]);
+
+  // Keep the active tab visible in the tab strip.
+  useEffect(() => {
+    const tab = tabsRef.current?.querySelector<HTMLElement>('[data-active="true"]');
+    const strip = tabsRef.current;
+    if (!tab || !strip) return;
+    const left = tab.offsetLeft - strip.clientWidth / 2 + tab.offsetWidth / 2;
+    strip.scrollTo({ left, behavior: "smooth" });
+  }, [catId]);
 
   // Escape closes the mobile sheet. While it is open the body carries a flag,
   // which parks the floating loyalty mascot — on a phone it sits exactly where
@@ -281,55 +364,6 @@ export default function MenuBoard({
       delete document.body.dataset.mxSheet;
     };
   }, [sheetOpen]);
-
-  // Desktop: scrolling the page walks the rail. The body is made tall enough to
-  // hold one scroll step per item (CSS, via --mx-steps) while the rail and the
-  // stage stay pinned, and the scroll position picks the item on stage.
-  useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 901px)");
-    let raf = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const body = bodyRef.current;
-        if (!desktop.matches || !body || items.length < 2) return;
-        const step = scrollStep();
-        const start = body.getBoundingClientRect().top + window.scrollY - STICKY_TOP;
-        const idx = Math.min(items.length - 1, Math.max(0, Math.round((window.scrollY - start) / step)));
-        const it = items[idx];
-        setPickedItem(it.id ?? it.ar);
-      });
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, [items]);
-
-  // Keep the active row in view inside the rail — scroll the rail only, never
-  // the page (scrollIntoView would fight the scroll that drives it).
-  useEffect(() => {
-    const rail = railRef.current;
-    if (!rail || currentIdx < 0) return;
-    const row = rail.children[currentIdx] as HTMLElement | undefined;
-    if (!row || rail.scrollHeight <= rail.clientHeight) return;
-    const target = row.offsetTop - rail.clientHeight / 2 + row.offsetHeight / 2;
-    rail.scrollTo({ top: target, behavior: "smooth" });
-  }, [currentIdx]);
-
-  const pick = (idx: number) => {
-    const it = items[idx];
-    const body = bodyRef.current;
-    if (window.matchMedia("(min-width: 901px)").matches && body && items.length > 1) {
-      const start = body.getBoundingClientRect().top + window.scrollY - STICKY_TOP;
-      window.scrollTo({ top: start + idx * scrollStep(), behavior: "smooth" });
-      setPickedItem(it.id ?? it.ar);
-      return;
-    }
-    setPickedItem(it.id ?? it.ar);
-    setSheetOpen(true);
-  };
 
   if (!cat) {
     return (
@@ -348,54 +382,73 @@ export default function MenuBoard({
         <p className="mx-top-note">كل الأسعار بالريال السعودي · {toArabic(items.length)} صنف</p>
       </header>
 
-      <nav className="mx-tabs" aria-label="أقسام المنيو">
+      <nav className="mx-tabs" aria-label="أقسام المنيو" ref={tabsRef}>
         {categories.map((c) => (
           <button
             key={c.id}
             type="button"
             className="mx-tab"
             data-active={c.id === cat.id}
-            onClick={() => c.id !== cat.id && goto(c.id)}
+            onClick={() => goto(c.id)}
           >
             {c.ar}
           </button>
         ))}
       </nav>
 
-      {items.length === 0 ? (
-        <div className="mx-empty">لا توجد أصناف في هذا القسم حالياً.</div>
-      ) : (
-        <div
-          className="mx-body"
-          ref={bodyRef}
-          style={{ "--mx-steps": items.length } as React.CSSProperties}
-        >
-          <aside className="mx-rail" aria-label={cat.ar} ref={railRef}>
-            {items.map((it, i) => (
-              <RailRow
-                key={(it.id ?? it.ar) + i}
-                it={it}
-                photo={itemPhoto(it, photoSet)}
-                glyph={cat.glyph}
-                active={current === it}
-                onPick={() => pick(i)}
-              />
-            ))}
-          </aside>
+      <div className="mx-body">
+        {/* One continuous list of every category; scrolling it walks the tabs. */}
+        <aside className="mx-rail" aria-label="أصناف المنيو" ref={railRef}>
+          {categories.map((c) => (
+            <section
+              key={c.id}
+              className="mx-rail-sec"
+              aria-label={c.ar}
+              ref={(el) => {
+                if (el) sectionRefs.current.set(c.id, el);
+                else sectionRefs.current.delete(c.id);
+              }}
+            >
+              <h2 className="mx-rail-head">{c.ar}</h2>
+              {c.items.length === 0 ? (
+                <p className="mx-rail-empty">لا توجد أصناف في هذا القسم حالياً.</p>
+              ) : (
+                c.items.map((it, i) => (
+                  <RailRow
+                    key={rowKey(c, it) + i}
+                    it={it}
+                    photo={itemPhoto(it, photoSet)}
+                    glyph={c.glyph}
+                    active={c.id === cat.id && current === it}
+                    onPick={() => {
+                      setPicked(rowKey(c, it));
+                      setSheetOpen(true);
+                      if (c.id !== cat.id) {
+                        setCatId(c.id);
+                        window.history.replaceState({ catId: c.id }, "", pathForId(c.id));
+                      }
+                    }}
+                  />
+                ))
+              )}
+            </section>
+          ))}
+        </aside>
 
-          <section className="mx-stage" data-open={sheetOpen || undefined}>
-            {current && (
-              <Stage
-                it={current}
-                photo={itemPhoto(current, photoSet)}
-                glyph={cat.glyph}
-                note={cat.note}
-                onClose={() => setSheetOpen(false)}
-              />
-            )}
-          </section>
-        </div>
-      )}
+        <section className="mx-stage" data-open={sheetOpen || undefined}>
+          {current ? (
+            <Stage
+              it={current}
+              photo={itemPhoto(current, photoSet)}
+              glyph={cat.glyph}
+              note={cat.note}
+              onClose={() => setSheetOpen(false)}
+            />
+          ) : (
+            <div className="mx-empty">لا توجد أصناف في هذا القسم حالياً.</div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

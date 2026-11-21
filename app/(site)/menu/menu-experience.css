@@ -90,9 +90,6 @@
   grid-template-columns: var(--mx-rail) 1fr;
   gap: 26px;
   align-items: start;
-  /* one 40vh scroll step per item (see scrollStep() in MenuBoard.tsx) while
-     the rail and stage stay pinned */
-  min-height: calc((var(--mx-steps, 1) - 1) * 40vh + 100vh - 120px);
 }
 
 /* ── the rail ──────────────────────────────────────────────────── */
@@ -191,6 +188,31 @@
 .mx-row-price .cur {
   font-family: var(--font-body);
   font-size: 11px;
+  opacity: 0.8;
+}
+
+/* every category sits in the one list, under its own heading */
+.mx-rail-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mx-rail-sec + .mx-rail-sec {
+  margin-top: 18px;
+}
+.mx-rail-head {
+  margin: 0;
+  padding: 6px 12px 4px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--blush);
+  border-bottom: 1px solid var(--mx-line);
+}
+.mx-rail-empty {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--rose);
   opacity: 0.8;
 }
 
@@ -390,7 +412,15 @@
   .mx-body {
     grid-template-columns: 1fr;
     gap: 0;
-    min-height: 0;
+  }
+  .mx-tabs {
+    position: sticky;
+    top: var(--mx-nav-h, 64px);
+    z-index: 20;
+    margin-bottom: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background: var(--burgundy-deep);
   }
   .mx-rail {
     position: static;

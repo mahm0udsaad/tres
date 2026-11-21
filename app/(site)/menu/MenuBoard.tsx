@@ -15,12 +15,14 @@
  *   │  price · name · cal · desc       │ ▢ item    │
  *   └──────────────────────────────────┴───────────┘
  *
- * The rail sits at the inline end (the left, in RTL) exactly as the reference
- * lays it out, and the stage holds one product at a time.
+ * The rail sits at the inline start (the right, in RTL) — the owner asked for
+ * it there — and the stage holds one product at a time. On desktop the page
+ * scrolls through the category: each scroll step advances the stage to the
+ * next item in the rail, and picking a row scrolls to that item's step.
  *
- * Specialty coffee keeps its own layout: those items are origins, not drinks —
- * variety, altitude, process and tasting notes side by side — so that category
- * renders as the origin-card grid instead of rail + stage.
+ * Every category, specialty origins included, uses this same rail + stage —
+ * the owner wants one design across the menu. Origin specs (variety, altitude,
+ * process, notes) show on the stage.
  *
  * On a phone there is no room for two panes: the rail becomes the page and the
  * stage opens over it as a sheet.
@@ -30,7 +32,7 @@
  * History API without a server round-trip.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toArabic, type Category, type Item } from "../../lib/menu";
 import "./menu-experience.css";
 
@@ -38,17 +40,11 @@ function pathForId(id: string | null): string {
   return id ? `/menu/${id}` : "/menu";
 }
 
-/** An origin/bean category — spec sheets rather than drinks.
- *
- *  It has to be the category's whole character, not one item's: مشاريب الحليب
- *  carries tasting notes and a variety on إسبرسو alone, and an `.some()` test
- *  here threw all fourteen drinks into the spec-sheet layout, which has no
- *  product photos. So: most of the items must carry an actual origin spec. */
-function isOriginCategory(cat: Category): boolean {
-  const items = cat.items;
-  if (items.length === 0) return false;
-  const withSpec = items.filter((i) => i.variety || i.process || i.altitude).length;
-  return withSpec >= Math.max(2, Math.ceil(items.length * 0.6));
+/** Where the rail and stage pin (matches `top` on both in the CSS). */
+const STICKY_TOP = 90;
+/** One scroll step per item — matches the 40vh in .mx-body's min-height. */
+function scrollStep(): number {
+  return window.innerHeight * 0.4;
 }
 
 function itemPhoto(it: Item, photoSet: Set<string>): string | undefined {
@@ -217,70 +213,6 @@ function Stage({
   );
 }
 
-/* ── origin card (specialty categories) ───────────────────────────────────── */
-function OriginCard({ it, photo }: { it: Item; photo?: string }) {
-  const art = it.emblem ?? photo;
-  return (
-    <article className="mx-origin" data-sold-out={it.soldOut || undefined}>
-      {art && (
-        <span className="mx-origin-flag" style={{ backgroundImage: `url(${art})` }} aria-hidden="true" />
-      )}
-      <span className="mx-origin-scrim" aria-hidden="true" />
-      <div className="mx-origin-body">
-        <div className="mx-origin-head">
-          {it.en && (
-            <span className="mx-origin-en" dir="ltr">
-              {it.en}
-            </span>
-          )}
-          <h3>{it.ar}</h3>
-        </div>
-        {it.price && (
-          <div className="mx-origin-price">
-            <span className="num">{it.price}</span>
-            <span className="cur">ر.س</span>
-          </div>
-        )}
-        <dl className="mx-specs">
-          {it.variety && (
-            <div>
-              <dt>السلالة</dt>
-              <dd>{it.variety}</dd>
-            </div>
-          )}
-          {it.altitude && (
-            <div>
-              <dt>الارتفاع</dt>
-              <dd>{it.altitude}</dd>
-            </div>
-          )}
-          {it.process && (
-            <div>
-              <dt>المعالجة</dt>
-              <dd>{it.process}</dd>
-            </div>
-          )}
-        </dl>
-        {it.notes && it.notes.length > 0 && <p className="mx-origin-notes">{it.notes.join(" · ")}</p>}
-        {rosetteOf(it) ? (
-          <span className="mx-rosette mx-rosette--sm">{rosetteOf(it)}</span>
-        ) : (
-          badges(it).length > 0 && (
-            <div className="mx-origin-chips">
-              {badges(it).map((b) => (
-                <span key={b} className="mx-chip mx-chip--badge">
-                  {b}
-                </span>
-              ))}
-            </div>
-          )
-        )}
-        {it.soldOut && <span className="mx-origin-out">نفدت الكمية</span>}
-      </div>
-    </article>
-  );
-}
-
 export default function MenuBoard({
   initialId,
   images = [],
@@ -303,14 +235,21 @@ export default function MenuBoard({
 
   const cat = categories.find((c) => c.id === catId) ?? categories[0];
   const items = cat?.items ?? [];
-  const origins = cat ? isOriginCategory(cat) : false;
   const current = items.find((i) => (i.id ?? i.ar) === pickedItem) ?? items[0];
+  const currentIdx = current ? items.indexOf(current) : -1;
+
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLElement>(null);
 
   const goto = useCallback(
     (id: string, opts: { push?: boolean } = {}) => {
       setCatId(id);
       setPickedItem(null);
       setSheetOpen(false);
+      const body = bodyRef.current;
+      if (body && window.scrollY > body.offsetTop) {
+        window.scrollTo({ top: 0 });
+      }
       if (opts.push !== false && pathForId(id) !== window.location.pathname) {
         window.history.pushState({ catId: id }, "", pathForId(id));
       }
@@ -343,6 +282,55 @@ export default function MenuBoard({
     };
   }, [sheetOpen]);
 
+  // Desktop: scrolling the page walks the rail. The body is made tall enough to
+  // hold one scroll step per item (CSS, via --mx-steps) while the rail and the
+  // stage stay pinned, and the scroll position picks the item on stage.
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 901px)");
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const body = bodyRef.current;
+        if (!desktop.matches || !body || items.length < 2) return;
+        const step = scrollStep();
+        const start = body.getBoundingClientRect().top + window.scrollY - STICKY_TOP;
+        const idx = Math.min(items.length - 1, Math.max(0, Math.round((window.scrollY - start) / step)));
+        const it = items[idx];
+        setPickedItem(it.id ?? it.ar);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [items]);
+
+  // Keep the active row in view inside the rail — scroll the rail only, never
+  // the page (scrollIntoView would fight the scroll that drives it).
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || currentIdx < 0) return;
+    const row = rail.children[currentIdx] as HTMLElement | undefined;
+    if (!row || rail.scrollHeight <= rail.clientHeight) return;
+    const target = row.offsetTop - rail.clientHeight / 2 + row.offsetHeight / 2;
+    rail.scrollTo({ top: target, behavior: "smooth" });
+  }, [currentIdx]);
+
+  const pick = (idx: number) => {
+    const it = items[idx];
+    const body = bodyRef.current;
+    if (window.matchMedia("(min-width: 901px)").matches && body && items.length > 1) {
+      const start = body.getBoundingClientRect().top + window.scrollY - STICKY_TOP;
+      window.scrollTo({ top: start + idx * scrollStep(), behavior: "smooth" });
+      setPickedItem(it.id ?? it.ar);
+      return;
+    }
+    setPickedItem(it.id ?? it.ar);
+    setSheetOpen(true);
+  };
+
   if (!cat) {
     return (
       <div className="mx">
@@ -352,7 +340,7 @@ export default function MenuBoard({
   }
 
   return (
-    <div className="mx" data-origins={origins || undefined}>
+    <div className="mx">
       {/* No wordmark here: the nav already carries it, and two TRES marks
           stacked on one screen read as a mistake. */}
       <header className="mx-top">
@@ -376,14 +364,25 @@ export default function MenuBoard({
 
       {items.length === 0 ? (
         <div className="mx-empty">لا توجد أصناف في هذا القسم حالياً.</div>
-      ) : origins ? (
-        <div className="mx-origins">
-          {items.map((it, i) => (
-            <OriginCard key={it.id ?? i} it={it} photo={itemPhoto(it, photoSet)} />
-          ))}
-        </div>
       ) : (
-        <div className="mx-body">
+        <div
+          className="mx-body"
+          ref={bodyRef}
+          style={{ "--mx-steps": items.length } as React.CSSProperties}
+        >
+          <aside className="mx-rail" aria-label={cat.ar} ref={railRef}>
+            {items.map((it, i) => (
+              <RailRow
+                key={(it.id ?? it.ar) + i}
+                it={it}
+                photo={itemPhoto(it, photoSet)}
+                glyph={cat.glyph}
+                active={current === it}
+                onPick={() => pick(i)}
+              />
+            ))}
+          </aside>
+
           <section className="mx-stage" data-open={sheetOpen || undefined}>
             {current && (
               <Stage
@@ -395,25 +394,6 @@ export default function MenuBoard({
               />
             )}
           </section>
-
-          <aside className="mx-rail" aria-label={cat.ar}>
-            {items.map((it, i) => {
-              const key = it.id ?? it.ar;
-              return (
-                <RailRow
-                  key={key + i}
-                  it={it}
-                  photo={itemPhoto(it, photoSet)}
-                  glyph={cat.glyph}
-                  active={current === it}
-                  onPick={() => {
-                    setPickedItem(key);
-                    setSheetOpen(true);
-                  }}
-                />
-              );
-            })}
-          </aside>
         </div>
       )}
     </div>

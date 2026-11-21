@@ -2,8 +2,8 @@
    MENU — digital menu board
    Rebuilt to the owner's reference: a tab rail across the top, the
    list of the open category down the inline end, and one product
-   held large on the stage beside it. Specialty origins swap the
-   stage for a grid of spec cards.
+   held large on the stage beside it. Every category, specialty
+   origins included, shares this one layout.
 
    Everything resolves through the design tokens in globals.css, so
    the board re-skins with the active theme (classic / summer /
@@ -86,9 +86,13 @@
   margin: 0 auto;
   padding: 0 28px;
   display: grid;
-  grid-template-columns: 1fr var(--mx-rail);
+  /* rail first → the inline start, which is the right in RTL */
+  grid-template-columns: var(--mx-rail) 1fr;
   gap: 26px;
   align-items: start;
+  /* one 40vh scroll step per item (see scrollStep() in MenuBoard.tsx) while
+     the rail and stage stay pinned */
+  min-height: calc((var(--mx-steps, 1) - 1) * 40vh + 100vh - 120px);
 }
 
 /* ── the rail ──────────────────────────────────────────────────── */
@@ -269,14 +273,6 @@
   background: radial-gradient(circle at 50% 50%, var(--blush) 0 68%, transparent 69%),
     repeating-conic-gradient(from 0deg at 50% 50%, var(--blush) 0 7deg, transparent 7deg 15deg);
 }
-.mx-rosette--sm {
-  position: absolute;
-  top: 14px;
-  inset-inline-end: 14px;
-  width: 64px;
-  height: 64px;
-  font-size: 10px;
-}
 .mx-stage-body {
   padding: 24px 30px 30px;
   border-top: 1px solid var(--mx-line);
@@ -356,7 +352,7 @@
   opacity: 0.75;
 }
 
-/* ── spec sheet (shared by stage + origin cards) ───────────────── */
+/* ── spec sheet (on the stage) ───────────────── */
 .mx-specs {
   display: flex;
   flex-wrap: wrap;
@@ -374,95 +370,6 @@
   margin: 0;
   font-size: 14px;
   color: var(--cream);
-}
-
-/* ── origins grid ──────────────────────────────────────────────── */
-.mx-origins {
-  max-width: 1360px;
-  margin: 0 auto;
-  padding: 0 28px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-.mx-origin {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border: 1px solid var(--mx-line);
-  border-radius: 26px;
-  min-height: 260px;
-}
-.mx-origin[data-sold-out] {
-  opacity: 0.7;
-}
-.mx-origin-flag {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-size: cover;
-  background-position: center;
-  filter: saturate(0.85);
-}
-.mx-origin-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(
-    180deg,
-    rgb(var(--burgundy-darkest-rgb) / 0.62) 0%,
-    rgb(var(--burgundy-darkest-rgb) / 0.88) 62%,
-    rgb(var(--burgundy-darkest-rgb) / 0.96) 100%
-  );
-}
-.mx-origin-body {
-  position: relative;
-  z-index: 2;
-  padding: 26px 24px 24px;
-}
-.mx-origin-en {
-  font-family: var(--font-latin);
-  font-size: 12px;
-  letter-spacing: 0.26em;
-  color: var(--blush);
-}
-.mx-origin-head h3 {
-  font-family: var(--font-display);
-  font-size: 30px;
-  margin: 4px 0 0;
-  color: var(--cream);
-}
-.mx-origin-price {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  margin-top: 10px;
-}
-.mx-origin-price .num {
-  font-family: var(--font-latin);
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--blush);
-}
-.mx-origin-price .cur {
-  font-size: 12px;
-  color: var(--rose);
-}
-.mx-origin-notes {
-  margin: 14px 0 0;
-  font-size: 13.5px;
-  line-height: 1.8;
-  color: var(--rose);
-}
-.mx-origin-out {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 6px 13px;
-  border-radius: 999px;
-  border: 1px solid rgb(var(--blush-rgb) / 0.4);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--blush);
 }
 
 .mx-empty {
@@ -483,6 +390,7 @@
   .mx-body {
     grid-template-columns: 1fr;
     gap: 0;
+    min-height: 0;
   }
   .mx-rail {
     position: static;
@@ -551,13 +459,6 @@
   .mx-stage {
     transition: none;
   }
-}
-
-.mx-origin-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 14px;
 }
 
 /* the floating loyalty mascot shares the phone's bottom-start corner with the
